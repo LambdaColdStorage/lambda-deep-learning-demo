@@ -14,10 +14,14 @@ class APP(object):
   """
   def __init__(self, args):
     self.args = args
-    self.inputter = importlib.import_module(args.inputter).build(self.args)
-    self.modeler = importlib.import_module(args.modeler).build(self.args)
-    self.runner = importlib.import_module(args.runner).build(self.args)
+    self.inputter = importlib.import_module("inputter." + args.inputter).build(self.args)
+    self.modeler = importlib.import_module("modeler." + args.modeler).build(self.args)
+    self.runner = importlib.import_module(
+      "runner." + args.runner).build(self.args,
+                                     self.inputter,
+                                     self.modeler)
 
 
   def run(self):
-    print("Applicaiton is running.")
+    # print("Applicaiton is running.")
+    self.runner.run()

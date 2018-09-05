@@ -4,19 +4,16 @@ Licensed under
 ==========================================================================
 
 """
-from __future__ import print_function
-import abc
-import six
+from modeler import Modeler
 
-@six.add_metaclass(abc.ABCMeta)
-class Modeler(object):
+
+class ImageClassificationModeler(Modeler):
   def __init__(self, args):
-    self.args = args
+    super(ImageClassificationModeler, self).__init__(args)
 
-  @abc.abstractmethod
   def create_precomputation(self):
-    raise NotImplementedError()
+    pass
 
 
 def build(args):
-  return Modeler(args)
+  return ImageClassificationModeler(args)
