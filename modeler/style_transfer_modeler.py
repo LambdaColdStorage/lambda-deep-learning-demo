@@ -28,7 +28,7 @@ class StyleTransferModeler(Modeler):
     self.train_skip_vars = ['vgg_19']
     self.l2_loss_skip_vars = []
     self.train_vars = []
-    self.RGB_MEAN = [123.68, 116.78, 103.94]
+    self.pre_compute_ops = {}
     if self.args.mode == "infer":
       self.feature_net_init_flag = False
     else:
@@ -65,8 +65,7 @@ class StyleTransferModeler(Modeler):
     style_image = tf.image.convert_image_dtype(style_image,
                                                dtype=tf.float32)
     style_image = style_image * 255.0
-    style_image = vgg_preprocessing._mean_image_subtraction(style_image,
-                                                            self.RGB_MEAN)
+    style_image = vgg_preprocessing._mean_image_subtraction(style_image)
     style_image = tf.expand_dims(style_image, 0)
 
     (logits, features), self.feature_net_init_flag = self.feature_net(
@@ -86,13 +85,14 @@ class StyleTransferModeler(Modeler):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
-    self.style_features_target = {}
-    for layer in self.style_layers:
-      self.style_features_target[layer] = tf.placeholder(tf.float32)
-    self.style_features_target_op = self.compute_style_feature()
-    self.pre_compute_ops = {self.style_features_target[key]:
-                            self.style_features_target_op[key]
-                            for key in self.style_features_target}
+    if self.args.mode == "train":
+      self.style_features_target = {}
+      for layer in self.style_layers:
+        self.style_features_target[layer] = tf.placeholder(tf.float32)
+      self.style_features_target_op = self.compute_style_feature()
+      self.pre_compute_ops = {self.style_features_target[key]:
+                              self.style_features_target_op[key]
+                              for key in self.style_features_target}
 
   def model_fn(self, x):
     images = x[0]
@@ -148,14 +148,7 @@ class StyleTransferModeler(Modeler):
     content_features_target[self.content_layers] = (
       vgg_net_target[self.content_layers])
 
-    axis_to_split = 3
-    num_splits = 3
-    channels = tf.split(axis=axis_to_split,
-                        num_or_size_splits=num_splits,
-                        value=outputs)
-    for i in range(num_splits):
-      channels[i] -= self.RGB_MEAN[i]
-    outputs_mean_subtracted = tf.concat(axis=axis_to_split, values=channels)
+    outputs_mean_subtracted = vgg_preprocessing._mean_image_subtraction(outputs)
 
     (logits, vgg_net_source), self.feature_net_init_flag = self.feature_net(
       outputs_mean_subtracted,

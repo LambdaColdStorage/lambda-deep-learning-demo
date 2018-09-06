@@ -195,7 +195,7 @@ def _central_crop(image_list, crop_height, crop_width):
   return outputs
 
 
-def _mean_image_subtraction(image, means):
+def _mean_image_subtraction(image, means=[_R_MEAN, _G_MEAN, _B_MEAN]):
   """Subtracts the given means from each image channel.
 
   For example:
@@ -216,16 +216,24 @@ def _mean_image_subtraction(image, means):
       than three or if the number of channels in `image` doesn't match the
       number of values in `means`.
   """
-  if image.get_shape().ndims != 3:
-    raise ValueError('Input must be of size [height, width, C>0]')
-  num_channels = image.get_shape().as_list()[-1]
-  if len(means) != num_channels:
-    raise ValueError('len(means) must match the number of channels')
+  if image.get_shape().ndims == 3:
+    num_channels = image.get_shape().as_list()[-1]
+    if len(means) != num_channels:
+      raise ValueError('len(means) must match the number of channels')
 
-  channels = tf.split(axis=2, num_or_size_splits=num_channels, value=image)
-  for i in range(num_channels):
-    channels[i] -= means[i]
-  return tf.concat(axis=2, values=channels)
+    channels = tf.split(axis=2, num_or_size_splits=num_channels, value=image)
+    for i in range(num_channels):
+      channels[i] -= means[i]
+    return tf.concat(axis=2, values=channels)
+  elif image.get_shape().ndims == 4:
+    channels = tf.split(axis=3,
+                        num_or_size_splits=3,
+                        value=image)
+    for i in range(3):
+      channels[i] -= means[i]
+    return tf.concat(axis=3, values=channels)
+  else:
+    raise ValueError('Input must be of size [height, width, C>0] or [batch_size, height, width, C>0]')
 
 
 def _smallest_size_at_least(height, width, smallest_side):

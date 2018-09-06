@@ -19,11 +19,11 @@ class ImageClassificationModeler(Modeler):
     self.train_skip_vars = []
     self.l2_loss_skip_vars = ["BatchNorm", "preact", "postnorm"]
     self.train_vars = []
+    self.pre_compute_ops = {}
 
   def create_precomputation(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
-    self.pre_compute_ops = {}
 
   def model_fn(self, x):
     images = x[0]
