@@ -43,7 +43,7 @@ def main():
   parser.add_argument("--dataset_csv", type=str,
                       help="Path to dataset's csv meta file",
                       default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                           "demo/data/cifar10/train.csv")))
+                                                 "demo/data/cifar10/train.csv")))
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
@@ -51,7 +51,7 @@ def main():
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
-                      default=1)
+                      default=4)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
@@ -63,7 +63,7 @@ def main():
   parser.add_argument("--num_classes",
                       help="Number of classes.",
                       type=int,
-                      default=10)                        
+                      default=10)
   parser.add_argument("--image_height",
                       help="Image height.",
                       type=int,
@@ -80,7 +80,7 @@ def main():
                       help="Directory to save mode",
                       type=str,
                       default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                           "demo/model/image_classification_cifar10")))
+                                                 "demo/model/image_classification_cifar10")))
   parser.add_argument("--l2_weight_decay",
                       help="Weight decay for L2 regularization in training",
                       type=float,

@@ -6,10 +6,9 @@ Licensed under
 """
 import importlib
 
-import tensorflow as tf
 
 class APP(object):
-  """ A machine leanring application composed of 
+  """ A machine leanring application composed of
       an inputter, a modeler and a runner.
   """
   def __init__(self, args):
@@ -20,7 +19,6 @@ class APP(object):
       "runner." + args.runner).build(self.args,
                                      self.inputter,
                                      self.modeler)
-
 
   def run(self):
     # print("Applicaiton is running.")

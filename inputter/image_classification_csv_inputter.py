@@ -20,7 +20,7 @@ class ImageClassificationCSVInputter(Inputter):
   def __init__(self, args):
     super(ImageClassificationCSVInputter, self).__init__(args)
     self.augmenter = importlib.import_module("augmenter." + args.augmenter)
-    self.get_num_samples = -1
+    self.num_samples = -1
 
   def get_num_samples(self):
     if self.num_samples < 0:
