@@ -88,22 +88,23 @@ class ParameterServerRunner(Runner):
     else:
       return tf.reduce_mean(x)
 
-  def replicate_graph(self):
+  def replicate_graph(self, pre_fn, input_fn, model_fn):
     with tf.device("/cpu:0"):
-      self.modeler.create_precomputation()
+      pre_fn()
 
       if self.args.mode == "infer":
         pass
       else:
-        batch = self.inputter.input_fn()
+        batch = input_fn()
         output = ()
+        # Map
         for i in range(self.args.num_gpu):
           with tf.device(self.assign_to_device("/gpu:{}".format(i),
                          ps_device="/cpu:0")):
             # Split input data across multiple devices
             x = self.batch_split(batch, i)
 
-            y = self.modeler.model_fn(x)
+            y = model_fn(x)
 
             # Gather output across multiple devices
             if i == 0:
@@ -121,12 +122,16 @@ class ParameterServerRunner(Runner):
 
   def run(self):
     print("ParameterServerRunner is running.")
-    reduced_ops = self.replicate_graph()
 
+    reduced_ops = self.replicate_graph(
+      self.modeler.create_precomputation,
+      self.inputter.input_fn,
+      self.modeler.model_fn)
+
+    # Create train_op for gradient, keep other ops unchanged
     run_ops = ()
     for op in reduced_ops:
       if isinstance(op, list):
-        # Create train_op to minize the loss
         minimize_op = self.modeler.optimizer.apply_gradients(
           op, global_step=self.modeler.global_step)
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -135,9 +140,9 @@ class ParameterServerRunner(Runner):
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
-      for i in range(10):
-        self.sess.run(run_ops)
-        print(i)
+      for i in range(100):
+        outputs = self.sess.run(run_ops)
+        print(outputs[0])
 
 
 def build(args, inputter, modeler):
