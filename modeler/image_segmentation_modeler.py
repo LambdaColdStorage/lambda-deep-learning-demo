@@ -5,17 +5,21 @@ Licensed under
 
 """
 import importlib
+import numpy as np
 
 import tensorflow as tf
 
 from modeler import Modeler
 
 
-class ImageClassificationModeler(Modeler):
+class ImageSegmentationModeler(Modeler):
   def __init__(self, args):
-    super(ImageClassificationModeler, self).__init__(args)
+    super(ImageSegmentationModeler, self).__init__(args)
     self.net = getattr(importlib.import_module("network." + self.args.network),
                        "net")
+    self.class_names = self.args.class_names.split(",")
+    self.colors = np.random.randint(255,
+                                    size=(self.args.num_classes, 3))
 
   def create_precomputation(self):
     self.global_step = tf.train.get_or_create_global_step()
@@ -67,12 +71,18 @@ class ImageClassificationModeler(Modeler):
     pass
 
   def create_loss_fn(self, logits, labels):
-    loss_cross_entropy = tf.losses.softmax_cross_entropy(
-      logits=logits, onehot_labels=labels)
+    logits = tf.reshape(logits, [-1, self.args.num_classes])
+    labels = tf.reshape(labels, [-1])
+    labels = tf.cast(labels, tf.int32)
 
-    l2_var_list = [v for v in tf.trainable_variables()
+    loss_cross_entropy = tf.losses.sparse_softmax_cross_entropy(
+      logits=logits, labels=labels)
+
+    l2_var_list = [v for v in tf.trainable_variables()]
+
+    l2_var_list = [v for v in l2_var_list
                    if not any(x in v.name for
-                              x in ["BatchNorm", "preact", "postnorm"])]
+                              x in ["BatchNorm","preact","postnorm"])]
 
     loss_l2 = self.args.l2_weight_decay * tf.add_n(
       [tf.nn.l2_loss(v) for v in l2_var_list])
@@ -89,4 +99,4 @@ class ImageClassificationModeler(Modeler):
 
 
 def build(args):
-  return ImageClassificationModeler(args)
+  return ImageSegmentationModeler(args)

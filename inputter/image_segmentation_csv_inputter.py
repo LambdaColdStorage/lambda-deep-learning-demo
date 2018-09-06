@@ -16,9 +16,9 @@ import tensorflow as tf
 from inputter import Inputter
 
 
-class ImageClassificationCSVInputter(Inputter):
+class ImageSegmentationCSVInputter(Inputter):
   def __init__(self, args):
-    super(ImageClassificationCSVInputter, self).__init__(args)
+    super(ImageSegmentationCSVInputter, self).__init__(args)
     self.augmenter = importlib.import_module("augmenter." + args.augmenter)
     self.num_samples = -1
 
@@ -32,41 +32,46 @@ class ImageClassificationCSVInputter(Inputter):
   def get_samples_fn(self, test_samples):
     if self.args.mode == "infer":
       images_path = test_samples
-      labels = [-1] * len(test_samples)
+      labels_path = test_samples
     elif self.args.mode == "train" or \
             self.args.mode == "eval":
       assert os.path.exists(self.args.dataset_csv), (
         "Cannot find dataset_csv file {}.".format(self.args.dataset_csv))
 
       images_path = []
-      labels = []
+      labels_path = []
       dirname = os.path.dirname(self.args.dataset_csv)
       with open(self.args.dataset_csv) as f:
         parsed = csv.reader(f, delimiter=",", quotechar="'")
         for row in parsed:
           images_path.append(os.path.join(dirname, row[0]))
-          labels.append(int(row[1]))
+          labels_path.append(os.path.join(dirname, row[1]))
 
-    return (images_path, labels)
+    return (images_path, labels_path)
 
-  def parse_fn(self, image_path, label):
+  def parse_fn(self, image_path, label_path):
     """Parse a single input sample
     """
     image = tf.read_file(image_path)
-    image = tf.image.decode_jpeg(image,
-                                 channels=self.args.image_depth,
-                                 dct_method="INTEGER_ACCURATE")
+    image = tf.image.decode_png(image, channels=self.args.image_depth)
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
-    is_training = (self.args.mode == "train")
-    image = self.augmenter.augment(image,
-                                   self.args.image_height,
-                                   self.args.image_width,
-                                   is_training,
-                                   add_image_summaries=False)
+    if self.args.mode == "infer":
+      image = image - 0.5
+      label = image[0]
+      return image, label
+    else:
+      label = tf.read_file(label_path)
+      label = tf.image.decode_png(label, channels=1)
+      label = tf.cast(label, dtype=tf.int64)
 
-    label = tf.one_hot(label, depth=self.args.num_classes)
-
-    return (image, label)
+      is_training = (self.args.mode == "train")
+      return self.augmenter.augment(image, label,
+                                    self.args.output_height,
+                                    self.args.output_width,
+                                    self.args.resize_side_min,
+                                    self.args.resize_side_max,
+                                    is_training=is_training)
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.args.batch_size_per_gpu *
@@ -100,4 +105,4 @@ class ImageClassificationCSVInputter(Inputter):
 
 
 def build(args):
-  return ImageClassificationCSVInputter(args)
+  return ImageSegmentationCSVInputter(args)

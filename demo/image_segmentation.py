@@ -19,11 +19,11 @@ def main():
   parser.add_argument("--inputter",
                       type=str,
                       help="Name of the inputter",
-                      default="image_classification_csv_inputter")
+                      default="image_segmentation_csv_inputter")
   parser.add_argument("--modeler",
                       type=str,
                       help="Name of the modeler",
-                      default="image_classification_modeler")
+                      default="image_segmentation_modeler")
   parser.add_argument("--runner",
                       type=str,
                       help="Name of the runner",
@@ -31,11 +31,11 @@ def main():
   parser.add_argument("--augmenter",
                       type=str,
                       help="Name of the augmenter",
-                      default="cifar_augmenter")
-  parser.add_argument("--network", choices=["resnet32"],
+                      default="fcn_augmenter")
+  parser.add_argument("--network", choices=["fcn"],
                       type=str,
                       help="Choose a network architecture",
-                      default="resnet32")
+                      default="fcn")
   parser.add_argument("--mode", choices=["train", "eval", "infer"],
                       type=str,
                       help="Choose a job mode from train, eval, and infer.",
@@ -43,11 +43,11 @@ def main():
   parser.add_argument("--dataset_csv", type=str,
                       help="Path to dataset's csv meta file",
                       default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/data/cifar10/train.csv")))
+                                                 "demo/data/camvid/train.csv")))
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
-                      default=128)
+                      default=32)
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
@@ -59,31 +59,47 @@ def main():
   parser.add_argument("--shuffle_buffer_size",
                       help="Buffer size for shuffling training images.",
                       type=int,
-                      default=2000)
+                      default=1000)
   parser.add_argument("--num_classes",
                       help="Number of classes.",
                       type=int,
-                      default=10)
+                      default=12)
   parser.add_argument("--image_height",
                       help="Image height.",
                       type=int,
-                      default=32)
+                      default=360)
   parser.add_argument("--image_width",
                       help="Image width.",
                       type=int,
-                      default=32)
+                      default=480)
+  parser.add_argument("--output_height",
+                      help="Output height.",
+                      type=int,
+                      default=368)
+  parser.add_argument("--output_width",
+                      help="Output width.",
+                      type=int,
+                      default=480)
+  parser.add_argument("--resize_side_min",
+                      help="The minimal image size in augmentation.",
+                      type=int,
+                      default=400)
+  parser.add_argument("--resize_side_max",
+                      help="The maximul image size in augmentation.",
+                      type=int,
+                      default=600)  
   parser.add_argument("--image_depth",
                       help="Number of color channels.",
                       type=int,
                       default=3)
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
-                      default="channels_first")    
+                      default="channels_first")  
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
                       default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/model/image_classification_cifar10")))
+                                                 "demo/model/image_segmentation_camvid")))
   parser.add_argument("--l2_weight_decay",
                       help="Weight decay for L2 regularization in training",
                       type=float,
@@ -91,7 +107,7 @@ def main():
   parser.add_argument("--learning_rate",
                       help="Initial learning rate in training.",
                       type=float,
-                      default=0.5)
+                      default=0.1)
   parser.add_argument("--piecewise_boundaries",
                       help="Epochs to decay learning rate",
                       default="2")
@@ -121,7 +137,7 @@ def main():
                       default=1)
   parser.add_argument("--class_names",
                       help="List of class names.",
-                      default="airplane,automobile,bird,cat,deer,dog,frog,horse,ship,truck")
+                      default="")
 
   args = parser.parse_args()
 

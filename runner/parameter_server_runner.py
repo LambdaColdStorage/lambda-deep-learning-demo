@@ -144,7 +144,7 @@ class ParameterServerRunner(Runner):
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
-      for i in range(100):
+      for i in range(10):
         outputs = self.sess.run(run_ops)
         print(outputs[0])
 

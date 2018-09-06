@@ -8,6 +8,7 @@ from __future__ import print_function
 import abc
 import six
 
+import tensorflow as tf
 
 @six.add_metaclass(abc.ABCMeta)
 class Modeler(object):
@@ -34,6 +35,35 @@ class Modeler(object):
   def create_loss_fn(self, *argv):
     raise NotImplementedError
 
+  def create_optimizer(self, learning_rate):
+    # Setup optimizer
+    if self.args.optimizer == "adadelta":
+      optimizer = tf.train.AdadeltaOptimizer(
+          learning_rate=learning_rate)
+    elif self.args.optimizer == "adagrad":
+      optimizer = tf.train.AdagradOptimizer(
+          learning_rate=learning_rate)
+    elif self.args.optimizer == "adam":
+      optimizer = tf.train.AdamOptimizer(
+          learning_rate=learning_rate)
+    elif self.args.optimizer == "ftrl":
+      optimizer = tf.train.FtrlOptimizer(
+          learning_rate=learning_rate)
+    elif self.args.optimizer == "momentum":
+      optimizer = tf.train.MomentumOptimizer(
+          learning_rate=learning_rate,
+          momentum=0.9,
+          name="Momentum")
+    elif self.args.optimizer == "rmsprop":
+      optimizer = tf.train.RMSPropOptimizer(
+          learning_rate=learning_rate)
+    elif self.args.optimizer == "sgd":
+      optimizer = tf.train.GradientDescentOptimizer(
+        learning_rate=learning_rate)
+    else:
+      raise ValueError("Optimizer [%s] was not recognized" %
+                       self.args.optimizer)
+    return optimizer
 
 def build(args):
   return Modeler(args)
