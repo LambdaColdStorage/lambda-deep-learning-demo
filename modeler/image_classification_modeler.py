@@ -30,7 +30,8 @@ class ImageClassificationModeler(Modeler):
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss)
 
-    return (loss, grads)
+    return {"loss": loss,
+            "grads": grads}
 
   def create_graph_fn(self, input):
     is_training = (self.args.mode == "train")

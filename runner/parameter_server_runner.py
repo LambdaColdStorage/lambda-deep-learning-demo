@@ -96,7 +96,7 @@ class ParameterServerRunner(Runner):
         pass
       else:
         batch = input_fn()
-        output = ()
+        output = {}
         # Map
         for i in range(self.args.num_gpu):
           with tf.device(self.assign_to_device("/gpu:{}".format(i),
@@ -108,16 +108,16 @@ class ParameterServerRunner(Runner):
 
             # Gather output across multiple devices
             if i == 0:
-              for item_y in y:
-                output = (output + ([item_y],))
+              for key in y:
+                output[key] = [y[key]]
             else:
-              for item_y, item_output in zip(y, output):
-                item_output.append(item_y)
+              for key in y:
+                output[key].append(y[key])
 
         # Reduce
-        reduced_ops = ()
-        for x in output:
-          reduced_ops = (reduced_ops + (self.reduce_op(x),))
+        reduced_ops = {}
+        for key in output:
+          reduced_ops[key] = self.reduce_op(output[key])
         return reduced_ops
 
   def run(self):
@@ -129,14 +129,18 @@ class ParameterServerRunner(Runner):
       self.modeler.model_fn)
 
     # Create train_op for gradient, keep other ops unchanged
-    run_ops = ()
-    for op in reduced_ops:
-      if isinstance(op, list):
+    run_ops = []
+    name_ops = []
+    for key in reduced_ops:
+      if key == "grads":
         minimize_op = self.modeler.optimizer.apply_gradients(
-          op, global_step=self.modeler.global_step)
+          reduced_ops[key], global_step=self.modeler.global_step)
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         op = tf.group(minimize_op, update_ops)
-      run_ops = (run_ops + (op,))
+      else:
+        op = reduced_ops[key]
+      run_ops.append(op)
+      name_ops.append(key)
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
