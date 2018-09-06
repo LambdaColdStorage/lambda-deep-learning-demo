@@ -43,7 +43,7 @@ class StyleTransferCSVInputter(Inputter):
         parsed = csv.reader(f, delimiter=",", quotechar="'")
         for row in parsed:
           images_path.append(os.path.join(dirname, row[0]))
-    return images_path
+    return (images_path,)
 
   def parse_fn(self, image_path):
     """Parse a single input sample
@@ -57,11 +57,11 @@ class StyleTransferCSVInputter(Inputter):
     else:
       is_training = (self.args.mode == "train")
       image = self.augmenter.augment(image,
-                                    self.args.image_height,
-                                    self.args.image_width,
-                                    self.args.resize_side_min,
-                                    self.args.resize_side_max,
-                                    is_training=is_training)
+                                     self.args.image_height,
+                                     self.args.image_width,
+                                     self.args.resize_side_min,
+                                     self.args.resize_side_max,
+                                     is_training=is_training)
     return (image,)
 
   def input_fn(self, test_samples=[]):

@@ -7,8 +7,6 @@ Licensed under
 import os
 import argparse
 
-import tensorflow as tf
-
 import app
 
 

@@ -8,7 +8,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from networks.slim import vgg
+from network.external.tf_slim import vgg
 
 slim = tf.contrib.slim
 

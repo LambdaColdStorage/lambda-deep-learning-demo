@@ -10,6 +10,7 @@ import six
 
 import tensorflow as tf
 
+
 @six.add_metaclass(abc.ABCMeta)
 class Modeler(object):
   def __init__(self, args):
@@ -34,6 +35,13 @@ class Modeler(object):
   @abc.abstractmethod
   def create_loss_fn(self, *argv):
     raise NotImplementedError
+
+  def gether_train_vars(self):
+    self.train_vars = [v for v in tf.get_collection(
+                       tf.GraphKeys.TRAINABLE_VARIABLES)
+                       if not any(x in v.name
+                                  for x in
+                                  self.train_skip_vars)]
 
   def create_optimizer(self, learning_rate):
     # Setup optimizer
@@ -64,6 +72,47 @@ class Modeler(object):
       raise ValueError("Optimizer [%s] was not recognized" %
                        self.args.optimizer)
     return optimizer
+
+  def create_learning_rate_fn(self, global_step):
+    """Create learning rate
+    Returns:
+      A learning rate calcualtor used by TF"s optimizer.
+    """
+    initial_learning_rate = self.args.learning_rate
+    bs_per_gpu = self.args.batch_size_per_gpu
+    num_gpu = self.args.num_gpu
+    batches_per_epoch = (self.num_samples / (bs_per_gpu * num_gpu))
+    boundaries = list(map(float,
+                      self.args.piecewise_boundaries.split(",")))
+    boundaries = [int(batches_per_epoch * boundary) for boundary in boundaries]
+
+    decays = list(map(float,
+                  self.args.piecewise_learning_rate_decay.split(",")))
+    values = [initial_learning_rate * decay for decay in decays]
+
+    learning_rate = tf.train.piecewise_constant(
+      tf.cast(global_step, tf.int32), boundaries, values)
+
+    tf.identity(learning_rate, name="learning_rate")
+    tf.summary.scalar("learning_rate", learning_rate)
+
+    return learning_rate
+
+  def l2_regularization(self):
+    l2_var_list = [v for v in self.train_vars
+                   if not any(x in v.name for
+                              x in self.l2_loss_skip_vars)]
+
+    loss_l2 = self.args.l2_weight_decay * tf.add_n(
+      [tf.nn.l2_loss(v) for v in l2_var_list])
+    return loss_l2
+
+  def create_grad_fn(self, loss):
+    self.optimizer = self.create_optimizer(self.learning_rate)
+    grads = self.optimizer.compute_gradients(loss, var_list=self.train_vars)
+
+    return grads
+
 
 def build(args):
   return Modeler(args)

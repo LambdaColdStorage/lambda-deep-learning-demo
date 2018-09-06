@@ -103,50 +103,52 @@ class ParameterServerRunner(Runner):
                          ps_device="/cpu:0")):
             # Split input data across multiple devices
             x = self.batch_split(batch, i)
+            y = model_fn(x)
 
-            # y = model_fn(x)
+            # Gather output across multiple devices
+            if i == 0:
+              for key in y:
+                output[key] = [y[key]]
+            else:
+              for key in y:
+                output[key].append(y[key])
 
-        #     # Gather output across multiple devices
-        #     if i == 0:
-        #       for key in y:
-        #         output[key] = [y[key]]
-        #     else:
-        #       for key in y:
-        #         output[key].append(y[key])
-
-        # # Reduce
-        # reduced_ops = {}
-        # for key in output:
-        #   reduced_ops[key] = self.reduce_op(output[key])
-        # return reduced_ops
+        # Reduce
+        reduced_ops = {}
+        for key in output:
+          reduced_ops[key] = self.reduce_op(output[key])
+        return reduced_ops
 
   def run(self):
-    print("ParameterServerRunner is running.")
-
     reduced_ops = self.replicate_graph(
       self.modeler.create_precomputation,
       self.inputter.input_fn,
       self.modeler.model_fn)
 
-    # # Create train_op for gradient, keep other ops unchanged
-    # run_ops = []
-    # name_ops = []
-    # for key in reduced_ops:
-    #   if key == "grads":
-    #     minimize_op = self.modeler.optimizer.apply_gradients(
-    #       reduced_ops[key], global_step=self.modeler.global_step)
-    #     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    #     op = tf.group(minimize_op, update_ops)
-    #   else:
-    #     op = reduced_ops[key]
-    #   run_ops.append(op)
-    #   name_ops.append(key)
+    # Create train_op for gradient, keep other ops unchanged
+    run_ops = []
+    name_ops = []
+    for key in reduced_ops:
+      if key == "grads":
+        minimize_op = self.modeler.optimizer.apply_gradients(
+          reduced_ops[key], global_step=self.modeler.global_step)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        op = tf.group(minimize_op, update_ops)
+      else:
+        op = reduced_ops[key]
+      run_ops.append(op)
+      name_ops.append(key)
 
-    # with tf.Session(config=self.session_config) as self.sess:
-    #   self.sess.run(tf.global_variables_initializer())
-    #   for i in range(10):
-    #     outputs = self.sess.run(run_ops)
-    #     print(outputs[0])
+    with tf.Session(config=self.session_config) as self.sess:
+      self.sess.run(tf.global_variables_initializer())
+
+      self.feed_dict_pre = {}
+      for key in self.modeler.pre_compute_ops:
+        self.feed_dict_pre[key] = self.sess.run(
+          self.modeler.pre_compute_ops[key])
+      for i in range(100):
+        outputs = self.sess.run(run_ops, feed_dict=self.feed_dict_pre)
+        print(outputs[0])
 
 
 def build(args, inputter, modeler):

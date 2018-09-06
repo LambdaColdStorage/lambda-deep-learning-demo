@@ -48,7 +48,7 @@ def main():
                       default=15)
   parser.add_argument("--tv_weight",
                       help="Weight for tv loss",
-                      default=200)  
+                      default=200)
   parser.add_argument("--dataset_csv", type=str,
                       help="Path to dataset's csv meta file",
                       default=os.path.expanduser(os.path.join(os.environ['HOME'],
@@ -60,7 +60,7 @@ def main():
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
-                      default=1)
+                      default=4)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
@@ -84,7 +84,7 @@ def main():
   parser.add_argument("--resize_side_max",
                       help="The maximul image size in augmentation.",
                       type=int,
-                      default=600)   
+                      default=600)
   parser.add_argument("--image_depth",
                       help="Number of color channels.",
                       type=int,
@@ -104,7 +104,8 @@ def main():
 
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
-                      default="channels_first")  
+                      choices=["channels_first", "channels_last"],
+                      default="channels_last")
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
@@ -117,7 +118,7 @@ def main():
   parser.add_argument("--learning_rate",
                       help="Initial learning rate in training.",
                       type=float,
-                      default=0.1)
+                      default=0.01)
   parser.add_argument("--piecewise_boundaries",
                       help="Epochs to decay learning rate",
                       default="2")
@@ -128,7 +129,7 @@ def main():
                       help="Name of optimizer",
                       choices=["adadelta", "adagrad", "adam", "ftrl",
                                "momentum", "rmsprop", "sgd"],
-                      default="momentum")
+                      default="rmsprop")
   parser.add_argument("--log_every_n_iter",
                       help="Number of steps to log",
                       type=int,
@@ -151,6 +152,7 @@ def main():
   demo = app.APP(args)
 
   demo.run()
+
 
 if __name__ == "__main__":
   main()
