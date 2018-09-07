@@ -50,8 +50,8 @@ class ImageSegmentationCSVInputter(Inputter):
   def create_precomputation(self):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
-    max_steps = (self.get_num_samples() * self.args.epochs // batch_size)
-    tf.constant(max_steps, name="max_step")
+    max_step = (self.get_num_samples() * self.args.epochs // batch_size)
+    tf.constant(max_step, name="max_step")
 
   def parse_fn(self, image_path, label_path):
     """Parse a single input sample
@@ -81,7 +81,7 @@ class ImageSegmentationCSVInputter(Inputter):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
 
-    max_steps = (self.get_num_samples() * self.args.epochs // batch_size)
+    max_step = (self.get_num_samples() * self.args.epochs // batch_size)
 
     samples = self.get_samples_fn(test_samples)
 
@@ -99,7 +99,7 @@ class ImageSegmentationCSVInputter(Inputter):
     dataset = dataset.apply(
         tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.take(max_steps)
+    dataset = dataset.take(max_step)
 
     dataset = dataset.prefetch(2)
 

@@ -158,6 +158,10 @@ class ParameterServerRunner(Runner):
 
     self.run_feed_dict()
 
+  def before_step(self, callbacks):
+    for callback in callbacks:
+      callback.before_step(self.sess)
+
   def after_step(self, callbacks, outputs_dict, saver):
     for callback in callbacks:
       callback.after_step(self.sess, outputs_dict, saver)
@@ -183,6 +187,8 @@ class ParameterServerRunner(Runner):
       max_step = self.sess.run(self.max_step_op)
 
       while global_step < max_step:
+        self.before_step(self.modeler.callbacks)
+
         outputs = self.sess.run(self.run_ops, feed_dict=self.feed_dict)
         global_step = self.sess.run(self.global_step_op)
 

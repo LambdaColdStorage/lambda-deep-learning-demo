@@ -6,6 +6,7 @@ Licensed under
 """
 import os
 import sys
+import time
 
 import tensorflow as tf
 
@@ -16,6 +17,10 @@ class Basic(Callback):
   def __init__(self, args):
     super(Basic, self).__init__(args)
     self.graph = tf.get_default_graph()
+    self.accumulated_loss = 0.0
+    self.accumulated_samples = 0.0
+    self.accumulated_time = 0.0
+    self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
 
   def before_run(self, sess, saver):
     print("Basic callback before_run")
@@ -70,20 +75,34 @@ class Basic(Callback):
                                global_step=max_step)
         print("Checkpoint " + save_path + " has been saved.")
 
-  def before_step(self, *argv):
-    print("Basic callback before_step")
+  def before_step(self, sess):
+    self.time_before_step = time.time()
 
   def after_step(self, sess, outputs_dict, saver):
+    self.time_after_step = time.time()
+
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
 
     global_step = sess.run(global_step_op)
+
+    self.accumulated_samples = self.accumulated_samples + self.batch_size
+    self.accumulated_time = (self.accumulated_time + self.time_after_step -
+                             self.time_before_step)
+    self.accumulated_loss = self.accumulated_loss + outputs_dict["loss"]
 
     if self.args.mode == "train":
       every_n_iter = self.args.log_every_n_iter
 
       if global_step % every_n_iter == 0:
+        num_samples_per_sec = self.accumulated_samples / self.accumulated_time
+        running_loss = self.accumulated_loss / every_n_iter
         print("step: " + str(global_step) +
-              ", loss: " + "{0:.4f}".format(outputs_dict["loss"]))
+              ", loss: " + "{0:.4f}".format(running_loss) +
+              ", speed: " + "{0:.4f}".format(num_samples_per_sec) +
+              " samples/sec.")
+        self.accumulated_samples = 0.0
+        self.accumulated_time = 0.0
+        self.accumulated_loss = 0.0
 
       if global_step % self.args.save_checkpoints_steps == 0:
         save_path = saver.save(

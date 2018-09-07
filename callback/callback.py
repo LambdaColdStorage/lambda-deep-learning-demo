@@ -18,6 +18,18 @@ class Callback(object):
   def before_run(self, *argv):
     raise NotImplementedError()
 
+  @abc.abstractmethod
+  def after_run(self, *argv):
+    raise NotImplementedError()
+
+  @abc.abstractmethod
+  def before_step(self, *argv):
+    raise NotImplementedError()
+
+  @abc.abstractmethod
+  def after_step(self, *argv):
+    raise NotImplementedError()
+
 
 def build(args):
   return Callback(args)
