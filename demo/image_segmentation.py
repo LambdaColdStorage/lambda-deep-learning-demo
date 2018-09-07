@@ -7,8 +7,6 @@ Licensed under
 import os
 import argparse
 
-import tensorflow as tf
-
 import app
 
 
@@ -42,8 +40,8 @@ def main():
                       default="train")
   parser.add_argument("--dataset_csv", type=str,
                       help="Path to dataset's csv meta file",
-                      default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/data/camvid/train.csv")))
+                      default=os.path.join(os.environ['HOME'],
+                                           "demo/data/camvid/train.csv"))
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
@@ -55,7 +53,7 @@ def main():
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
-                      default=3)
+                      default=100)
   parser.add_argument("--shuffle_buffer_size",
                       help="Buffer size for shuffling training images.",
                       type=int,
@@ -87,19 +85,19 @@ def main():
   parser.add_argument("--resize_side_max",
                       help="The maximul image size in augmentation.",
                       type=int,
-                      default=600)  
+                      default=600)
   parser.add_argument("--image_depth",
                       help="Number of color channels.",
                       type=int,
                       default=3)
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
-                      default="channels_first")  
+                      default="channels_first")
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
-                      default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/model/image_segmentation_camvid")))
+                      default=os.path.join(os.environ['HOME'],
+                                           "demo/model/image_segmentation_camvid"))
   parser.add_argument("--l2_weight_decay",
                       help="Weight decay for L2 regularization in training",
                       type=float,
@@ -141,9 +139,13 @@ def main():
 
   args = parser.parse_args()
 
+  args.dataset_csv = os.path.expanduser(args.dataset_csv)
+  args.model_dir = os.path.expanduser(args.model_dir)
+
   demo = app.APP(args)
 
   demo.run()
+
 
 if __name__ == "__main__":
   main()

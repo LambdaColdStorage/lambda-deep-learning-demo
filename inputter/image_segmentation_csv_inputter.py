@@ -6,8 +6,6 @@ Licensed under
 """
 from __future__ import print_function
 import os
-import abc
-import six
 import csv
 import importlib
 
@@ -49,6 +47,12 @@ class ImageSegmentationCSVInputter(Inputter):
 
     return (images_path, labels_path)
 
+  def create_precomputation(self):
+    batch_size = (self.args.batch_size_per_gpu *
+                  self.args.num_gpu)
+    max_steps = (self.get_num_samples() * self.args.epochs // batch_size)
+    tf.constant(max_steps, name="max_step")
+
   def parse_fn(self, image_path, label_path):
     """Parse a single input sample
     """
@@ -77,9 +81,9 @@ class ImageSegmentationCSVInputter(Inputter):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
 
-    samples = self.get_samples_fn(test_samples)
+    max_steps = (self.get_num_samples() * self.args.epochs // batch_size)
 
-    num_samples = len(samples[0])
+    samples = self.get_samples_fn(test_samples)
 
     dataset = tf.data.Dataset.from_tensor_slices(samples)
 
@@ -87,7 +91,6 @@ class ImageSegmentationCSVInputter(Inputter):
       dataset = dataset.shuffle(self.args.shuffle_buffer_size)
 
     dataset = dataset.repeat(self.args.epochs)
-    self.max_steps = (num_samples * self.args.epochs // batch_size)
 
     dataset = dataset.map(
       lambda image, label: self.parse_fn(image, label),
@@ -96,7 +99,7 @@ class ImageSegmentationCSVInputter(Inputter):
     dataset = dataset.apply(
         tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.take(self.max_steps)
+    dataset = dataset.take(max_steps)
 
     dataset = dataset.prefetch(2)
 

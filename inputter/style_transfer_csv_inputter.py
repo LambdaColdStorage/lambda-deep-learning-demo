@@ -6,8 +6,6 @@ Licensed under
 """
 from __future__ import print_function
 import os
-import abc
-import six
 import csv
 import importlib
 
@@ -21,6 +19,12 @@ class StyleTransferCSVInputter(Inputter):
     super(StyleTransferCSVInputter, self).__init__(args)
     self.augmenter = importlib.import_module("augmenter." + args.augmenter)
     self.num_samples = -1
+
+  def create_precomputation(self):
+    batch_size = (self.args.batch_size_per_gpu *
+                  self.args.num_gpu)
+    max_steps = (self.get_num_samples() * self.args.epochs // batch_size)
+    tf.constant(max_steps, name="max_step")
 
   def get_num_samples(self):
     if self.num_samples < 0:
@@ -67,10 +71,9 @@ class StyleTransferCSVInputter(Inputter):
   def input_fn(self, test_samples=[]):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
+    max_steps = (self.get_num_samples() * self.args.epochs // batch_size)
 
     samples = self.get_samples_fn(test_samples)
-
-    num_samples = len(samples[0])
 
     dataset = tf.data.Dataset.from_tensor_slices(samples)
 
@@ -78,7 +81,6 @@ class StyleTransferCSVInputter(Inputter):
       dataset = dataset.shuffle(self.args.shuffle_buffer_size)
 
     dataset = dataset.repeat(self.args.epochs)
-    self.max_steps = (num_samples * self.args.epochs // batch_size)
 
     dataset = dataset.map(
       lambda image: self.parse_fn(image),
@@ -87,7 +89,7 @@ class StyleTransferCSVInputter(Inputter):
     dataset = dataset.apply(
         tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.take(self.max_steps)
+    dataset = dataset.take(max_steps)
 
     dataset = dataset.prefetch(2)
 

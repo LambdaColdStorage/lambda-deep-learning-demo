@@ -4,9 +4,9 @@ Licensed under
 ==========================================================================
 
 """
-from runner import Runner
-
 import tensorflow as tf
+
+from runner import Runner
 
 
 class ParameterServerRunner(Runner):
@@ -18,7 +18,10 @@ class ParameterServerRunner(Runner):
     self.session_config = self.create_session_config()
     self.sess = None
     self.num_samples = inputter.get_num_samples()
+    self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
     self.modeler.num_samples = self.num_samples
+    self.feed_dict_pre = {}
+    self.run_flag = True
 
   def create_session_config(self):
     """create session_config
@@ -88,9 +91,11 @@ class ParameterServerRunner(Runner):
     else:
       return tf.reduce_mean(x)
 
-  def replicate_graph(self, pre_fn, input_fn, model_fn):
+  def replicate_graph(self, pre_fns, input_fn, model_fn):
     with tf.device("/cpu:0"):
-      pre_fn()
+
+      for fn in pre_fns:
+        fn()
 
       if self.args.mode == "infer":
         pass
@@ -119,9 +124,29 @@ class ParameterServerRunner(Runner):
           reduced_ops[key] = self.reduce_op(output[key])
         return reduced_ops
 
+  def before_run(self, callbacks, saver):
+    for callback in callbacks:
+      callback.before_run(self.sess, saver)
+
+    self.run_pre_compute_ops()
+
+  def after_step(self, callbacks, outputs_dict, saver):
+    for callback in callbacks:
+      callback.after_step(self.sess, outputs_dict, saver)
+
+  def after_run(self, callbacks, saver):
+    for callback in callbacks:
+      callback.after_run(self.sess, saver)
+
+  def run_pre_compute_ops(self):
+      for key in self.modeler.pre_compute_ops:
+        self.feed_dict_pre[key] = self.sess.run(
+          self.modeler.pre_compute_ops[key])
+
   def run(self):
     reduced_ops = self.replicate_graph(
-      self.modeler.create_precomputation,
+      [self.modeler.create_precomputation,
+       self.inputter.create_precomputation],
       self.inputter.input_fn,
       self.modeler.model_fn)
 
@@ -139,16 +164,33 @@ class ParameterServerRunner(Runner):
       run_ops.append(op)
       name_ops.append(key)
 
-    with tf.Session(config=self.session_config) as self.sess:
-      self.sess.run(tf.global_variables_initializer())
+    graph = tf.get_default_graph()
+    global_step_op = graph.get_tensor_by_name("global_step:0")
+    max_step_op = graph.get_tensor_by_name("max_step:0")
 
-      self.feed_dict_pre = {}
-      for key in self.modeler.pre_compute_ops:
-        self.feed_dict_pre[key] = self.sess.run(
-          self.modeler.pre_compute_ops[key])
-      for i in range(100):
+    saver = tf.train.Saver(
+      max_to_keep=self.args.keep_checkpoint_max)
+
+    with tf.Session(config=self.session_config) as self.sess:
+
+      # Before run
+      self.before_run(self.modeler.callbacks, saver)
+
+      global_step = self.sess.run(global_step_op)
+      max_step = self.sess.run(max_step_op)
+
+      print("Start running **************************")
+      while global_step < max_step:
         outputs = self.sess.run(run_ops, feed_dict=self.feed_dict_pre)
-        print(outputs[0])
+        global_step = self.sess.run(global_step_op)
+
+        outputs_dict = {}
+        for key, value in zip(name_ops, outputs):
+          outputs_dict[key] = value
+
+        self.after_step(self.modeler.callbacks, outputs_dict, saver)
+
+      self.after_run(self.modeler.callbacks, saver)
 
 
 def build(args, inputter, modeler):

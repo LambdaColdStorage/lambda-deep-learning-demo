@@ -7,8 +7,6 @@ Licensed under
 import os
 import argparse
 
-import tensorflow as tf
-
 import app
 
 
@@ -51,8 +49,8 @@ def main():
                       default=200)
   parser.add_argument("--dataset_csv", type=str,
                       help="Path to dataset's csv meta file",
-                      default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/data/mscoco_fns/train2014.csv")))
+                      default=os.path.join(os.environ['HOME'],
+                                           "demo/data/mscoco_fns/train2014.csv"))
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
@@ -64,7 +62,7 @@ def main():
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
-                      default=3)
+                      default=1)
   parser.add_argument("--shuffle_buffer_size",
                       help="Buffer size for shuffling training images.",
                       type=int,
@@ -109,8 +107,8 @@ def main():
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
-                      default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/model/style_transfer_mscoco_fns")))
+                      default=os.path.join(os.environ['HOME'],
+                                           "demo/model/style_transfer_mscoco_fns"))
   parser.add_argument("--l2_weight_decay",
                       help="Weight decay for L2 regularization in training",
                       type=float,
@@ -148,6 +146,10 @@ def main():
                       default=1)
 
   args = parser.parse_args()
+  args.dataset_csv = os.path.expanduser(args.dataset_csv)
+  args.model_dir = os.path.expanduser(args.model_dir)
+  args.feature_net_path = os.path.expanduser(args.feature_net_path)
+  args.style_image_path = os.path.expanduser(args.style_image_path)
 
   demo = app.APP(args)
 

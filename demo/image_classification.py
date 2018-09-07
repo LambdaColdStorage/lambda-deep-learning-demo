@@ -40,8 +40,8 @@ def main():
                       default="train")
   parser.add_argument("--dataset_csv", type=str,
                       help="Path to dataset's csv meta file",
-                      default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/data/cifar10/train.csv")))
+                      default=os.path.join(os.environ['HOME'],
+                                           "demo/data/cifar10/train.csv"))
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
@@ -76,12 +76,12 @@ def main():
                       default=3)
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
-                      default="channels_first")    
+                      default="channels_first")
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
-                      default=os.path.expanduser(os.path.join(os.environ['HOME'],
-                                                 "demo/model/image_classification_cifar10")))
+                      default=os.path.join(os.environ['HOME'],
+                                           "demo/model/image_classification_cifar10"))
   parser.add_argument("--l2_weight_decay",
                       help="Weight decay for L2 regularization in training",
                       type=float,
@@ -123,9 +123,13 @@ def main():
 
   args = parser.parse_args()
 
+  args.dataset_csv = os.path.expanduser(args.dataset_csv)
+  args.model_dir = os.path.expanduser(args.model_dir)
+
   demo = app.APP(args)
 
   demo.run()
+
 
 if __name__ == "__main__":
   main()

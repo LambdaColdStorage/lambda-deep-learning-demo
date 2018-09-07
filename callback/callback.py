@@ -10,22 +10,14 @@ import six
 
 
 @six.add_metaclass(abc.ABCMeta)
-class Inputter(object):
+class Callback(object):
   def __init__(self, args):
     self.args = args
 
   @abc.abstractmethod
-  def get_num_samples(self, *argv):
-    raise NotImplementedError()
-
-  @abc.abstractmethod
-  def parse_fn(self, mode, *argv):
-    raise NotImplementedError()
-
-  @abc.abstractmethod
-  def input_fn(self, mode, *argv):
+  def before_run(self, *argv):
     raise NotImplementedError()
 
 
 def build(args):
-  return Inputter(args)
+  return Callback(args)

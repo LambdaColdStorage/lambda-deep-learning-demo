@@ -34,6 +34,13 @@ class StyleTransferModeler(Modeler):
     else:
       self.feature_net_init_flag = True
 
+    self.callback_names = ["basic"]
+    self.callbacks = []
+    for name in self.callback_names:
+      callback = importlib.import_module(
+        "callback." + name).build(self.args)
+      self.callbacks.append(callback)
+
   def tensor_size(self, tensor):
     s = tf.shape(tensor)
     return tf.reduce_prod(s[1:])
@@ -200,7 +207,7 @@ class StyleTransferModeler(Modeler):
     # L2 loss
     loss_l2 = self.l2_regularization()
 
-    loss = loss_l2 + loss_content + loss_style + loss_tv
+    loss = tf.identity(loss_l2 + loss_content + loss_style + loss_tv, name="loss")
     return loss
 
 

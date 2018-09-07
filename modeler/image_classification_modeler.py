@@ -21,6 +21,13 @@ class ImageClassificationModeler(Modeler):
     self.train_vars = []
     self.pre_compute_ops = {}
 
+    self.callback_names = ["basic"]
+    self.callbacks = []
+    for name in self.callback_names:
+      callback = importlib.import_module(
+        "callback." + name).build(self.args)
+      self.callbacks.append(callback)
+
   def create_precomputation(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
