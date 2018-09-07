@@ -6,8 +6,6 @@ Licensed under
 """
 from __future__ import print_function
 import os
-import abc
-import six
 import csv
 import importlib
 
@@ -22,17 +20,24 @@ class ImageClassificationCSVInputter(Inputter):
     self.augmenter = importlib.import_module("augmenter." + args.augmenter)
     self.num_samples = -1
 
+    if self.args.mode == "infer":
+      self.test_samples = [os.path.expanduser(x) for x
+                           in self.args.test_samples.split(",")]
+
   def get_num_samples(self):
     if self.num_samples < 0:
-      with open(self.args.dataset_csv) as f:
-        parsed = csv.reader(f, delimiter=",", quotechar="'")
-        self.num_samples = len(list(parsed))
+      if self.args.mode == "infer":
+        self.num_samples = len(self.test_samples)
+      else:
+        with open(self.args.dataset_csv) as f:
+          parsed = csv.reader(f, delimiter=",", quotechar="'")
+          self.num_samples = len(list(parsed))
     return self.num_samples
 
-  def get_samples_fn(self, test_samples):
+  def get_samples_fn(self):
     if self.args.mode == "infer":
-      images_path = test_samples
-      labels = [-1] * len(test_samples)
+      images_path = self.test_samples
+      labels = [-1] * len(self.test_samples)
     elif self.args.mode == "train" or \
             self.args.mode == "eval":
       assert os.path.exists(self.args.dataset_csv), (
@@ -79,7 +84,7 @@ class ImageClassificationCSVInputter(Inputter):
                   self.args.num_gpu)
     max_step = (self.get_num_samples() * self.args.epochs // batch_size)
 
-    samples = self.get_samples_fn(test_samples)
+    samples = self.get_samples_fn()
 
     dataset = tf.data.Dataset.from_tensor_slices(samples)
 

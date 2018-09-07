@@ -11,6 +11,10 @@ python demo/image_classification.py --mode=eval \
 --num_gpu=4 --epochs=1 \
 --dataset_csv=~/demo/data/cifar10/eval.csv
 
+Infer:
+python demo/image_classification.py --mode=infer \
+--num_gpu=1 --batch_size_per_gpu=1 --epochs=1 \
+--test_samples=~/demo/data/cifar10/test/appaloosa_s_001975.png,~/demo/data/cifar10/test/domestic_cat_s_001598.png,~/demo/data/cifar10/test/rhea_s_000225.png,~/demo/data/cifar10/test/trucking_rig_s_001216.png
 """
 import os
 import argparse
@@ -128,7 +132,10 @@ def main():
   parser.add_argument("--class_names",
                       help="List of class names.",
                       default="airplane,automobile,bird,cat,deer,dog,frog,horse,ship,truck")
-
+  parser.add_argument("--test_samples",
+                      help="A string of comma seperated testing data. "
+                      "Must be provided for infer mode.",
+                      type=str)
   args = parser.parse_args()
 
   args.dataset_csv = os.path.expanduser(args.dataset_csv)

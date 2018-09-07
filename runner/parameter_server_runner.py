@@ -86,10 +86,15 @@ class ParameterServerRunner(Runner):
 
   def replicate_graph(self):
 
+    batch = self.inputter.input_fn()
+
     if self.args.mode == "infer":
-      pass
+      with tf.device(self.assign_to_device("/gpu:{}".format(0),
+                     ps_device="/cpu:0")):
+        ops = self.modeler.model_fn(batch)
+        return ops
+
     else:
-      batch = self.inputter.input_fn()
       output = {}
       # Map
       for i in range(self.args.num_gpu):

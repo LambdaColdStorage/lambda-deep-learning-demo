@@ -34,7 +34,8 @@ class TrainSpeed(Callback):
 
     self.global_step = self.global_step + 1
 
-    self.accumulated_num_samples = self.accumulated_num_samples + self.batch_size
+    self.accumulated_num_samples = (self.accumulated_num_samples +
+                                    self.batch_size)
     self.accumulated_time = (self.accumulated_time + self.time_after_step -
                              self.time_before_step)
 
@@ -42,7 +43,8 @@ class TrainSpeed(Callback):
 
     if self.global_step % every_n_iter == 0:
       num_samples_per_sec = self.accumulated_num_samples / self.accumulated_time
-      print("speed: " + "{0:.4f}".format(num_samples_per_sec) + " samples/sec.")
+      print("speed: " + "{0:.4f}".format(num_samples_per_sec) +
+            " samples/sec.")
       self.accumulated_num_samples = 0.0
       self.accumulated_time = 0.0
 

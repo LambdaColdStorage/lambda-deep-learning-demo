@@ -34,15 +34,18 @@ class TrainSpeed(Callback):
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     global_step = sess.run(global_step_op)
 
-    self.accumulated_num_samples = self.accumulated_num_samples + self.batch_size
+    self.accumulated_num_samples = (self.accumulated_num_samples +
+                                    self.batch_size)
     self.accumulated_time = (self.accumulated_time + self.time_after_step -
                              self.time_before_step)
 
     every_n_iter = self.args.log_every_n_iter
 
     if global_step % every_n_iter == 0:
-      num_samples_per_sec = self.accumulated_num_samples / self.accumulated_time
-      print("speed: " + "{0:.4f}".format(num_samples_per_sec) + " samples/sec.")
+      num_samples_per_sec = (self.accumulated_num_samples /
+                             self.accumulated_time)
+      print("speed: " + "{0:.4f}".format(num_samples_per_sec) +
+            " samples/sec.")
       self.accumulated_num_samples = 0.0
       self.accumulated_time = 0.0
 

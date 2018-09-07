@@ -4,29 +4,18 @@ Licensed under
 ==========================================================================
 
 """
-import os
-import sys
-
 import tensorflow as tf
 
 from callback import Callback
 
 
-class EvalBasic(Callback):
+class InferDisplayImageClassification(Callback):
   def __init__(self, args):
-    super(EvalBasic, self).__init__(args)
+    super(InferDisplayImageClassification, self).__init__(args)
     self.graph = tf.get_default_graph()
 
   def before_run(self, sess, saver):
-    ckpt_path = os.path.join(self.args.model_dir, "*ckpt*")
-    if tf.train.checkpoint_exists(ckpt_path):
-      saver.restore(sess,
-                    tf.train.latest_checkpoint(self.args.model_dir))
-      print("Parameters restored.")
-    else:
-      sys.exit("Can not find checkpoint at " + ckpt_path)
-
-    print("Start evaluation.")
+    pass
 
   def after_run(self, sess, saver):
     pass
@@ -35,8 +24,10 @@ class EvalBasic(Callback):
     pass
 
   def after_step(self, sess, outputs_dict, saver):
-    pass
+    for p, c in zip(outputs_dict["probabilities"],
+                    outputs_dict["classes"]):
+      print("Predict: " + str(c) + ", Probability: " + str(p[c]))
 
 
 def build(args):
-  return EvalBasic(args)
+  return InferDisplayImageClassification(args)

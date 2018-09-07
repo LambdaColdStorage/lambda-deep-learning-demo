@@ -63,11 +63,9 @@ class TrainBasic(Callback):
     pass
 
   def after_step(self, sess, outputs_dict, saver):
-  
+
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     global_step = sess.run(global_step_op)
-
-    every_n_iter = self.args.log_every_n_iter
 
     if global_step % self.args.save_checkpoints_steps == 0:
       save_path = saver.save(

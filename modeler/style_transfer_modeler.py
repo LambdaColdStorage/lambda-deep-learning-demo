@@ -99,19 +99,6 @@ class StyleTransferModeler(Modeler):
                             self.style_features_target_op[key]
                             for key in self.style_features_target}
 
-  def model_fn(self, x):
-    images = x[0]
-    logits, predictions = self.create_graph_fn(images)
-
-    self.gether_train_vars()
-
-    if self.args.mode == "train":
-      loss = self.create_loss_fn(logits, images)
-      grads = self.create_grad_fn(loss)
-
-    return {"loss": loss,
-            "grads": grads}
-
   def create_graph_fn(self, input):
     return self.net(input, data_format=self.args.data_format)
 
@@ -153,7 +140,8 @@ class StyleTransferModeler(Modeler):
     content_features_target[self.content_layers] = (
       vgg_net_target[self.content_layers])
 
-    outputs_mean_subtracted = vgg_preprocessing._mean_image_subtraction(outputs)
+    outputs_mean_subtracted = vgg_preprocessing._mean_image_subtraction(
+      outputs)
 
     (logits, vgg_net_source), self.feature_net_init_flag = self.feature_net(
       outputs_mean_subtracted,
@@ -205,8 +193,22 @@ class StyleTransferModeler(Modeler):
     # L2 loss
     loss_l2 = self.l2_regularization()
 
-    loss = tf.identity(loss_l2 + loss_content + loss_style + loss_tv, name="loss")
+    loss = tf.identity(loss_l2 + loss_content +
+                       loss_style + loss_tv, name="loss")
     return loss
+
+  def model_fn(self, x):
+    images = x[0]
+    logits, predictions = self.create_graph_fn(images)
+
+    self.gether_train_vars()
+
+    if self.args.mode == "train":
+      loss = self.create_loss_fn(logits, images)
+      grads = self.create_grad_fn(loss)
+
+    return {"loss": loss,
+            "grads": grads}
 
 
 def build(args):

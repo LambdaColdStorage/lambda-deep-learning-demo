@@ -16,6 +16,7 @@ import tensorflow as tf
 class Modeler(object):
   def __init__(self, args):
     self.args = args
+    self.callbacks = []
 
   @abc.abstractmethod
   def create_nonreplicated_fn(self, *argv):
@@ -38,7 +39,6 @@ class Modeler(object):
     raise NotImplementedError
 
   def create_callbacks(self, callback_names):
-    self.callbacks = []
     for name in callback_names:
       callback = importlib.import_module(
         "callback." + name).build(self.args)

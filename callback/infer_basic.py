@@ -12,9 +12,9 @@ import tensorflow as tf
 from callback import Callback
 
 
-class EvalBasic(Callback):
+class InferBasic(Callback):
   def __init__(self, args):
-    super(EvalBasic, self).__init__(args)
+    super(InferBasic, self).__init__(args)
     self.graph = tf.get_default_graph()
 
   def before_run(self, sess, saver):
@@ -39,4 +39,4 @@ class EvalBasic(Callback):
 
 
 def build(args):
-  return EvalBasic(args)
+  return InferBasic(args)
