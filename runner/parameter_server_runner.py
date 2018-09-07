@@ -113,20 +113,19 @@ class ParameterServerRunner(Runner):
         reduced_ops[key] = self.reduce_op(output[key])
       return reduced_ops
 
-
   def collect_ops(self, ops):
     # Create train_op for gradient, keep other ops unchanged
     run_ops = []
     run_ops_names = []
 
-    for key in reduced_ops:
+    for key in ops:
       if key == "grads":
         minimize_op = self.modeler.optimizer.apply_gradients(
-          reduced_ops[key], global_step=self.modeler.global_step)
+          ops[key], global_step=self.modeler.global_step)
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         op = tf.group(minimize_op, update_ops)
       else:
-        op = reduced_ops[key]
+        op = ops[key]
       run_ops.append(op)
       run_ops_names.append(key)
 
@@ -135,7 +134,6 @@ class ParameterServerRunner(Runner):
   def create_graph(self):
 
     with tf.device("/cpu:0"):
-      
       for fn in self.nonreplicated_fns:
         fn()
 

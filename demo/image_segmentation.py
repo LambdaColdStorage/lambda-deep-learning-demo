@@ -5,7 +5,7 @@ Licensed under
 Train:
 python demo/image_segmentation.py
 
-Evaluation: 
+Evaluation:
 python demo/image_segmentation.py --mode=eval \
 --num_gpu=1 --epochs=1 \
 --dataset_csv=~/demo/data/camvid/val.csv
@@ -55,7 +55,7 @@ def main():
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
-                      default=1)
+                      default=4)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,

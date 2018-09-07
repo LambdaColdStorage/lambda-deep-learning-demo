@@ -2,6 +2,8 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
+Train:
+python demo/style_transfer.py
 
 """
 import os
@@ -58,7 +60,7 @@ def main():
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
-                      default=1)
+                      default=4)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,

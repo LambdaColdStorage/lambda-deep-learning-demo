@@ -52,7 +52,6 @@ class ImageClassificationModeler(Modeler):
       return {"loss": loss,
               "accuracy": accuracy}
 
-
   def create_graph_fn(self, input):
     is_training = (self.args.mode == "train")
     return self.net(input, self.args.num_classes,

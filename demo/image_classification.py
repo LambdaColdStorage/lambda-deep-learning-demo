@@ -2,10 +2,13 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
+Train:
+python demo/image_classification.py \
+--num_gpu=4
 
-Evaluation: 
+Evaluation:
 python demo/image_classification.py --mode=eval \
---num_gpu=1 --epochs=1 \
+--num_gpu=4 --epochs=1 \
 --dataset_csv=~/demo/data/cifar10/eval.csv
 
 """
@@ -54,7 +57,7 @@ def main():
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
-                      default=1)
+                      default=4)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,

@@ -18,7 +18,7 @@ class Modeler(object):
     self.args = args
 
   @abc.abstractmethod
-  def create_precomputation(self, *argv):
+  def create_nonreplicated_fn(self, *argv):
     raise NotImplementedError()
 
   @abc.abstractmethod

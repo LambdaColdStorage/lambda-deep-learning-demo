@@ -4,6 +4,7 @@ Licensed under
 ==========================================================================
 
 """
+import tensorflow as tf
 
 
 class Runner(object):
@@ -12,15 +13,17 @@ class Runner(object):
     self.inputter = inputter
     self.modeler = modeler
 
+    self.modeler.num_samples = self.inputter.get_num_samples()
+
     self.session_config = self.create_session_config()
     self.sess = None
     self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
     self.feed_dict = {}
     self.outputs = None
     self.nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
-                               self.inputter.create_nonreplicated_fn]
-	self.run_ops = []
-	self.run_ops_names = []
+                              self.inputter.create_nonreplicated_fn]
+    self.run_ops = []
+    self.run_ops_names = []
 
   def before_run(self, callbacks):
     for callback in callbacks:
@@ -34,6 +37,7 @@ class Runner(object):
 
   def after_step(self, callbacks):
 
+    outputs_dict = {}
     for key, value in zip(self.run_ops_names, self.outputs):
       outputs_dict[key] = value
 
@@ -41,7 +45,6 @@ class Runner(object):
       callback.after_step(self.sess, outputs_dict, self.saver)
 
   def after_run(self, callbacks):
-      
     for callback in callbacks:
       callback.after_run(self.sess, self.saver)
 
@@ -52,7 +55,7 @@ class Runner(object):
 
   def run(self):
     self.create_graph()
-    
+
     with tf.Session(config=self.session_config) as self.sess:
 
       # Before run
@@ -74,6 +77,7 @@ class Runner(object):
         global_step = global_step + 1
 
       self.after_run(self.modeler.callbacks)
+
 
 def build(args, inputter, modeler):
   return Runner(args, inputter, modeler)
