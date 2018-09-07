@@ -9,6 +9,11 @@ Evaluation:
 python demo/image_segmentation.py --mode=eval \
 --num_gpu=1 --epochs=1 \
 --dataset_csv=~/demo/data/camvid/val.csv
+
+Infer:
+python demo/image_segmentation.py --mode=infer \
+--batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
+--test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
 """
 import os
 import argparse
@@ -142,6 +147,10 @@ def main():
   parser.add_argument("--class_names",
                       help="List of class names.",
                       default="")
+  parser.add_argument("--test_samples",
+                      help="A string of comma seperated testing data. "
+                      "Must be provided for infer mode.",
+                      type=str)
 
   args = parser.parse_args()
 

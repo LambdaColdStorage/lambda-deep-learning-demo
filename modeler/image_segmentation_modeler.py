@@ -30,6 +30,9 @@ class ImageSegmentationModeler(Modeler):
                              "train_accuracy", "train_speed"])
     elif self.args.mode == "eval":
       self.create_callbacks(["eval_basic", "eval_accuracy", "eval_speed"])
+    elif self.args.mode == "infer":
+      self.create_callbacks(["infer_basic",
+                             "infer_display_image_segmentation"])
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
@@ -66,9 +69,8 @@ class ImageSegmentationModeler(Modeler):
     labels = x[1]
     logits, predictions = self.create_graph_fn(images)
 
-    self.gether_train_vars()
-
     if self.args.mode == "train":
+      self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss)
       accuracy = self.create_eval_metrics_fn(
@@ -77,11 +79,15 @@ class ImageSegmentationModeler(Modeler):
               "grads": grads,
               "accuracy": accuracy}
     elif self.args.mode == "eval":
+      self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
       accuracy = self.create_eval_metrics_fn(
         predictions, labels)
       return {"loss": loss,
               "accuracy": accuracy}
+    elif self.args.mode == "infer":
+      return {"classes": predictions["classes"],
+              "probabilities": predictions["probabilities"]}
 
 
 def build(args):

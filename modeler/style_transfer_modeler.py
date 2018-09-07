@@ -5,6 +5,7 @@ Licensed under
 
 """
 import importlib
+import sys
 
 import tensorflow as tf
 
@@ -38,6 +39,9 @@ class StyleTransferModeler(Modeler):
       self.create_callbacks(["train_basic", "train_loss", "train_speed"])
     elif self.args.mode == "eval":
       self.create_callbacks([])
+    elif self.args.mode == "infer":
+      self.create_callbacks(["infer_basic",
+                             "infer_display_style_transfer"])
 
   def tensor_size(self, tensor):
     s = tf.shape(tensor)
@@ -199,16 +203,19 @@ class StyleTransferModeler(Modeler):
 
   def model_fn(self, x):
     images = x[0]
-    logits, predictions = self.create_graph_fn(images)
-
-    self.gether_train_vars()
+    stylized_images = self.create_graph_fn(images)
 
     if self.args.mode == "train":
-      loss = self.create_loss_fn(logits, images)
+      self.gether_train_vars()
+      loss = self.create_loss_fn(stylized_images, images)
       grads = self.create_grad_fn(loss)
-
-    return {"loss": loss,
-            "grads": grads}
+      return {"loss": loss,
+              "grads": grads}
+    elif self.args.mode == "eval":
+      sys.exit("Evaluation mode is not allowed for style transfer.")
+    elif self.args.mode == "infer":
+      return {"output": stylized_images,
+              "input": images}
 
 
 def build(args):

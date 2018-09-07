@@ -5,6 +5,9 @@ Licensed under
 Train:
 python demo/style_transfer.py
 
+python demo/style_transfer.py --mode=infer \
+--batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
+--test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg
 """
 import os
 import argparse
@@ -146,6 +149,10 @@ def main():
                       help="Maximum number of checkpoints to save.",
                       type=int,
                       default=1)
+  parser.add_argument("--test_samples",
+                      help="A string of comma seperated testing data. "
+                      "Must be provided for infer mode.",
+                      type=str)
 
   args = parser.parse_args()
   args.dataset_csv = os.path.expanduser(args.dataset_csv)

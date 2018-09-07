@@ -39,7 +39,6 @@ class TrainBasic(Callback):
     max_step = sess.run(max_step_op)
 
     if global_step >= max_step:
-      # print("Training has already reached the maximum steps.")
       sys.exit("Training has already reached the maximum steps.")
     else:
       if global_step == 0:

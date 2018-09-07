@@ -103,6 +103,6 @@ def net(inputs, num_classes,
 
     predictions = {
       'classes': tf.argmax(logits, axis=3),
-      'probability': tf.nn.softmax(logits, dim=3, name='softmax_tensor')}
+      'probabilities': tf.nn.softmax(logits, dim=3, name='softmax_tensor')}
 
     return logits, predictions

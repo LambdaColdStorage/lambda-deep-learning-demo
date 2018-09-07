@@ -26,7 +26,7 @@ class InferBasic(Callback):
     else:
       sys.exit("Can not find checkpoint at " + ckpt_path)
 
-    print("Start evaluation.")
+    print("Start inference.")
 
   def after_run(self, sess, saver):
     pass

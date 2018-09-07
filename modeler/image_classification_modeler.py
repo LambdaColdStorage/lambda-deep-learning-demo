@@ -71,6 +71,7 @@ class ImageClassificationModeler(Modeler):
               "grads": grads,
               "accuracy": accuracy}
     elif self.args.mode == "eval":
+      self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
       accuracy = self.create_eval_metrics_fn(
         predictions, labels)

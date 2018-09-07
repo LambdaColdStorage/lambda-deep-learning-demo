@@ -12,6 +12,7 @@ import importlib
 import tensorflow as tf
 
 from inputter import Inputter
+from augmenter.external import vgg_preprocessing
 
 
 class StyleTransferCSVInputter(Inputter):
@@ -19,6 +20,10 @@ class StyleTransferCSVInputter(Inputter):
     super(StyleTransferCSVInputter, self).__init__(args)
     self.augmenter = importlib.import_module("augmenter." + args.augmenter)
     self.num_samples = -1
+
+    if self.args.mode == "infer":
+      self.test_samples = [os.path.expanduser(x) for x
+                           in self.args.test_samples.split(",")]
 
   def create_nonreplicated_fn(self):
     batch_size = (self.args.batch_size_per_gpu *
@@ -28,14 +33,17 @@ class StyleTransferCSVInputter(Inputter):
 
   def get_num_samples(self):
     if self.num_samples < 0:
-      with open(self.args.dataset_csv) as f:
-        parsed = csv.reader(f, delimiter=",", quotechar="'")
-        self.num_samples = len(list(parsed))
+      if self.args.mode == "infer":
+        self.num_samples = len(self.test_samples)
+      else:
+        with open(self.args.dataset_csv) as f:
+          parsed = csv.reader(f, delimiter=",", quotechar="'")
+          self.num_samples = len(list(parsed))
     return self.num_samples
 
-  def get_samples_fn(self, test_samples):
+  def get_samples_fn(self):
     if self.args.mode == "infer":
-      images_path = test_samples
+      images_path = self.test_samples
     elif self.args.mode == "train" or \
             self.args.mode == "eval":
       assert os.path.exists(self.args.dataset_csv), (
@@ -57,7 +65,8 @@ class StyleTransferCSVInputter(Inputter):
     image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
     if self.args.mode == "infer":
-      pass
+      image = vgg_preprocessing._mean_image_subtraction(
+        image * 255.0)
     else:
       is_training = (self.args.mode == "train")
       image = self.augmenter.augment(image,
@@ -73,7 +82,7 @@ class StyleTransferCSVInputter(Inputter):
                   self.args.num_gpu)
     max_step = (self.get_num_samples() * self.args.epochs // batch_size)
 
-    samples = self.get_samples_fn(test_samples)
+    samples = self.get_samples_fn()
 
     dataset = tf.data.Dataset.from_tensor_slices(samples)
 

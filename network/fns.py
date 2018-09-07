@@ -117,4 +117,4 @@ def net(inputs, data_format):
              if data_format == 'channels_first'
              else outputs)
 
-  return outputs, inputs
+  return outputs
