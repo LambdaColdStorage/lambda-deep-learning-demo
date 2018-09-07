@@ -20,8 +20,7 @@ class ParameterServerRunner(Runner):
     self.num_samples = inputter.get_num_samples()
     self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
     self.modeler.num_samples = self.num_samples
-    self.feed_dict_pre = {}
-    self.run_flag = True
+    self.feed_dict = {}
 
   def create_session_config(self):
     """create session_config
@@ -124,11 +123,40 @@ class ParameterServerRunner(Runner):
           reduced_ops[key] = self.reduce_op(output[key])
         return reduced_ops
 
+  def create_graph(self):
+    reduced_ops = self.replicate_graph(
+      [self.modeler.create_precomputation,
+       self.inputter.create_precomputation],
+      self.inputter.input_fn,
+      self.modeler.model_fn)
+
+    # Create train_op for gradient, keep other ops unchanged
+    self.run_ops = []
+    self.name_ops = []
+    for key in reduced_ops:
+      if key == "grads":
+        minimize_op = self.modeler.optimizer.apply_gradients(
+          reduced_ops[key], global_step=self.modeler.global_step)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        op = tf.group(minimize_op, update_ops)
+      else:
+        op = reduced_ops[key]
+      self.run_ops.append(op)
+      self.name_ops.append(key)
+
+    self.graph = tf.get_default_graph()
+    self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
+    self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
+
+    self.saver = tf.train.Saver(
+      max_to_keep=self.args.keep_checkpoint_max,
+      name="global_saver")
+
   def before_run(self, callbacks, saver):
     for callback in callbacks:
       callback.before_run(self.sess, saver)
 
-    self.run_pre_compute_ops()
+    self.run_feed_dict()
 
   def after_step(self, callbacks, outputs_dict, saver):
     for callback in callbacks:
@@ -138,59 +166,33 @@ class ParameterServerRunner(Runner):
     for callback in callbacks:
       callback.after_run(self.sess, saver)
 
-  def run_pre_compute_ops(self):
-      for key in self.modeler.pre_compute_ops:
-        self.feed_dict_pre[key] = self.sess.run(
-          self.modeler.pre_compute_ops[key])
+  def run_feed_dict(self):
+      for key in self.modeler.feed_dict_ops:
+        self.feed_dict[key] = self.sess.run(
+          self.modeler.feed_dict_ops[key])
 
   def run(self):
-    reduced_ops = self.replicate_graph(
-      [self.modeler.create_precomputation,
-       self.inputter.create_precomputation],
-      self.inputter.input_fn,
-      self.modeler.model_fn)
-
-    # Create train_op for gradient, keep other ops unchanged
-    run_ops = []
-    name_ops = []
-    for key in reduced_ops:
-      if key == "grads":
-        minimize_op = self.modeler.optimizer.apply_gradients(
-          reduced_ops[key], global_step=self.modeler.global_step)
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        op = tf.group(minimize_op, update_ops)
-      else:
-        op = reduced_ops[key]
-      run_ops.append(op)
-      name_ops.append(key)
-
-    graph = tf.get_default_graph()
-    global_step_op = graph.get_tensor_by_name("global_step:0")
-    max_step_op = graph.get_tensor_by_name("max_step:0")
-
-    saver = tf.train.Saver(
-      max_to_keep=self.args.keep_checkpoint_max)
+    self.create_graph()
 
     with tf.Session(config=self.session_config) as self.sess:
 
       # Before run
-      self.before_run(self.modeler.callbacks, saver)
+      self.before_run(self.modeler.callbacks, self.saver)
 
-      global_step = self.sess.run(global_step_op)
-      max_step = self.sess.run(max_step_op)
+      global_step = self.sess.run(self.global_step_op)
+      max_step = self.sess.run(self.max_step_op)
 
-      print("Start running **************************")
       while global_step < max_step:
-        outputs = self.sess.run(run_ops, feed_dict=self.feed_dict_pre)
-        global_step = self.sess.run(global_step_op)
+        outputs = self.sess.run(self.run_ops, feed_dict=self.feed_dict)
+        global_step = self.sess.run(self.global_step_op)
 
         outputs_dict = {}
-        for key, value in zip(name_ops, outputs):
+        for key, value in zip(self.name_ops, outputs):
           outputs_dict[key] = value
 
-        self.after_step(self.modeler.callbacks, outputs_dict, saver)
+        self.after_step(self.modeler.callbacks, outputs_dict, self.saver)
 
-      self.after_run(self.modeler.callbacks, saver)
+      self.after_run(self.modeler.callbacks, self.saver)
 
 
 def build(args, inputter, modeler):

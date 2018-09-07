@@ -28,7 +28,7 @@ class StyleTransferModeler(Modeler):
     self.train_skip_vars = ['vgg_19']
     self.l2_loss_skip_vars = []
     self.train_vars = []
-    self.pre_compute_ops = {}
+    self.feed_dict_ops = {}
     if self.args.mode == "infer":
       self.feature_net_init_flag = False
     else:
@@ -97,9 +97,9 @@ class StyleTransferModeler(Modeler):
       for layer in self.style_layers:
         self.style_features_target[layer] = tf.placeholder(tf.float32)
       self.style_features_target_op = self.compute_style_feature()
-      self.pre_compute_ops = {self.style_features_target[key]:
-                              self.style_features_target_op[key]
-                              for key in self.style_features_target}
+      self.feed_dict_ops = {self.style_features_target[key]:
+                            self.style_features_target_op[key]
+                            for key in self.style_features_target}
 
   def model_fn(self, x):
     images = x[0]

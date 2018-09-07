@@ -23,7 +23,7 @@ class ImageSegmentationModeler(Modeler):
     self.train_skip_vars = []
     self.l2_loss_skip_vars = ["BatchNorm", "preact", "postnorm"]
     self.train_vars = []
-    self.pre_compute_ops = {}
+    self.feed_dict_ops = {}
 
     self.callback_names = ["basic"]
     self.callbacks = []
