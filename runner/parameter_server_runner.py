@@ -15,12 +15,6 @@ class ParameterServerRunner(Runner):
                                                 inputter,
                                                 modeler)
     self.ps_ops = ["Variable", "VariableV2", "AutoReloadVariable"]
-    self.session_config = self.create_session_config()
-    self.sess = None
-    self.num_samples = inputter.get_num_samples()
-    self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
-    self.modeler.num_samples = self.num_samples
-    self.feed_dict = {}
 
   def create_session_config(self):
     """create session_config
@@ -90,49 +84,41 @@ class ParameterServerRunner(Runner):
     else:
       return tf.reduce_mean(x)
 
-  def replicate_graph(self, pre_fns, input_fn, model_fn):
-    with tf.device("/cpu:0"):
+  def replicate_graph(self):
 
-      for fn in pre_fns:
-        fn()
+    if self.args.mode == "infer":
+      pass
+    else:
+      batch = self.inputter.input_fn()
+      output = {}
+      # Map
+      for i in range(self.args.num_gpu):
+        with tf.device(self.assign_to_device("/gpu:{}".format(i),
+                       ps_device="/cpu:0")):
+          # Split input data across multiple devices
+          x = self.batch_split(batch, i)
+          y = self.modeler.model_fn(x)
 
-      if self.args.mode == "infer":
-        pass
-      else:
-        batch = input_fn()
-        output = {}
-        # Map
-        for i in range(self.args.num_gpu):
-          with tf.device(self.assign_to_device("/gpu:{}".format(i),
-                         ps_device="/cpu:0")):
-            # Split input data across multiple devices
-            x = self.batch_split(batch, i)
-            y = model_fn(x)
+          # Gather output across multiple devices
+          if i == 0:
+            for key in y:
+              output[key] = [y[key]]
+          else:
+            for key in y:
+              output[key].append(y[key])
 
-            # Gather output across multiple devices
-            if i == 0:
-              for key in y:
-                output[key] = [y[key]]
-            else:
-              for key in y:
-                output[key].append(y[key])
+      # Reduce
+      reduced_ops = {}
+      for key in output:
+        reduced_ops[key] = self.reduce_op(output[key])
+      return reduced_ops
 
-        # Reduce
-        reduced_ops = {}
-        for key in output:
-          reduced_ops[key] = self.reduce_op(output[key])
-        return reduced_ops
 
-  def create_graph(self):
-    reduced_ops = self.replicate_graph(
-      [self.modeler.create_precomputation,
-       self.inputter.create_precomputation],
-      self.inputter.input_fn,
-      self.modeler.model_fn)
-
+  def collect_ops(self, ops):
     # Create train_op for gradient, keep other ops unchanged
-    self.run_ops = []
-    self.name_ops = []
+    run_ops = []
+    run_ops_names = []
+
     for key in reduced_ops:
       if key == "grads":
         minimize_op = self.modeler.optimizer.apply_gradients(
@@ -141,72 +127,29 @@ class ParameterServerRunner(Runner):
         op = tf.group(minimize_op, update_ops)
       else:
         op = reduced_ops[key]
-      self.run_ops.append(op)
-      self.name_ops.append(key)
+      run_ops.append(op)
+      run_ops_names.append(key)
 
-    self.graph = tf.get_default_graph()
-    self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
-    self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
+    return run_ops, run_ops_names
 
-    self.saver = tf.train.Saver(
-      max_to_keep=self.args.keep_checkpoint_max,
-      name="global_saver")
+  def create_graph(self):
 
-  def before_run(self, callbacks, saver):
-    for callback in callbacks:
-      callback.before_run(self.sess, saver)
+    with tf.device("/cpu:0"):
+      
+      for fn in self.nonreplicated_fns:
+        fn()
 
-    self.run_feed_dict()
+      reduced_ops = self.replicate_graph()
 
-  def before_step(self, callbacks):
-    for callback in callbacks:
-      callback.before_step(self.sess)
+      self.run_ops, self.run_ops_names = self.collect_ops(reduced_ops)
 
-  def after_step(self, callbacks, outputs_dict, saver):
-    for callback in callbacks:
-      callback.after_step(self.sess, outputs_dict, saver)
+      self.graph = tf.get_default_graph()
+      self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
+      self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
 
-  def after_run(self, callbacks, saver):
-    for callback in callbacks:
-      callback.after_run(self.sess, saver)
-
-  def run_feed_dict(self):
-      for key in self.modeler.feed_dict_ops:
-        self.feed_dict[key] = self.sess.run(
-          self.modeler.feed_dict_ops[key])
-
-  def run(self):
-    self.create_graph()
-
-    with tf.Session(config=self.session_config) as self.sess:
-
-      # Before run
-      self.before_run(self.modeler.callbacks, self.saver)
-
-      if self.args.mode == "train":
-        global_step = self.sess.run(self.global_step_op)
-      elif self.args.mode == "eval":
-        global_step = 0
-
-      max_step = self.sess.run(self.max_step_op)
-
-      while global_step < max_step:
-        self.before_step(self.modeler.callbacks)
-
-        outputs = self.sess.run(self.run_ops, feed_dict=self.feed_dict)
-        
-        if self.args.mode == "train":
-          global_step = self.sess.run(self.global_step_op)
-        elif self.args.mode == "eval":
-          global_step = global_step + 1
-
-        outputs_dict = {}
-        for key, value in zip(self.name_ops, outputs):
-          outputs_dict[key] = value
-
-        self.after_step(self.modeler.callbacks, outputs_dict, self.saver)
-
-      self.after_run(self.modeler.callbacks, self.saver)
+      self.saver = tf.train.Saver(
+        max_to_keep=self.args.keep_checkpoint_max,
+        name="global_saver")
 
 
 def build(args, inputter, modeler):

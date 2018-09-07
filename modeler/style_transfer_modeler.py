@@ -86,7 +86,7 @@ class StyleTransferModeler(Modeler):
 
     return self.style_features_target_op
 
-  def create_precomputation(self):
+  def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 

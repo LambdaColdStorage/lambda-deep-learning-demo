@@ -20,7 +20,7 @@ class StyleTransferCSVInputter(Inputter):
     self.augmenter = importlib.import_module("augmenter." + args.augmenter)
     self.num_samples = -1
 
-  def create_precomputation(self):
+  def create_nonreplicated_fn(self):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
     max_step = (self.get_num_samples() * self.args.epochs // batch_size)
