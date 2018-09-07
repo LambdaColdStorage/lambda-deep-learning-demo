@@ -34,7 +34,10 @@ class StyleTransferModeler(Modeler):
     else:
       self.feature_net_init_flag = True
 
-    self.create_callbacks(["basic"])
+    if self.args.mode == "train":
+      self.create_callbacks(["train_basic", "train_loss", "train_speed"])
+    elif self.args.mode == "eval":
+      self.create_callbacks([])
 
   def tensor_size(self, tensor):
     s = tf.shape(tensor)

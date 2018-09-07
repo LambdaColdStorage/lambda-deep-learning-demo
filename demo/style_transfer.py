@@ -58,7 +58,7 @@ def main():
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
-                      default=4)
+                      default=1)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,

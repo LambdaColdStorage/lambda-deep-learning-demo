@@ -183,14 +183,22 @@ class ParameterServerRunner(Runner):
       # Before run
       self.before_run(self.modeler.callbacks, self.saver)
 
-      global_step = self.sess.run(self.global_step_op)
+      if self.args.mode == "train":
+        global_step = self.sess.run(self.global_step_op)
+      elif self.args.mode == "eval":
+        global_step = 0
+
       max_step = self.sess.run(self.max_step_op)
 
       while global_step < max_step:
         self.before_step(self.modeler.callbacks)
 
         outputs = self.sess.run(self.run_ops, feed_dict=self.feed_dict)
-        global_step = self.sess.run(self.global_step_op)
+        
+        if self.args.mode == "train":
+          global_step = self.sess.run(self.global_step_op)
+        elif self.args.mode == "eval":
+          global_step = global_step + 1
 
         outputs_dict = {}
         for key, value in zip(self.name_ops, outputs):

@@ -2,7 +2,13 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
+Train:
+python demo/image_segmentation.py
 
+Evaluation: 
+python demo/image_segmentation.py --mode=eval \
+--num_gpu=1 --epochs=1 \
+--dataset_csv=~/demo/data/camvid/val.csv
 """
 import os
 import argparse
@@ -49,11 +55,11 @@ def main():
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
-                      default=4)
+                      default=1)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
-                      default=100)
+                      default=20)
   parser.add_argument("--shuffle_buffer_size",
                       help="Buffer size for shuffling training images.",
                       type=int,

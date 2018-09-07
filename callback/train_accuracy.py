@@ -9,9 +9,9 @@ import tensorflow as tf
 from callback import Callback
 
 
-class Accuracy(Callback):
+class TrainAccuracy(Callback):
   def __init__(self, args):
-    super(Accuracy, self).__init__(args)
+    super(TrainAccuracy, self).__init__(args)
     self.graph = tf.get_default_graph()
     self.accumulated_accuracy = 0.0
 
@@ -33,14 +33,13 @@ class Accuracy(Callback):
     self.accumulated_accuracy = (self.accumulated_accuracy +
                                  outputs_dict["accuracy"])
 
-    if self.args.mode == "train":
-      every_n_iter = self.args.log_every_n_iter
+    every_n_iter = self.args.log_every_n_iter
 
-      if global_step % every_n_iter == 0:
-        running_accuracy = self.accumulated_accuracy / every_n_iter
-        print("accuracy: " + "{0:.4f}".format(running_accuracy))
-        self.accumulated_accuracy = 0.0
+    if global_step % every_n_iter == 0:
+      running_accuracy = self.accumulated_accuracy / every_n_iter
+      print("accuracy: " + "{0:.4f}".format(running_accuracy))
+      self.accumulated_accuracy = 0.0
 
 
 def build(args):
-  return Accuracy(args)
+  return TrainAccuracy(args)
