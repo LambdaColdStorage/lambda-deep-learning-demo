@@ -34,12 +34,7 @@ class StyleTransferModeler(Modeler):
     else:
       self.feature_net_init_flag = True
 
-    self.callback_names = ["basic"]
-    self.callbacks = []
-    for name in self.callback_names:
-      callback = importlib.import_module(
-        "callback." + name).build(self.args)
-      self.callbacks.append(callback)
+    self.create_callbacks(["basic"])
 
   def tensor_size(self, tensor):
     s = tf.shape(tensor)

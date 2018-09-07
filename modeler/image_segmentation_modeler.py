@@ -25,12 +25,7 @@ class ImageSegmentationModeler(Modeler):
     self.train_vars = []
     self.feed_dict_ops = {}
 
-    self.callback_names = ["basic"]
-    self.callbacks = []
-    for name in self.callback_names:
-      callback = importlib.import_module(
-        "callback." + name).build(self.args)
-      self.callbacks.append(callback)
+    self.create_callbacks(["basic", "accuracy"])
 
   def create_precomputation(self):
     self.global_step = tf.train.get_or_create_global_step()
@@ -46,9 +41,11 @@ class ImageSegmentationModeler(Modeler):
     if self.args.mode == "train":
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss)
+      accuracy = self.create_eval_metrics_fn(predictions, labels)
 
     return {"loss": loss,
-            "grads": grads}
+            "grads": grads,
+            "accuracy": accuracy}
 
   def create_graph_fn(self, input):
     is_training = (self.args.mode == "train")
@@ -56,7 +53,11 @@ class ImageSegmentationModeler(Modeler):
                     is_training=is_training, data_format=self.args.data_format)
 
   def create_eval_metrics_fn(self, predictions, labels):
-    pass
+    equality = tf.equal(predictions["classes"],
+                        labels)
+    accuracy = tf.reduce_mean(tf.cast(equality, tf.float32))
+
+    return accuracy
 
   def create_loss_fn(self, logits, labels):
     logits = tf.reshape(logits, [-1, self.args.num_classes])

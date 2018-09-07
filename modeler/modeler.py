@@ -7,6 +7,7 @@ Licensed under
 from __future__ import print_function
 import abc
 import six
+import importlib
 
 import tensorflow as tf
 
@@ -35,6 +36,13 @@ class Modeler(object):
   @abc.abstractmethod
   def create_loss_fn(self, *argv):
     raise NotImplementedError
+
+  def create_callbacks(self, callback_names):
+    self.callbacks = []
+    for name in callback_names:
+      callback = importlib.import_module(
+        "callback." + name).build(self.args)
+      self.callbacks.append(callback)
 
   def gether_train_vars(self):
     self.train_vars = [v for v in tf.get_collection(
