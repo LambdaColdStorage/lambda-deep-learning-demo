@@ -6,13 +6,17 @@ Licensed under
 """
 import importlib
 
+import tensorflow as tf
 
 class APP(object):
   """ A machine leanring application composed of
       an inputter, a modeler and a runner.
   """
   def __init__(self, args):
+
     self.args = args
+    
+    tf.reset_default_graph()
 
     self.inputter = importlib.import_module(
       "inputter." + args.inputter).build(self.args)

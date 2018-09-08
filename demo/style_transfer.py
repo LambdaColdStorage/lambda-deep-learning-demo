@@ -15,41 +15,17 @@ Infer:
 python demo/style_transfer.py --mode=infer \
 --batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
 --test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg
+
+Tune:
+python demo/style_transfer.py --mode=tune \
+--num_gpu=1
 """
 import os
-import sys
 import argparse
-from six.moves import urllib
-import tarfile
 
 import app
-
-
-def download_and_prepare_data(data_file, data_url, create_parent_folder=True):
-  data_dirname = os.path.dirname(data_file)
-  print("Can not find " + data_file +
-        ", download it now.")
-  if not os.path.isdir(data_dirname):
-    os.makedirs(data_dirname)
-
-  if create_parent_folder:
-    untar_dirname = data_dirname
-  else:
-    untar_dirname = os.path.abspath(os.path.join(data_dirname, os.pardir))
-
-  download_tar_name = os.path.join("/tmp", os.path.basename(data_url))
-
-  def _progress(count, block_size, total_size):
-    sys.stdout.write('\r>> Downloading to %s %.1f%%' % (
-        download_tar_name, 100.0 * count * block_size / total_size))
-    sys.stdout.flush()
-
-  local_tar_name, _ = urllib.request.urlretrieve(data_url,
-                                                 download_tar_name,
-                                                 _progress)
-
-  print("\nExtracting dataset to " + data_dirname)
-  tarfile.open(local_tar_name, 'r:gz').extractall(untar_dirname)
+from tool import downloader
+from tool import tuner
 
 
 def main():
@@ -76,7 +52,7 @@ def main():
                       type=str,
                       help="Choose a network architecture",
                       default="fns")
-  parser.add_argument("--mode", choices=["train", "eval", "infer"],
+  parser.add_argument("--mode", choices=["train", "eval", "infer", "tune"],
                       type=str,
                       help="Choose a job mode from train, eval, and infer.",
                       default="train")
@@ -209,19 +185,22 @@ def main():
 
   # Download data if necessary
   if not os.path.exists(args.dataset_csv):
-    download_and_prepare_data(args.dataset_csv, args.dataset_url, False)
+    downloader.download_and_extract(args.dataset_csv,
+                                    args.dataset_url, False)
   else:
     print("Found " + args.dataset_csv + ".")
 
   if not os.path.exists(args.feature_net_path):
-    download_and_prepare_data(args.feature_net_path,
-                              args.feature_net_url, True)
+    downloader.download_and_extract(args.feature_net_path,
+                                    args.feature_net_url, True)
   else:
     print("Found " + args.feature_net_path + '.')
 
-  demo = app.APP(args)
-
-  demo.run()
+  if args.mode == "tune":
+    tuner.tune(args)
+  else:
+    demo = app.APP(args)
+    demo.run()
 
 
 if __name__ == "__main__":

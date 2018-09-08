@@ -15,38 +15,18 @@ Infer:
 python demo/image_segmentation.py --mode=infer \
 --batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
 --test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
+
+Tune:
+python demo/image_segmentation.py --mode=tune \
+--num_gpu=1
 """
 import os
-import sys
 import argparse
-from six.moves import urllib
-import tarfile
 
 import app
+from tool import downloader
+from tool import tuner
 
-
-def download_and_prepare_data(dataset_csv):
-  dataset_dirname = os.path.dirname(dataset_csv)
-  print("Can not find " + dataset_csv +
-        ", download it now.")
-  if not os.path.isdir(dataset_dirname):
-    os.makedirs(dataset_dirname)
-  untar_dirname = os.path.abspath(os.path.join(dataset_dirname, os.pardir))
-
-  data_url = 'https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz'
-  download_tar_name = os.path.join('/tmp/camvid.tar.gz')
-
-  def _progress(count, block_size, total_size):
-    sys.stdout.write('\r>> Downloading to %s %.1f%%' % (
-        download_tar_name, 100.0 * count * block_size / total_size))
-    sys.stdout.flush()
-
-  local_tar_name, _ = urllib.request.urlretrieve(data_url,
-                                                 download_tar_name,
-                                                 _progress)
-
-  print("\nExtracting dataset to " + dataset_dirname)
-  tarfile.open(local_tar_name, 'r:gz').extractall(untar_dirname)
 
 def main():
   parser = argparse.ArgumentParser(
@@ -72,7 +52,7 @@ def main():
                       type=str,
                       help="Choose a network architecture",
                       default="fcn")
-  parser.add_argument("--mode", choices=["train", "eval", "infer"],
+  parser.add_argument("--mode", choices=["train", "eval", "infer", "tune"],
                       type=str,
                       help="Choose a job mode from train, eval, and infer.",
                       default="train")
@@ -182,6 +162,10 @@ def main():
                       help="A string of comma seperated names for summary",
                       type=str,
                       default="loss,accuracy,learning_rate")
+  parser.add_argument("--dataset_url",
+                      help="URL for downloading data",
+                      default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz")
+
   args = parser.parse_args()
 
   args.dataset_csv = os.path.expanduser(args.dataset_csv)
@@ -190,13 +174,16 @@ def main():
 
   # Download data if necessary
   if not os.path.exists(args.dataset_csv):
-    download_and_prepare_data(args.dataset_csv)
+    downloader.download_and_extract(args.dataset_csv,
+                                    args.dataset_url, False)
   else:
-    print("Found " + args.dataset_csv + ", starting demo.")
+    print("Found " + args.dataset_csv + ".")
 
-  demo = app.APP(args)
-
-  demo.run()
+  if args.mode == "tune":
+    tuner.tune(args)
+  else:
+    demo = app.APP(args)
+    demo.run()
 
 
 if __name__ == "__main__":
