@@ -5,7 +5,6 @@ Licensed under
 
 """
 import importlib
-import sys
 
 import tensorflow as tf
 
@@ -36,9 +35,11 @@ class StyleTransferModeler(Modeler):
       self.feature_net_init_flag = True
 
     if self.args.mode == "train":
-      self.create_callbacks(["train_basic", "train_loss", "train_speed"])
+      self.create_callbacks(["train_basic", "train_loss", "train_speed",
+                             "train_summary"])
     elif self.args.mode == "eval":
-      self.create_callbacks([])
+      self.create_callbacks(["eval_basic", "eval_loss",
+                             "eval_speed", "eval_summary"])
     elif self.args.mode == "infer":
       self.create_callbacks(["infer_basic",
                              "infer_display_style_transfer"])
@@ -94,7 +95,7 @@ class StyleTransferModeler(Modeler):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
-    if self.args.mode == "train":
+    if self.args.mode == "train" or self.args.mode == "eval":
       self.style_features_target = {}
       for layer in self.style_layers:
         self.style_features_target[layer] = tf.placeholder(tf.float32)
@@ -210,9 +211,12 @@ class StyleTransferModeler(Modeler):
       loss = self.create_loss_fn(stylized_images, images)
       grads = self.create_grad_fn(loss)
       return {"loss": loss,
-              "grads": grads}
+              "grads": grads,
+              "learning_rate": self.learning_rate}
     elif self.args.mode == "eval":
-      sys.exit("Evaluation mode is not allowed for style transfer.")
+      self.gether_train_vars()
+      loss = self.create_loss_fn(stylized_images, images)
+      return {"loss": loss}
     elif self.args.mode == "infer":
       return {"output": stylized_images,
               "input": images}

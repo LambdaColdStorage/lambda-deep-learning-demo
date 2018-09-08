@@ -3,8 +3,15 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 Train:
-python demo/style_transfer.py
+python demo/style_transfer.py \
+--num_gpu=4
 
+Eval:
+python demo/style_transfer.py --mode=eval \
+--num_gpu=4 --epochs=1 \
+--dataset_csv=~/demo/data/mscoco_fns/eval2014.csv
+
+Infer:
 python demo/style_transfer.py --mode=infer \
 --batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
 --test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg
@@ -136,7 +143,7 @@ def main():
   parser.add_argument("--log_every_n_iter",
                       help="Number of steps to log",
                       type=int,
-                      default=10)
+                      default=2)
   parser.add_argument("--save_summary_steps",
                       help="Number of steps to save summary.",
                       type=int,
@@ -153,7 +160,10 @@ def main():
                       help="A string of comma seperated testing data. "
                       "Must be provided for infer mode.",
                       type=str)
-
+  parser.add_argument("--summary_names",
+                      help="A string of comma seperated names for summary",
+                      type=str,
+                      default="loss,learning_rate")
   args = parser.parse_args()
   args.dataset_csv = os.path.expanduser(args.dataset_csv)
   args.model_dir = os.path.expanduser(args.model_dir)

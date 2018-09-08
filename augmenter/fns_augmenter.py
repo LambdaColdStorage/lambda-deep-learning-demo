@@ -16,6 +16,13 @@ def augment(image, output_height, output_width,
     image = vgg_preprocessing._central_crop(
       [image], output_height, output_width)[0]
     image = tf.reshape(image, [output_height, output_width, 3])
+  else:
+    resize_side = resize_side_max
+    image = vgg_preprocessing._aspect_preserving_resize(
+      image, resize_side, 3, 'bilinear')
+    image = vgg_preprocessing._central_crop(
+      [image], output_height, output_width)[0]
+    image = tf.reshape(image, [output_height, output_width, 3])
 
   image = image * 255.0
   image = vgg_preprocessing._mean_image_subtraction(image)
