@@ -20,6 +20,27 @@ Tune:
 python demo/image_classification.py --mode=tune \
 --num_gpu=1
 
+Transfer Learning:
+python demo/image_classification.py --mode=train \
+--num_gpu=1 --epochs=20 --piecewise_boundaries=10 \
+--network=resnet50 \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 \
+--num_classes=120 \
+--dataset_csv=~/demo/data/StanfordDogs120/train.csv \
+--model_dir=~/demo/model/image_classification_StanfordDog120 \
+--pretrained_ckpt=~/demo/model/resnet_v2_50_2017_04_14 \
+--skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
+--trainable_var_list="resnet_v2_50/logits"
+
+python demo/image_classification.py --mode=eval \
+--num_gpu=1 --epochs=1 \
+--network=resnet50 \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 \
+--num_classes=120 \
+--dataset_csv=~/demo/data/StanfordDogs120/eval.csv \
+--model_dir=~/demo/model/image_classification_StanfordDog120
 """
 import os
 import argparse
@@ -49,7 +70,7 @@ def main():
                       type=str,
                       help="Name of the augmenter",
                       default="cifar_augmenter")
-  parser.add_argument("--network", choices=["resnet32"],
+  parser.add_argument("--network", choices=["resnet32", "resnet50"],
                       type=str,
                       help="Choose a network architecture",
                       default="resnet32")
@@ -150,9 +171,20 @@ def main():
   parser.add_argument("--dataset_url",
                       help="URL for downloading data",
                       default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz")
-
+  parser.add_argument("--pretrained_ckpt",
+                      help="Path to pretrained network for transfer learning",
+                      type=str,
+                      default="")
+  parser.add_argument("--skip_pretrained_var_list",
+                      help="Variables to skip in restoring from pretrained model",
+                      type=str,
+                      default="")
+  parser.add_argument("--trainable_var_list",
+                      help="List of trainable Variables",
+                      type=str,
+                      default="")
   args = parser.parse_args()
-
+  args.dataset_csv = os.path.expanduser(args.dataset_csv)
   args.model_dir = os.path.expanduser(args.model_dir)
   args.summary_names = args.summary_names.split(",")
 

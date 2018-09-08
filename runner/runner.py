@@ -70,6 +70,9 @@ class Runner(object):
   def run(self):
     self.create_graph()
 
+    # for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
+    #   print (i.name)   # i.name if you want just a name
+
     with tf.Session(config=self.session_config) as self.sess:
 
       # Before run

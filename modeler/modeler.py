@@ -45,11 +45,22 @@ class Modeler(object):
       self.callbacks.append(callback)
 
   def gether_train_vars(self):
-    self.train_vars = [v for v in tf.get_collection(
-                       tf.GraphKeys.TRAINABLE_VARIABLES)
-                       if not any(x in v.name
-                                  for x in
-                                  self.train_skip_vars)]
+
+    self.train_vars = tf.get_collection(
+      tf.GraphKeys.TRAINABLE_VARIABLES)
+
+    if self.train_skip_vars:
+      self.train_vars = [v for v in self.train_vars
+                         if not any(x in v.name
+                                    for x in
+                                    self.train_skip_vars)]
+
+    if self.args.trainable_var_list:
+      trainable_var_list = self.args.trainable_var_list.split(",")
+      self.train_vars = [v for v in self.train_vars
+                         if any(x in v.name
+                                for x in
+                                trainable_var_list)]
 
   def create_optimizer(self, learning_rate):
     # Setup optimizer

@@ -8,6 +8,7 @@ from __future__ import print_function
 
 import os
 import sys
+import glob
 
 import tensorflow as tf
 
@@ -32,8 +33,8 @@ class TrainBasic(Callback):
                       self.args.model_dir))
       print("Parameters restored.")
     else:
-        print("Initialize global variables ... ")
-        sess.run(tf.global_variables_initializer())
+      print("Initialize global variables ... ")
+      sess.run(tf.global_variables_initializer())
 
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     max_step_op = self.graph.get_tensor_by_name("max_step:0")
@@ -45,6 +46,39 @@ class TrainBasic(Callback):
     else:
       if global_step == 0:
         print("Start training from step " + str(global_step))
+
+        # Restore some weights from pre-trained model
+        if self.args.pretrained_ckpt:
+          self.args.pretrained_ckpt = os.path.expanduser(
+            self.args.pretrained_ckpt)
+          print("Try to initialize weights from pre-trained model.")
+          if tf.train.checkpoint_exists(
+            os.path.join(self.args.pretrained_ckpt, "*ckpt*")):
+            variables_to_restore = {v.name.split(":")[0]: v
+                                    for v in tf.get_collection(
+                                        tf.GraphKeys.GLOBAL_VARIABLES)}
+            if self.args.skip_pretrained_var_list:
+              skip_pretrained_var_list = self.args.skip_pretrained_var_list.split(",")
+              variables_to_restore = {
+                v: variables_to_restore[v] for
+                v in variables_to_restore if not
+                any(x in v for
+                    x in skip_pretrained_var_list)}
+
+            if variables_to_restore:
+              saver_pre_trained = tf.train.Saver(
+                var_list=variables_to_restore)
+              for file in glob.glob(self.args.pretrained_ckpt + "/*.ckpt"):
+                ckpt_file = file
+              saver_pre_trained.restore(sess,
+                  os.path.join(self.args.pretrained_ckpt, ckpt_file))
+
+              print("Weights restored from pre-trained model.")
+            else:
+              print("Found no useful weights")
+          else:
+            print("Can't find pre-trained model at " + self.args.pretrained_ckpt)
+            print("Initialize weight randomly.")
       else:
         print("Resume training from step " + str(global_step))
 

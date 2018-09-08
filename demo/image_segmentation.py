@@ -167,7 +167,6 @@ def main():
                       default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz")
 
   args = parser.parse_args()
-
   args.dataset_csv = os.path.expanduser(args.dataset_csv)
   args.model_dir = os.path.expanduser(args.model_dir)
   args.summary_names = args.summary_names.split(",")
