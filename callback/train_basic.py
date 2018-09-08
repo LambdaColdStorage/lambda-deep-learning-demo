@@ -4,6 +4,8 @@ Licensed under
 ==========================================================================
 
 """
+from __future__ import print_function
+
 import os
 import sys
 
@@ -51,7 +53,7 @@ class TrainBasic(Callback):
     max_step = sess.run(max_step_op)
 
     if max_step % self.args.save_checkpoints_steps != 0:
-      print("Saving checkpoint for the final step ...")
+      print("\nSaving checkpoint for the final step ...")
       save_path = saver.save(sess,
                              os.path.join(self.args.model_dir,
                                           "model.ckpt"),

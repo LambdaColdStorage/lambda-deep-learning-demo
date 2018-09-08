@@ -65,7 +65,7 @@ def main():
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
-                      default=3)
+                      default=5)
   parser.add_argument("--shuffle_buffer_size",
                       help="Buffer size for shuffling training images.",
                       type=int,
@@ -116,7 +116,7 @@ def main():
   parser.add_argument("--log_every_n_iter",
                       help="Number of steps to log",
                       type=int,
-                      default=10)
+                      default=2)
   parser.add_argument("--save_summary_steps",
                       help="Number of steps to save summary.",
                       type=int,

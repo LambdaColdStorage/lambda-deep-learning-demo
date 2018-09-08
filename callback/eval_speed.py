@@ -42,11 +42,13 @@ class TrainSpeed(Callback):
     every_n_iter = self.args.log_every_n_iter
 
     if self.global_step % every_n_iter == 0:
-      num_samples_per_sec = self.accumulated_num_samples / self.accumulated_time
-      print("speed: " + "{0:.4f}".format(num_samples_per_sec) +
-            " samples/sec.")
+      num_samples_per_sec = (self.accumulated_num_samples /
+                             self.accumulated_time)
       self.accumulated_num_samples = 0.0
       self.accumulated_time = 0.0
+      return {"speed": "Speed: " + "{0:.4f}".format(num_samples_per_sec)}
+    else:
+      return {}
 
 
 def build(args):

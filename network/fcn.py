@@ -1,7 +1,6 @@
 import tensorflow as tf
 
-BASE_FILTER = 64
-# DATA_FORMAT = 'channels_first'
+BASE_FILTER = 16
 
 
 def net(inputs, num_classes,

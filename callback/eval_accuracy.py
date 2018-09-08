@@ -21,7 +21,7 @@ class RunningAccuracy(Callback):
 
   def after_run(self, sess, saver):
     eval_accuracy = self.accumulated_accuracy / self.global_step
-    print("Evaluation accuracy: " + "{0:.4f}".format(eval_accuracy))
+    print("\nEvaluation accuracy: " + "{0:.4f}".format(eval_accuracy))
 
   def before_step(self, sess):
     pass
@@ -37,7 +37,9 @@ class RunningAccuracy(Callback):
 
     if self.global_step % every_n_iter == 0:
       running_accuracy = self.accumulated_accuracy / self.global_step
-      print("accuracy: " + "{0:.4f}".format(running_accuracy))
+      return {"accuracy": "Accuracy: " + "{0:.4f}".format(running_accuracy)}
+    else:
+      return {}
 
 
 def build(args):

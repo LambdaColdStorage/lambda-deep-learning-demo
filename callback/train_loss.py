@@ -34,8 +34,11 @@ class TrainLoss(Callback):
 
     if global_step % every_n_iter == 0:
       loss = self.accumulated_loss / every_n_iter
-      print("loss: " + "{0:.4f}".format(loss))
       self.accumulated_loss = 0.0
+      # print("loss: " + "{0:.4f}".format(loss))
+      return {"loss": "Loss: " + "{0:.4f}".format(loss)}
+    else:
+      return {}
 
 
 def build(args):

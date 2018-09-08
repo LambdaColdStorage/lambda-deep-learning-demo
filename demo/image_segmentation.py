@@ -56,15 +56,11 @@ def main():
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
-                      default=32)
+                      default=16)
   parser.add_argument("--num_gpu",
                       help="Number of GPUs.",
                       type=int,
                       default=4)
-  parser.add_argument("--epochs",
-                      help="Number of epochs.",
-                      type=int,
-                      default=20)
   parser.add_argument("--shuffle_buffer_size",
                       help="Buffer size for shuffling training images.",
                       type=int,
@@ -117,9 +113,13 @@ def main():
                       help="Initial learning rate in training.",
                       type=float,
                       default=0.1)
+  parser.add_argument("--epochs",
+                      help="Number of epochs.",
+                      type=int,
+                      default=200)
   parser.add_argument("--piecewise_boundaries",
                       help="Epochs to decay learning rate",
-                      default="2")
+                      default="100")
   parser.add_argument("--piecewise_learning_rate_decay",
                       help="Decay ratio for learning rate",
                       default="1.0,0.1")
@@ -131,7 +131,7 @@ def main():
   parser.add_argument("--log_every_n_iter",
                       help="Number of steps to log",
                       type=int,
-                      default=10)
+                      default=2)
   parser.add_argument("--save_summary_steps",
                       help="Number of steps to save summary.",
                       type=int,

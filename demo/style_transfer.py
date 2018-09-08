@@ -64,10 +64,6 @@ def main():
                       help="Number of GPUs.",
                       type=int,
                       default=4)
-  parser.add_argument("--epochs",
-                      help="Number of epochs.",
-                      type=int,
-                      default=1)
   parser.add_argument("--shuffle_buffer_size",
                       help="Buffer size for shuffling training images.",
                       type=int,
@@ -122,9 +118,13 @@ def main():
                       help="Initial learning rate in training.",
                       type=float,
                       default=0.01)
+  parser.add_argument("--epochs",
+                      help="Number of epochs.",
+                      type=int,
+                      default=10)
   parser.add_argument("--piecewise_boundaries",
                       help="Epochs to decay learning rate",
-                      default="2")
+                      default="5")
   parser.add_argument("--piecewise_learning_rate_decay",
                       help="Decay ratio for learning rate",
                       default="1.0,0.1")

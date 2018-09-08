@@ -37,8 +37,10 @@ class TrainAccuracy(Callback):
 
     if global_step % every_n_iter == 0:
       running_accuracy = self.accumulated_accuracy / every_n_iter
-      print("accuracy: " + "{0:.4f}".format(running_accuracy))
       self.accumulated_accuracy = 0.0
+      return {"accuracy": "Accuracy: " + "{0:.4f}".format(running_accuracy)}
+    else:
+      return {}
 
 
 def build(args):

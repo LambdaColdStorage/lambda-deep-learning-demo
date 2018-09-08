@@ -4,6 +4,9 @@ Licensed under
 ==========================================================================
 
 """
+from __future__ import print_function
+import sys
+
 import tensorflow as tf
 
 
@@ -41,8 +44,16 @@ class Runner(object):
     for key, value in zip(self.run_ops_names, self.outputs):
       outputs_dict[key] = value
 
+    print_msg = "\r"
     for callback in callbacks:
-      callback.after_step(self.sess, outputs_dict, self.saver)
+      return_dict = callback.after_step(self.sess, outputs_dict, self.saver)
+      if return_dict:
+        for key in return_dict:
+          print_msg = print_msg + return_dict[key] + " "
+
+    if len(print_msg) > 0:
+      print(print_msg, end='')
+      sys.stdout.flush()
 
   def after_run(self, callbacks):
     for callback in callbacks:
