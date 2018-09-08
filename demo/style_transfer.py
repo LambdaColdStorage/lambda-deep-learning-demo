@@ -17,9 +17,39 @@ python demo/style_transfer.py --mode=infer \
 --test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg
 """
 import os
+import sys
 import argparse
+from six.moves import urllib
+import tarfile
 
 import app
+
+
+def download_and_prepare_data(data_file, data_url, create_parent_folder=True):
+  data_dirname = os.path.dirname(data_file)
+  print("Can not find " + data_file +
+        ", download it now.")
+  if not os.path.isdir(data_dirname):
+    os.makedirs(data_dirname)
+
+  if create_parent_folder:
+    untar_dirname = data_dirname
+  else:
+    untar_dirname = os.path.abspath(os.path.join(data_dirname, os.pardir))
+
+  download_tar_name = os.path.join("/tmp", os.path.basename(data_url))
+
+  def _progress(count, block_size, total_size):
+    sys.stdout.write('\r>> Downloading to %s %.1f%%' % (
+        download_tar_name, 100.0 * count * block_size / total_size))
+    sys.stdout.flush()
+
+  local_tar_name, _ = urllib.request.urlretrieve(data_url,
+                                                 download_tar_name,
+                                                 _progress)
+
+  print("\nExtracting dataset to " + data_dirname)
+  tarfile.open(local_tar_name, 'r:gz').extractall(untar_dirname)
 
 
 def main():
@@ -164,11 +194,30 @@ def main():
                       help="A string of comma seperated names for summary",
                       type=str,
                       default="loss,learning_rate")
+  parser.add_argument("--dataset_url",
+                      help="URL for downloading data",
+                      default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz")
+  parser.add_argument("--feature_net_url",
+                      help="URL for downloading pre-trained feature_net",
+                      default="http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz")
+
   args = parser.parse_args()
   args.dataset_csv = os.path.expanduser(args.dataset_csv)
   args.model_dir = os.path.expanduser(args.model_dir)
   args.feature_net_path = os.path.expanduser(args.feature_net_path)
   args.style_image_path = os.path.expanduser(args.style_image_path)
+
+  # Download data if necessary
+  if not os.path.exists(args.dataset_csv):
+    download_and_prepare_data(args.dataset_csv, args.dataset_url, False)
+  else:
+    print("Found " + args.dataset_csv + ".")
+
+  if not os.path.exists(args.feature_net_path):
+    download_and_prepare_data(args.feature_net_path,
+                              args.feature_net_url, True)
+  else:
+    print("Found " + args.feature_net_path + '.')
 
   demo = app.APP(args)
 

@@ -17,10 +17,36 @@ python demo/image_segmentation.py --mode=infer \
 --test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
 """
 import os
+import sys
 import argparse
+from six.moves import urllib
+import tarfile
 
 import app
 
+
+def download_and_prepare_data(dataset_csv):
+  dataset_dirname = os.path.dirname(dataset_csv)
+  print("Can not find " + dataset_csv +
+        ", download it now.")
+  if not os.path.isdir(dataset_dirname):
+    os.makedirs(dataset_dirname)
+  untar_dirname = os.path.abspath(os.path.join(dataset_dirname, os.pardir))
+
+  data_url = 'https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz'
+  download_tar_name = os.path.join('/tmp/camvid.tar.gz')
+
+  def _progress(count, block_size, total_size):
+    sys.stdout.write('\r>> Downloading to %s %.1f%%' % (
+        download_tar_name, 100.0 * count * block_size / total_size))
+    sys.stdout.flush()
+
+  local_tar_name, _ = urllib.request.urlretrieve(data_url,
+                                                 download_tar_name,
+                                                 _progress)
+
+  print("\nExtracting dataset to " + dataset_dirname)
+  tarfile.open(local_tar_name, 'r:gz').extractall(untar_dirname)
 
 def main():
   parser = argparse.ArgumentParser(
@@ -161,6 +187,12 @@ def main():
   args.dataset_csv = os.path.expanduser(args.dataset_csv)
   args.model_dir = os.path.expanduser(args.model_dir)
   args.summary_names = args.summary_names.split(",")
+
+  # Download data if necessary
+  if not os.path.exists(args.dataset_csv):
+    download_and_prepare_data(args.dataset_csv)
+  else:
+    print("Found " + args.dataset_csv + ", starting demo.")
 
   demo = app.APP(args)
 
