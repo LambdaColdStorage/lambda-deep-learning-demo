@@ -120,7 +120,7 @@ def main():
   parser.add_argument("--save_summary_steps",
                       help="Number of steps to save summary.",
                       type=int,
-                      default=10)
+                      default=2)
   parser.add_argument("--save_checkpoints_steps",
                       help="Number of steps to save checkpoints",
                       type=int,
@@ -136,10 +136,15 @@ def main():
                       help="A string of comma seperated testing data. "
                       "Must be provided for infer mode.",
                       type=str)
+  parser.add_argument("--summary_names",
+                      help="A string of comma seperated names for summary",
+                      type=str,
+                      default="loss,accuracy,learning_rate")
   args = parser.parse_args()
 
   args.dataset_csv = os.path.expanduser(args.dataset_csv)
   args.model_dir = os.path.expanduser(args.model_dir)
+  args.summary_names = args.summary_names.split(",")
 
   demo = app.APP(args)
 

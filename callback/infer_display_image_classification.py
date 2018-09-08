@@ -17,13 +17,13 @@ class InferDisplayImageClassification(Callback):
   def before_run(self, sess, saver):
     pass
 
-  def after_run(self, sess, saver):
+  def after_run(self, sess, saver, summary_writer):
     pass
 
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver):
+  def after_step(self, sess, outputs_dict, saver, summary_writer):
     for p, c in zip(outputs_dict["probabilities"],
                     outputs_dict["classes"]):
       print("Predict: " + str(c) + ", Probability: " + str(p[c]))

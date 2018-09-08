@@ -9,9 +9,9 @@ import tensorflow as tf
 from callback import Callback
 
 
-class RunningAccuracy(Callback):
+class EvalAccuracy(Callback):
   def __init__(self, args):
-    super(RunningAccuracy, self).__init__(args)
+    super(EvalAccuracy, self).__init__(args)
     self.graph = tf.get_default_graph()
     self.accumulated_accuracy = 0.0
     self.global_step = 0.0
@@ -19,14 +19,14 @@ class RunningAccuracy(Callback):
   def before_run(self, sess, saver):
     pass
 
-  def after_run(self, sess, saver):
+  def after_run(self, sess, saver, summary_writer):
     eval_accuracy = self.accumulated_accuracy / self.global_step
-    print("\nEvaluation accuracy: " + "{0:.4f}".format(eval_accuracy))
+    print("Evaluation accuracy: " + "{0:.4f}".format(eval_accuracy))
 
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver):
+  def after_step(self, sess, outputs_dict, saver, summary_writer):
 
     self.global_step = self.global_step + 1
 
@@ -43,4 +43,4 @@ class RunningAccuracy(Callback):
 
 
 def build(args):
-  return RunningAccuracy(args)
+  return EvalAccuracy(args)

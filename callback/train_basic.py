@@ -48,7 +48,7 @@ class TrainBasic(Callback):
       else:
         print("Resume training from step " + str(global_step))
 
-  def after_run(self, sess, saver):
+  def after_run(self, sess, saver, summary_writer):
     max_step_op = self.graph.get_tensor_by_name("max_step:0")
     max_step = sess.run(max_step_op)
 
@@ -63,7 +63,7 @@ class TrainBasic(Callback):
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver):
+  def after_step(self, sess, outputs_dict, saver, summary_writer):
 
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     global_step = sess.run(global_step_op)

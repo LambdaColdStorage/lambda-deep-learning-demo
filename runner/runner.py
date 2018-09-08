@@ -27,6 +27,8 @@ class Runner(object):
                               self.inputter.create_nonreplicated_fn]
     self.run_ops = []
     self.run_ops_names = []
+    self.saver = None
+    self.summary_writer = None
 
   def before_run(self, callbacks):
     for callback in callbacks:
@@ -46,7 +48,8 @@ class Runner(object):
 
     print_msg = "\r"
     for callback in callbacks:
-      return_dict = callback.after_step(self.sess, outputs_dict, self.saver)
+      return_dict = callback.after_step(self.sess, outputs_dict,
+                                        self.saver, self.summary_writer)
       if return_dict:
         for key in return_dict:
           print_msg = print_msg + return_dict[key] + " "
@@ -57,7 +60,7 @@ class Runner(object):
 
   def after_run(self, callbacks):
     for callback in callbacks:
-      callback.after_run(self.sess, self.saver)
+      callback.after_run(self.sess, self.saver, self.summary_writer)
 
   def run_feed_dict(self):
       for key in self.modeler.feed_dict_ops:

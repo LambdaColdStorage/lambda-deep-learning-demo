@@ -9,37 +9,37 @@ import tensorflow as tf
 from callback import Callback
 
 
-class TrainLoss(Callback):
+class EvalLoss(Callback):
   def __init__(self, args):
-    super(TrainLoss, self).__init__(args)
+    super(EvalLoss, self).__init__(args)
     self.graph = tf.get_default_graph()
     self.accumulated_loss = 0.0
+    self.global_step = 0.0
 
   def before_run(self, sess, saver):
     pass
 
   def after_run(self, sess, saver, summary_writer):
-    pass
+    eval_loss = self.accumulated_loss / self.global_step
+    print("Evaluation loss: " + "{0:.4f}".format(eval_loss))
 
   def before_step(self, sess):
     pass
 
   def after_step(self, sess, outputs_dict, saver, summary_writer):
-    global_step_op = self.graph.get_tensor_by_name("global_step:0")
-    global_step = sess.run(global_step_op)
+    self.global_step = self.global_step + 1
 
-    self.accumulated_loss = self.accumulated_loss + outputs_dict["loss"]
+    self.accumulated_loss = (self.accumulated_loss +
+                             outputs_dict["loss"])
 
     every_n_iter = self.args.log_every_n_iter
 
-    if global_step % every_n_iter == 0:
-      loss = self.accumulated_loss / every_n_iter
-      self.accumulated_loss = 0.0
-      # print("loss: " + "{0:.4f}".format(loss))
-      return {"loss": "Loss: " + "{0:.4f}".format(loss)}
+    if self.global_step % every_n_iter == 0:
+      running_loss = self.accumulated_loss / self.global_step
+      return {"loss": "Loss: " + "{0:.4f}".format(running_loss)}
     else:
       return {}
 
 
 def build(args):
-  return TrainLoss(args)
+  return EvalLoss(args)

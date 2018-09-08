@@ -11,9 +11,9 @@ import tensorflow as tf
 from callback import Callback
 
 
-class TrainSpeed(Callback):
+class EvalSpeed(Callback):
   def __init__(self, args):
-    super(TrainSpeed, self).__init__(args)
+    super(EvalSpeed, self).__init__(args)
     self.graph = tf.get_default_graph()
     self.accumulated_num_samples = 0.0
     self.accumulated_time = 0.0
@@ -23,13 +23,13 @@ class TrainSpeed(Callback):
   def before_run(self, sess, saver):
     pass
 
-  def after_run(self, sess, saver):
+  def after_run(self, sess, saver, summary_writer):
     pass
 
   def before_step(self, sess):
     self.time_before_step = time.time()
 
-  def after_step(self, sess, outputs_dict, saver):
+  def after_step(self, sess, outputs_dict, saver, summary_writer):
     self.time_after_step = time.time()
 
     self.global_step = self.global_step + 1
@@ -52,4 +52,4 @@ class TrainSpeed(Callback):
 
 
 def build(args):
-  return TrainSpeed(args)
+  return EvalSpeed(args)

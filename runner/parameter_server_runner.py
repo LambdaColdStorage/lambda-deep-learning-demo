@@ -4,6 +4,8 @@ Licensed under
 ==========================================================================
 
 """
+import os
+
 import tensorflow as tf
 
 from runner import Runner
@@ -118,6 +120,12 @@ class ParameterServerRunner(Runner):
         reduced_ops[key] = self.reduce_op(output[key])
       return reduced_ops
 
+  def collect_summary(self, run_ops_names, run_ops):
+    for name, op in zip(run_ops_names, run_ops):
+      if name in self.args.summary_names:
+        tf.summary.scalar(name, op)
+    return tf.summary.merge_all()
+
   def collect_ops(self, ops):
     # Create train_op for gradient, keep other ops unchanged
     run_ops = []
@@ -134,6 +142,11 @@ class ParameterServerRunner(Runner):
       run_ops.append(op)
       run_ops_names.append(key)
 
+    if self.args.mode == "train":
+      summary_op = self.collect_summary(run_ops_names, run_ops)
+      run_ops.append(summary_op)
+      run_ops_names.append("summary")
+
     return run_ops, run_ops_names
 
   def create_graph(self):
@@ -149,6 +162,15 @@ class ParameterServerRunner(Runner):
       self.graph = tf.get_default_graph()
       self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
       self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
+
+      if self.args.mode == "train":
+        self.summary_writer = tf.summary.FileWriter(
+          self.args.model_dir,
+          graph=self.graph)
+      elif self.args.mode == "eval":
+        self.summary_writer = tf.summary.FileWriter(
+          os.path.join(self.args.model_dir, "eval"),
+          graph=self.graph)
 
       self.saver = tf.train.Saver(
         max_to_keep=self.args.keep_checkpoint_max,

@@ -40,13 +40,13 @@ class InferDisplayStyleTransfer(Callback):
   def before_run(self, sess, saver):
     pass
 
-  def after_run(self, sess, saver):
+  def after_run(self, sess, saver, summary_writer):
     pass
 
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver):
+  def after_step(self, sess, outputs_dict, saver, summary_writer):
     for input_image, output_image in zip(
       outputs_dict["input"], outputs_dict["output"]):
 

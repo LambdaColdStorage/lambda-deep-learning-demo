@@ -102,7 +102,7 @@ class Modeler(object):
       tf.cast(global_step, tf.int32), boundaries, values)
 
     tf.identity(learning_rate, name="learning_rate")
-    tf.summary.scalar("learning_rate", learning_rate)
+    # tf.summary.scalar("learning_rate", learning_rate)
 
     return learning_rate
 

@@ -22,13 +22,13 @@ class TrainSpeed(Callback):
   def before_run(self, sess, saver):
     pass
 
-  def after_run(self, sess, saver):
+  def after_run(self, sess, saver, summary_writer):
     pass
 
   def before_step(self, sess):
     self.time_before_step = time.time()
 
-  def after_step(self, sess, outputs_dict, saver):
+  def after_step(self, sess, outputs_dict, saver, summary_writer):
     self.time_after_step = time.time()
 
     global_step_op = self.graph.get_tensor_by_name("global_step:0")

@@ -28,13 +28,13 @@ class EvalBasic(Callback):
 
     print("Start evaluation.")
 
-  def after_run(self, sess, saver):
-    pass
+  def after_run(self, sess, saver, summary_writer):
+    print("\n")
 
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver):
+  def after_step(self, sess, outputs_dict, saver, summary_writer):
     pass
 
 

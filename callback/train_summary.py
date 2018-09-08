@@ -4,39 +4,36 @@ Licensed under
 ==========================================================================
 
 """
-import os
-import sys
-
 import tensorflow as tf
 
 from callback import Callback
 
 
-class InferBasic(Callback):
+class TrainSummary(Callback):
   def __init__(self, args):
-    super(InferBasic, self).__init__(args)
+    super(TrainSummary, self).__init__(args)
     self.graph = tf.get_default_graph()
 
   def before_run(self, sess, saver):
-    ckpt_path = os.path.join(self.args.model_dir, "*ckpt*")
-    if tf.train.checkpoint_exists(ckpt_path):
-      saver.restore(sess,
-                    tf.train.latest_checkpoint(self.args.model_dir))
-      print("Parameters restored.")
-    else:
-      sys.exit("Can not find checkpoint at " + ckpt_path)
-
-    print("Start inference.")
+    pass
 
   def after_run(self, sess, saver, summary_writer):
-    pass
+    summary_writer.flush()
+    summary_writer.close()
 
   def before_step(self, sess):
     pass
 
   def after_step(self, sess, outputs_dict, saver, summary_writer):
-    pass
+
+    global_step_op = self.graph.get_tensor_by_name("global_step:0")
+
+    global_step = sess.run(global_step_op)
+
+    if global_step % self.args.save_summary_steps == 0:
+      summary_writer.add_summary(outputs_dict["summary"],
+                                 global_step)
 
 
 def build(args):
-  return InferBasic(args)
+  return TrainSummary(args)

@@ -27,9 +27,12 @@ class ImageSegmentationModeler(Modeler):
 
     if self.args.mode == "train":
       self.create_callbacks(["train_basic", "train_loss",
-                             "train_accuracy", "train_speed"])
+                             "train_accuracy", "train_speed",
+                             "train_summary"])
     elif self.args.mode == "eval":
-      self.create_callbacks(["eval_basic", "eval_accuracy", "eval_speed"])
+      self.create_callbacks(["eval_basic", "eval_loss",
+                             "eval_accuracy", "eval_speed",
+                             "eval_summary"])
     elif self.args.mode == "infer":
       self.create_callbacks(["infer_basic",
                              "infer_display_image_segmentation"])
@@ -77,7 +80,8 @@ class ImageSegmentationModeler(Modeler):
         predictions, labels)
       return {"loss": loss,
               "grads": grads,
-              "accuracy": accuracy}
+              "accuracy": accuracy,
+              "learning_rate": self.learning_rate}
     elif self.args.mode == "eval":
       self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
