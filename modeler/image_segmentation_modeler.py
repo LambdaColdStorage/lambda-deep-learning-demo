@@ -15,16 +15,10 @@ from modeler import Modeler
 class ImageSegmentationModeler(Modeler):
   def __init__(self, args):
     super(ImageSegmentationModeler, self).__init__(args)
-    self.net = getattr(importlib.import_module("network." + self.args.network),
-                       "net")
+
     self.class_names = self.args.class_names.split(",")
     self.colors = np.random.randint(255,
                                     size=(self.args.num_classes, 3))
-    self.train_skip_vars = []
-    self.l2_loss_skip_vars = ["BatchNorm", "preact", "postnorm"]
-    self.train_vars = []
-    self.feed_dict_ops = {}
-
     if self.args.mode == "train":
       self.create_callbacks(["train_basic", "train_loss",
                              "train_accuracy", "train_speed",

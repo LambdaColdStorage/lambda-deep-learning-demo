@@ -15,9 +15,7 @@ from augmenter.external import vgg_preprocessing
 class StyleTransferModeler(Modeler):
   def __init__(self, args):
     super(StyleTransferModeler, self).__init__(args)
-    self.net = getattr(
-      importlib.import_module("network." + self.args.network),
-      "net")
+
     self.feature_net = getattr(
       importlib.import_module("network." + self.args.feature_net),
       "net")
@@ -25,10 +23,7 @@ class StyleTransferModeler(Modeler):
                          'vgg_19/conv3/conv3_1', 'vgg_19/conv4/conv4_1',
                          'vgg_19/conv5/conv5_1')
     self.content_layers = 'vgg_19/conv4/conv4_2'
-    self.train_skip_vars = ['vgg_19']
-    self.l2_loss_skip_vars = []
-    self.train_vars = []
-    self.feed_dict_ops = {}
+
     if self.args.mode == "infer":
       self.feature_net_init_flag = False
     else:

@@ -16,7 +16,14 @@ import tensorflow as tf
 class Modeler(object):
   def __init__(self, args):
     self.args = args
+    self.train_vars = []
     self.callbacks = []
+    self.feed_dict_ops = {}
+    self.skip_l2_loss_vars = []
+
+    self.net = getattr(importlib.import_module(
+      "network." + self.args.network),
+      "net")
 
   @abc.abstractmethod
   def create_nonreplicated_fn(self, *argv):
@@ -49,18 +56,19 @@ class Modeler(object):
     self.train_vars = tf.get_collection(
       tf.GraphKeys.TRAINABLE_VARIABLES)
 
-    if self.train_skip_vars:
-      self.train_vars = [v for v in self.train_vars
-                         if not any(x in v.name
-                                    for x in
-                                    self.train_skip_vars)]
-
+    # Collect all trainale variables
     if self.args.trainable_var_list:
-      trainable_var_list = self.args.trainable_var_list.split(",")
       self.train_vars = [v for v in self.train_vars
                          if any(x in v.name
                                 for x in
-                                trainable_var_list)]
+                                self.args.trainable_var_list)]
+
+    # Remove the blacklisted trainable variables
+    if self.args.skip_trainable_var_list:
+      self.train_vars = [v for v in self.train_vars
+                         if not any(x in v.name
+                                    for x in
+                                    self.args.skip_trainable_var_list)]
 
   def create_optimizer(self, learning_rate):
     # Setup optimizer
@@ -120,7 +128,7 @@ class Modeler(object):
   def l2_regularization(self):
     l2_var_list = [v for v in self.train_vars
                    if not any(x in v.name for
-                              x in self.l2_loss_skip_vars)]
+                              x in self.args.skip_l2_loss_vars)]
 
     loss_l2 = self.args.l2_weight_decay * tf.add_n(
       [tf.nn.l2_loss(v) for v in l2_var_list])

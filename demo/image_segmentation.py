@@ -4,11 +4,11 @@ Licensed under
 ==========================================================================
 Train:
 python demo/image_segmentation.py \
---num_gpu=4
+--num_gpu=1
 
 Evaluation:
 python demo/image_segmentation.py --mode=eval \
---num_gpu=4 --epochs=1 \
+--num_gpu=1 --epochs=1 \
 --dataset_csv=~/demo/data/camvid/val.csv
 
 Infer:
@@ -26,6 +26,7 @@ import argparse
 import app
 from tool import downloader
 from tool import tuner
+from tool import args_parser
 
 
 def main():
@@ -165,11 +166,32 @@ def main():
   parser.add_argument("--dataset_url",
                       help="URL for downloading data",
                       default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz")
+  parser.add_argument("--pretrained_dir",
+                      help="Path to pretrained network (for transfer learning).",
+                      type=str,
+                      default="")
+  parser.add_argument("--skip_pretrained_var_list",
+                      help="Variables to skip in restoring from pretrained model (for transfer learning).",
+                      type=str,
+                      default="")
+  parser.add_argument("--trainable_var_list",
+                      help="List of trainable Variables. \
+                           If None all variables in tf.GraphKeys.TRAINABLE_VARIABLES \
+                           will be trained, subjected to the ones blacklisted by skip_trainable_var_list.",
+                      type=str,
+                      default="")
+  parser.add_argument("--skip_trainable_var_list",
+                      help="List of blacklisted trainable Variables.",
+                      type=str,
+                      default="")
+  parser.add_argument("--skip_l2_loss_vars",
+                      help="List of blacklisted trainable Variables for L2 regularization.",
+                      type=str,
+                      default="BatchNorm,preact,postnorm")
 
   args = parser.parse_args()
-  args.dataset_csv = os.path.expanduser(args.dataset_csv)
-  args.model_dir = os.path.expanduser(args.model_dir)
-  args.summary_names = args.summary_names.split(",")
+
+  args = args_parser.prepare(args)
 
   # Download data if necessary
   if not os.path.exists(args.dataset_csv):

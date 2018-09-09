@@ -48,36 +48,35 @@ class TrainBasic(Callback):
         print("Start training from step " + str(global_step))
 
         # Restore some weights from pre-trained model
-        if self.args.pretrained_ckpt:
-          self.args.pretrained_ckpt = os.path.expanduser(
-            self.args.pretrained_ckpt)
+        if self.args.pretrained_dir:
+          self.args.pretrained_dir = os.path.expanduser(
+            self.args.pretrained_dir)
           print("Try to initialize weights from pre-trained model.")
           if tf.train.checkpoint_exists(
-            os.path.join(self.args.pretrained_ckpt, "*ckpt*")):
+            os.path.join(self.args.pretrained_dir, "*ckpt*")):
             variables_to_restore = {v.name.split(":")[0]: v
                                     for v in tf.get_collection(
                                         tf.GraphKeys.GLOBAL_VARIABLES)}
             if self.args.skip_pretrained_var_list:
-              skip_pretrained_var_list = self.args.skip_pretrained_var_list.split(",")
               variables_to_restore = {
                 v: variables_to_restore[v] for
                 v in variables_to_restore if not
                 any(x in v for
-                    x in skip_pretrained_var_list)}
+                    x in self.args.skip_pretrained_var_list)}
 
             if variables_to_restore:
               saver_pre_trained = tf.train.Saver(
                 var_list=variables_to_restore)
-              for file in glob.glob(self.args.pretrained_ckpt + "/*.ckpt"):
+              for file in glob.glob(self.args.pretrained_dir + "/*.ckpt"):
                 ckpt_file = file
               saver_pre_trained.restore(sess,
-                  os.path.join(self.args.pretrained_ckpt, ckpt_file))
+                  os.path.join(self.args.pretrained_dir, ckpt_file))
 
               print("Weights restored from pre-trained model.")
             else:
               print("Found no useful weights")
           else:
-            print("Can't find pre-trained model at " + self.args.pretrained_ckpt)
+            print("Can't find pre-trained model at " + self.args.pretrained_dir)
             print("Initialize weight randomly.")
       else:
         print("Resume training from step " + str(global_step))

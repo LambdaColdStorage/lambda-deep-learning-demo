@@ -4,11 +4,11 @@ Licensed under
 ==========================================================================
 Train:
 python demo/style_transfer.py \
---num_gpu=4
+--num_gpu=1
 
 Eval:
 python demo/style_transfer.py --mode=eval \
---num_gpu=4 --epochs=1 \
+--num_gpu=1 --epochs=1 \
 --dataset_csv=~/demo/data/mscoco_fns/eval2014.csv
 
 Infer:
@@ -26,6 +26,7 @@ import argparse
 import app
 from tool import downloader
 from tool import tuner
+from tool import args_parser
 
 
 def main():
@@ -176,12 +177,32 @@ def main():
   parser.add_argument("--feature_net_url",
                       help="URL for downloading pre-trained feature_net",
                       default="http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz")
+  parser.add_argument("--pretrained_dir",
+                      help="Path to pretrained network (for transfer learning).",
+                      type=str,
+                      default="")
+  parser.add_argument("--skip_pretrained_var_list",
+                      help="Variables to skip in restoring from pretrained model (for transfer learning).",
+                      type=str,
+                      default="")
+  parser.add_argument("--trainable_var_list",
+                      help="List of trainable Variables. \
+                           If None all variables in tf.GraphKeys.TRAINABLE_VARIABLES \
+                           will be trained, subjected to the ones blacklisted by skip_trainable_var_list.",
+                      type=str,
+                      default="")
+  parser.add_argument("--skip_trainable_var_list",
+                      help="List of blacklisted trainable Variables.",
+                      type=str,
+                      default="vgg_19")
+  parser.add_argument("--skip_l2_loss_vars",
+                      help="List of blacklisted trainable Variables for L2 regularization.",
+                      type=str,
+                      default="")
 
   args = parser.parse_args()
-  args.dataset_csv = os.path.expanduser(args.dataset_csv)
-  args.model_dir = os.path.expanduser(args.model_dir)
-  args.feature_net_path = os.path.expanduser(args.feature_net_path)
-  args.style_image_path = os.path.expanduser(args.style_image_path)
+
+  args = args_parser.prepare(args)
 
   # Download data if necessary
   if not os.path.exists(args.dataset_csv):
