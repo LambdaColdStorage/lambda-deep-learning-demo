@@ -338,6 +338,36 @@ def preprocess_for_train(image,
   return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
 
 
+def preprocess_for_train_speed(image,
+                               output_height,
+                               output_width,
+                               resize_side_min=_RESIZE_SIDE_MIN,
+                               resize_side_max=_RESIZE_SIDE_MAX):
+  """Preprocesses the given image for training.
+
+  Only resizes the image and does mean substraction for speed.
+
+  Args:
+    image: A `Tensor` representing an image of arbitrary size.
+    output_height: The height of the image after preprocessing.
+    output_width: The width of the image after preprocessing.
+    resize_side_min: The lower bound for the smallest side of the image for
+      aspect-preserving resizing.
+    resize_side_max: The upper bound for the smallest side of the image for
+      aspect-preserving resizing.
+
+  Returns:
+    A preprocessed image.
+  """
+  image = tf.image.resize_images(
+    image, [output_height, output_width],
+    method=tf.image.ResizeMethod.BILINEAR, align_corners=False)
+
+  image.set_shape([output_height, output_width, 3])
+  image = tf.to_float(image)
+  return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+
+
 def preprocess_for_eval(image, output_height, output_width, resize_side):
   """Preprocesses the given image for evaluation.
 
@@ -380,8 +410,10 @@ def preprocess_image(image, output_height, output_width, is_training=False,
     A preprocessed image.
   """
   if is_training:
-    return preprocess_for_train(image, output_height, output_width,
-                                resize_side_min, resize_side_max)
+    # return preprocess_for_train(image, output_height, output_width,
+    #                             resize_side_min, resize_side_max)
+    return preprocess_for_train_speed(image, output_height, output_width,
+                                      resize_side_min, resize_side_max)
   else:
     return preprocess_for_eval(image, output_height, output_width,
                                resize_side_min)
