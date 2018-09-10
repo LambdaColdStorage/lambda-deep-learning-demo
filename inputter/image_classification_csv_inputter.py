@@ -66,7 +66,7 @@ class ImageClassificationCSVInputter(Inputter):
     image = tf.image.decode_jpeg(image,
                                  channels=self.args.image_depth,
                                  dct_method="INTEGER_ACCURATE")
-    
+
     if self.augmenter:
       is_training = (self.args.mode == "train")
       image = self.augmenter.augment(image,

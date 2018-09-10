@@ -2,9 +2,13 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
+
+Resnet32
+
 Train:
 python demo/image_classification.py \
---num_gpu=1
+--num_gpu=4 \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz
 
 Evaluation:
 python demo/image_classification.py --mode=eval \
@@ -18,30 +22,83 @@ python demo/image_classification.py --mode=infer \
 
 Tune:
 python demo/image_classification.py --mode=tune \
---num_gpu=1
+--num_gpu=4
 
 Run with synthetic data:
 Train
 python demo/image_classification.py \
 --inputter=image_classification_syn_inputter \
 --augmenter="" \
---num_gpu=1
+--num_gpu=4
 
 Evaluation
 python demo/image_classification.py --mode=eval \
 --inputter=image_classification_syn_inputter \
 --augmenter="" \
---num_gpu=1 --epochs=1
+--num_gpu=4 --epochs=1
 
+Resnet50
 
-Transfer Learning:
 python demo/image_classification.py \
 --mode=train \
---num_gpu=1 --epochs=20 --piecewise_boundaries=10 \
+--num_gpu=4 --batch_size_per_gpu=128 --epochs=10 --piecewise_boundaries=10 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
 --dataset_csv=~/demo/data/StanfordDogs120/train.csv \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
+--model_dir=~/demo/model/image_classification_StanfordDog120
+
+python demo/image_classification.py \
+--mode=train \
+--num_gpu=4 --batch_size_per_gpu=64 --epochs=20000 --piecewise_boundaries=10 \
+--network=resnet50 \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--image_height=224 --image_width=224 --num_classes=120 \
+--model_dir=~/demo/model/image_classification_StanfordDog120
+
+Transfer Learning:
+
+wget http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz  \
+-O /tmp/resnet_v2_50_2017_04_14.tar.gz && if ! [ -d "~/demo/model/resnet_v2_50_2017_04_14" ]; then mkdir ~/demo/model/resnet_v2_50_2017_04_14; \
+fi && tar -xzf /tmp/resnet_v2_50_2017_04_14.tar.gz --directory=${HOME}/demo/model/resnet_v2_50_2017_04_14 && rm -rf /tmp/resnet_v2_50_2017_04_14.tar.gz
+
+Train with real data:
+python demo/image_classification.py \
+--mode=train \
+--num_gpu=4 --batch_size_per_gpu=64 --epochs=20 --piecewise_boundaries=10 \
+--network=resnet50 \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 --num_classes=120 \
+--dataset_csv=~/demo/data/StanfordDogs120/train.csv \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
+--model_dir=~/demo/model/image_classification_StanfordDog120 \
+--pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
+--skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
+--trainable_var_list="resnet_v2_50/logits"
+
+Train with synthetic data:
+
+python demo/image_classification.py \
+--mode=train \
+--num_gpu=4 --batch_size_per_gpu=256 --epochs=20000 --piecewise_boundaries=10 \
+--network=resnet50 \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--image_height=224 --image_width=224 --num_classes=120 \
+--model_dir=~/demo/model/image_classification_StanfordDog120 \
+--pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
+--skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
+--trainable_var_list="resnet_v2_50/logits"
+
+python demo/image_classification.py \
+--mode=train \
+--num_gpu=4 --batch_size_per_gpu=256 --epochs=20000 --piecewise_boundaries=10 \
+--network=resnet50 \
+--inputter=image_classification_syn_inputter \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 --num_classes=120 \
 --model_dir=~/demo/model/image_classification_StanfordDog120 \
 --pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
 --skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
@@ -49,7 +106,7 @@ python demo/image_classification.py \
 
 python demo/image_classification.py \
 --mode=eval \
---num_gpu=1 --epochs=1 \
+--num_gpu=4 --epochs=1 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
@@ -63,6 +120,7 @@ import app
 from tool import downloader
 from tool import tuner
 from tool import args_parser
+
 
 def main():
   parser = argparse.ArgumentParser(
@@ -184,7 +242,7 @@ def main():
                       default="loss,accuracy,learning_rate")
   parser.add_argument("--dataset_url",
                       help="URL for downloading data",
-                      default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz")
+                      default="")
   parser.add_argument("--pretrained_dir",
                       help="Path to pretrained network (for transfer learning).",
                       type=str,
@@ -202,7 +260,7 @@ def main():
   parser.add_argument("--skip_trainable_var_list",
                       help="List of blacklisted trainable Variables.",
                       type=str,
-                      default=None)
+                      default="")
   parser.add_argument("--skip_l2_loss_vars",
                       help="List of blacklisted trainable Variables for L2 regularization.",
                       type=str,
@@ -226,7 +284,8 @@ def main():
     tuner.tune(args)
   else:
     demo = app.APP(args)
-    demo.run() 
+    demo.run()
+
 
 if __name__ == "__main__":
   main()

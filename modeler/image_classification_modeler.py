@@ -4,8 +4,6 @@ Licensed under
 ==========================================================================
 
 """
-import importlib
-
 import tensorflow as tf
 
 from modeler import Modeler

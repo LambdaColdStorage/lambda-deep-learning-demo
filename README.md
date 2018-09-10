@@ -31,18 +31,18 @@ Train
 python demo/image_classification.py \
 --inputter=image_classification_syn_inputter \
 --augmenter="" \
---num_gpu=1
+--num_gpu=4
 
 Evaluation
 python demo/image_classification.py --mode=eval \
 --inputter=image_classification_syn_inputter \
 --augmenter="" \
---num_gpu=1 --epochs=1
+--num_gpu=4 --epochs=1
 
 Transfer Learning:
 python demo/image_classification.py \
 --mode=train \
---num_gpu=1 --epochs=20 --piecewise_boundaries=10 \
+--num_gpu=4 --epochs=20 --piecewise_boundaries=10 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
@@ -54,7 +54,7 @@ python demo/image_classification.py \
 
 python demo/image_classification.py \
 --mode=eval \
---num_gpu=1 --epochs=1 \
+--num_gpu=4 --epochs=1 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \

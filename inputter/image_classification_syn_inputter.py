@@ -16,7 +16,7 @@ class ImageClassificationSynInputter(Inputter):
   def __init__(self, args):
     super(ImageClassificationSynInputter, self).__init__(args)
 
-    self.num_samples = 10000
+    self.num_samples = 256
 
   def get_num_samples(self):
     return self.num_samples
@@ -31,7 +31,7 @@ class ImageClassificationSynInputter(Inputter):
     tf.constant(max_step, name="max_step")
 
   def parse_fn(self, image, label):
-    
+
     if self.augmenter:
       is_training = (self.args.mode == "train")
       image = self.augmenter.augment(image,
@@ -51,12 +51,12 @@ class ImageClassificationSynInputter(Inputter):
     label_value = 0
 
     shape = (
-      [self.get_num_samples() * self.args.epochs, self.args.image_height, self.args.image_width, self.args.image_depth]
+      [self.get_num_samples(), self.args.image_height, self.args.image_width, self.args.image_depth]
       if self.args.data_format == "channels_last" else
-      [self.get_num_samples() * self.args.epochs, self.args.image_depth, self.args.image_height, self.args.image_width])
+      [self.get_num_samples(), self.args.image_depth, self.args.image_height, self.args.image_width])
 
     image_shape = tf.TensorShape(shape)
-    label_shape = tf.TensorShape([self.get_num_samples() * self.args.epochs,
+    label_shape = tf.TensorShape([self.get_num_samples(),
                                   self.args.num_classes])
 
     image_element = nest.map_structure(
