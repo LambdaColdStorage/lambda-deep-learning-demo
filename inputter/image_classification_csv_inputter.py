@@ -7,7 +7,6 @@ Licensed under
 from __future__ import print_function
 import os
 import csv
-import importlib
 
 import tensorflow as tf
 
@@ -17,7 +16,7 @@ from inputter import Inputter
 class ImageClassificationCSVInputter(Inputter):
   def __init__(self, args):
     super(ImageClassificationCSVInputter, self).__init__(args)
-    self.augmenter = importlib.import_module("augmenter." + args.augmenter)
+
     self.num_samples = -1
 
     if self.args.mode == "infer":
@@ -67,12 +66,13 @@ class ImageClassificationCSVInputter(Inputter):
     image = tf.image.decode_jpeg(image,
                                  channels=self.args.image_depth,
                                  dct_method="INTEGER_ACCURATE")
-
-    is_training = (self.args.mode == "train")
-    image = self.augmenter.augment(image,
-                                   self.args.image_height,
-                                   self.args.image_width,
-                                   is_training)
+    
+    if self.augmenter:
+      is_training = (self.args.mode == "train")
+      image = self.augmenter.augment(image,
+                                     self.args.image_height,
+                                     self.args.image_width,
+                                     is_training)
 
     label = tf.one_hot(label, depth=self.args.num_classes)
 

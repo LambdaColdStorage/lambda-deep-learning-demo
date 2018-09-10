@@ -7,7 +7,6 @@ Licensed under
 from __future__ import print_function
 import os
 import csv
-import importlib
 
 import tensorflow as tf
 
@@ -17,7 +16,7 @@ from inputter import Inputter
 class ImageSegmentationCSVInputter(Inputter):
   def __init__(self, args):
     super(ImageSegmentationCSVInputter, self).__init__(args)
-    self.augmenter = importlib.import_module("augmenter." + args.augmenter)
+
     self.num_samples = -1
 
     if self.args.mode == "infer":
@@ -75,14 +74,15 @@ class ImageSegmentationCSVInputter(Inputter):
       label = tf.read_file(label_path)
       label = tf.image.decode_png(label, channels=1)
       label = tf.cast(label, dtype=tf.int64)
-
-      is_training = (self.args.mode == "train")
-      return self.augmenter.augment(image, label,
-                                    self.args.output_height,
-                                    self.args.output_width,
-                                    self.args.resize_side_min,
-                                    self.args.resize_side_max,
-                                    is_training=is_training)
+      
+      if self.augmenter:
+        is_training = (self.args.mode == "train")
+        return self.augmenter.augment(image, label,
+                                      self.args.output_height,
+                                      self.args.output_width,
+                                      self.args.resize_side_min,
+                                      self.args.resize_side_max,
+                                      is_training=is_training)
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.args.batch_size_per_gpu *

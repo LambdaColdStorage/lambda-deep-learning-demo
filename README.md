@@ -25,6 +25,41 @@ python demo/image_classification.py --mode=infer \
 Tune:
 python demo/image_classification.py --mode=tune \
 --num_gpu=4
+
+Run with synthetic data:
+Train
+python demo/image_classification.py \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--num_gpu=1
+
+Evaluation
+python demo/image_classification.py --mode=eval \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--num_gpu=1 --epochs=1
+
+Transfer Learning:
+python demo/image_classification.py \
+--mode=train \
+--num_gpu=1 --epochs=20 --piecewise_boundaries=10 \
+--network=resnet50 \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 --num_classes=120 \
+--dataset_csv=~/demo/data/StanfordDogs120/train.csv \
+--model_dir=~/demo/model/image_classification_StanfordDog120 \
+--pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
+--skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
+--trainable_var_list="resnet_v2_50/logits"
+
+python demo/image_classification.py \
+--mode=eval \
+--num_gpu=1 --epochs=1 \
+--network=resnet50 \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 --num_classes=120 \
+--dataset_csv=~/demo/data/StanfordDogs120/eval.csv \
+--model_dir=~/demo/model/image_classification_StanfordDog120
 ```
 
 __Image Segmenation__

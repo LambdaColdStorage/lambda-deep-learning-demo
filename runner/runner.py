@@ -17,18 +17,35 @@ class Runner(object):
     self.modeler = modeler
 
     self.modeler.num_samples = self.inputter.get_num_samples()
+    self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
 
     self.session_config = self.create_session_config()
     self.sess = None
-    self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
+    self.nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
+                              self.inputter.create_nonreplicated_fn]    
     self.feed_dict = {}
     self.outputs = None
-    self.nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
-                              self.inputter.create_nonreplicated_fn]
     self.run_ops = []
     self.run_ops_names = []
     self.saver = None
     self.summary_writer = None
+
+  def create_session_config(self):
+    """create session_config
+    """
+    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95,
+                                allow_growth=True)
+
+    # set number of GPU devices
+    device_count = {"GPU": self.args.num_gpu}
+
+    session_config = tf.ConfigProto(
+      allow_soft_placement=True,
+      log_device_placement=False,
+      device_count=device_count,
+      gpu_options=gpu_options)
+
+    return session_config
 
   def before_run(self, callbacks):
     for callback in callbacks:
@@ -67,11 +84,42 @@ class Runner(object):
         self.feed_dict[key] = self.sess.run(
           self.modeler.feed_dict_ops[key])
 
+  def collect_summary(self, run_ops_names, run_ops):
+    for name, op in zip(run_ops_names, run_ops):
+      if name in self.args.summary_names:
+        tf.summary.scalar(name, op)
+    return tf.summary.merge_all()
+
+  def collect_ops(self, ops):
+    # Create train_op for gradient, keep other ops unchanged
+    run_ops = []
+    run_ops_names = []
+
+    for key in ops:
+      if key == "grads":
+        minimize_op = self.modeler.optimizer.apply_gradients(
+          ops[key], global_step=self.modeler.global_step)
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        op = tf.group(minimize_op, update_ops)
+      else:
+        op = ops[key]
+      run_ops.append(op)
+      run_ops_names.append(key)
+
+    if self.args.mode == "train":
+      summary_op = self.collect_summary(run_ops_names, run_ops)
+      run_ops.append(summary_op)
+      run_ops_names.append("summary")
+
+    return run_ops, run_ops_names
+
+  def print_trainable_variables(self):
+
+    for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
+      print (i.name)
+
   def run(self):
     self.create_graph()
-
-    # for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
-    #   print (i.name)   # i.name if you want just a name
 
     with tf.Session(config=self.session_config) as self.sess:
 

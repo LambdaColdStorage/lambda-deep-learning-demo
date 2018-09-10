@@ -7,7 +7,6 @@ Licensed under
 from __future__ import print_function
 import os
 import csv
-import importlib
 
 import tensorflow as tf
 
@@ -18,7 +17,7 @@ from augmenter.external import vgg_preprocessing
 class StyleTransferCSVInputter(Inputter):
   def __init__(self, args):
     super(StyleTransferCSVInputter, self).__init__(args)
-    self.augmenter = importlib.import_module("augmenter." + args.augmenter)
+
     self.num_samples = -1
 
     if self.args.mode == "infer":
@@ -68,13 +67,14 @@ class StyleTransferCSVInputter(Inputter):
       image = vgg_preprocessing._mean_image_subtraction(
         image * 255.0)
     else:
-      is_training = (self.args.mode == "train")
-      image = self.augmenter.augment(image,
-                                     self.args.image_height,
-                                     self.args.image_width,
-                                     self.args.resize_side_min,
-                                     self.args.resize_side_max,
-                                     is_training=is_training)
+      if self.augmenter:
+        is_training = (self.args.mode == "train")
+        image = self.augmenter.augment(image,
+                                       self.args.image_height,
+                                       self.args.image_width,
+                                       self.args.resize_side_min,
+                                       self.args.resize_side_max,
+                                       is_training=is_training)
     return (image,)
 
   def input_fn(self, test_samples=[]):

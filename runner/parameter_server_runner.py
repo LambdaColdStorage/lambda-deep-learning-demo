@@ -18,23 +18,6 @@ class ParameterServerRunner(Runner):
                                                 modeler)
     self.ps_ops = ["Variable", "VariableV2", "AutoReloadVariable"]
 
-  def create_session_config(self):
-    """create session_config
-    """
-    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.95,
-                                allow_growth=True)
-
-    # set number of GPU devices
-    device_count = {"GPU": self.args.num_gpu}
-
-    session_config = tf.ConfigProto(
-      allow_soft_placement=True,
-      log_device_placement=False,
-      device_count=device_count,
-      gpu_options=gpu_options)
-
-    return session_config
-
   def assign_to_device(self, device, ps_device="/cpu:0"):
       def _assign(op):
           node_def = op if isinstance(op, tf.NodeDef) else op.node_def
@@ -119,35 +102,6 @@ class ParameterServerRunner(Runner):
       for key in output:
         reduced_ops[key] = self.reduce_op(output[key])
       return reduced_ops
-
-  def collect_summary(self, run_ops_names, run_ops):
-    for name, op in zip(run_ops_names, run_ops):
-      if name in self.args.summary_names:
-        tf.summary.scalar(name, op)
-    return tf.summary.merge_all()
-
-  def collect_ops(self, ops):
-    # Create train_op for gradient, keep other ops unchanged
-    run_ops = []
-    run_ops_names = []
-
-    for key in ops:
-      if key == "grads":
-        minimize_op = self.modeler.optimizer.apply_gradients(
-          ops[key], global_step=self.modeler.global_step)
-        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        op = tf.group(minimize_op, update_ops)
-      else:
-        op = ops[key]
-      run_ops.append(op)
-      run_ops_names.append(key)
-
-    if self.args.mode == "train":
-      summary_op = self.collect_summary(run_ops_names, run_ops)
-      run_ops.append(summary_op)
-      run_ops_names.append("summary")
-
-    return run_ops, run_ops_names
 
   def create_graph(self):
 

@@ -20,6 +20,20 @@ Tune:
 python demo/image_classification.py --mode=tune \
 --num_gpu=1
 
+Run with synthetic data:
+Train
+python demo/image_classification.py \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--num_gpu=1
+
+Evaluation
+python demo/image_classification.py --mode=eval \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--num_gpu=1 --epochs=1
+
+
 Transfer Learning:
 python demo/image_classification.py \
 --mode=train \
@@ -116,7 +130,7 @@ def main():
                       default=3)
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
-                      default="channels_first")
+                      default="channels_last")
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
@@ -199,17 +213,20 @@ def main():
   args = args_parser.prepare(args)
 
   # Download data if necessary
-  if not os.path.exists(args.dataset_csv):
-    downloader.download_and_extract(args.dataset_csv,
-                                    args.dataset_url, False)
+  if args.inputter == "image_classification_syn_inputter":
+    print("Use synthetic data")
   else:
-    print("Found " + args.dataset_csv + ".")
+    if not os.path.exists(args.dataset_csv):
+      downloader.download_and_extract(args.dataset_csv,
+                                      args.dataset_url, False)
+    else:
+      print("Found " + args.dataset_csv + ".")
 
   if args.mode == "tune":
     tuner.tune(args)
   else:
     demo = app.APP(args)
-    demo.run()    
+    demo.run() 
 
 if __name__ == "__main__":
   main()

@@ -14,5 +14,5 @@ def prepare(args):
     [] if not args.trainable_var_list else args.trainable_var_list.split(","))
   args.skip_l2_loss_vars = (
     [] if not args.skip_l2_loss_vars else args.skip_l2_loss_vars.split(","))
-
+  args.augmenter = (None if not args.augmenter else args.augmenter)
   return args
