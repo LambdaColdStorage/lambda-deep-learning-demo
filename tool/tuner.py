@@ -6,6 +6,7 @@ import random
 
 CONFIG_TUNE_PATH = "tool/config_tune.yaml"
 
+
 def type_convert(v):
     """ convert value to int, float or str"""
     try:
@@ -21,6 +22,7 @@ def type_convert(v):
       return v
     else:
       assert False, "Unknown type for hyper parameter: {}".format(tp)
+
 
 def tune(args):
   # Parse config file
@@ -56,8 +58,8 @@ def tune(args):
       args.mode = "eval"
       args.epochs = 1
       
-      # Optional, set args.dataset_csv to a validate file
-      # args.dataset_csv = path-to-eval-csv
+      # Optional, set args.dataset_meta to a validate file
+      # args.dataset_meta = path-to-eval-csv
       
       evaluator = app.APP(args)
       evaluator.run()

@@ -16,11 +16,11 @@ Evaluation:
 python demo/image_segmentation.py --mode=eval \
 --num_gpu=4 --epochs=1 \
 --augmenter_speed_mode \
---dataset_csv=~/demo/data/camvid/val.csv
+--dataset_meta=~/demo/data/camvid/val.csv
 
 python demo/image_segmentation.py --mode=eval \
 --num_gpu=4 --epochs=1 \
---dataset_csv=~/demo/data/camvid/val.csv
+--dataset_meta=~/demo/data/camvid/val.csv
 
 
 Infer:
@@ -72,7 +72,7 @@ def main():
                       type=str,
                       help="Choose a job mode from train, eval, and infer.",
                       default="train")
-  parser.add_argument("--dataset_csv", type=str,
+  parser.add_argument("--dataset_meta", type=str,
                       help="Path to dataset's csv meta file",
                       default=os.path.join(os.environ['HOME'],
                                            "demo/data/camvid/train.csv"))
@@ -211,11 +211,11 @@ def main():
 
   # Download data if necessary
   if args.mode != "infer":
-    if not os.path.exists(args.dataset_csv):
-      downloader.download_and_extract(args.dataset_csv,
+    if not os.path.exists(args.dataset_meta):
+      downloader.download_and_extract(args.dataset_meta,
                                       args.dataset_url, False)
     else:
-      print("Found " + args.dataset_csv + ".")
+      print("Found " + args.dataset_meta + ".")
 
   if args.mode == "tune":
     tuner.tune(args)

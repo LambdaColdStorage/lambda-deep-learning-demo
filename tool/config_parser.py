@@ -1,6 +1,4 @@
 import yaml
-import fileinput
-import os
 
 
 def parse(config_path):

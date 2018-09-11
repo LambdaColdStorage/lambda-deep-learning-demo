@@ -15,7 +15,7 @@ python demo/image_classification.py \
 Evaluation:
 python demo/image_classification.py --mode=eval \
 --num_gpu=4 --epochs=1 \
---dataset_csv=~/demo/data/cifar10/eval.csv
+--dataset_meta=~/demo/data/cifar10/eval.csv
 
 Infer:
 python demo/image_classification.py --mode=infer \
@@ -46,7 +46,7 @@ python demo/image_classification.py \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
---dataset_csv=~/demo/data/StanfordDogs120/train.csv \
+--dataset_meta=~/demo/data/StanfordDogs120/train.csv \
 --model_dir=~/demo/model/image_classification_StanfordDog120 \
 --pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
 --skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
@@ -58,7 +58,7 @@ python demo/image_classification.py \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
---dataset_csv=~/demo/data/StanfordDogs120/eval.csv \
+--dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
 --model_dir=~/demo/model/image_classification_StanfordDog120
 ```
 
@@ -71,7 +71,7 @@ python demo/image_segmentation.py \
 Evaluation:
 python demo/image_segmentation.py --mode=eval \
 --num_gpu=4 --epochs=1 \
---dataset_csv=~/demo/data/camvid/val.csv
+--dataset_meta=~/demo/data/camvid/val.csv
 
 Infer:
 python demo/image_segmentation.py --mode=infer \
@@ -92,7 +92,7 @@ python demo/style_transfer.py \
 Eval:
 python demo/style_transfer.py --mode=eval \
 --num_gpu=4 --epochs=1 \
---dataset_csv=~/demo/data/mscoco_fns/eval2014.csv
+--dataset_meta=~/demo/data/mscoco_fns/eval2014.csv
 
 Infer:
 python demo/style_transfer.py --mode=infer \

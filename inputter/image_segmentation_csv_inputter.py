@@ -29,7 +29,7 @@ class ImageSegmentationCSVInputter(Inputter):
       if self.args.mode == "infer":
         self.num_samples = len(self.test_samples)
       else:
-        with open(self.args.dataset_csv) as f:
+        with open(self.args.dataset_meta) as f:
           parsed = csv.reader(f, delimiter=",", quotechar="'")
           self.num_samples = len(list(parsed))
     return self.num_samples
@@ -40,13 +40,13 @@ class ImageSegmentationCSVInputter(Inputter):
       labels_path = self.test_samples
     elif self.args.mode == "train" or \
             self.args.mode == "eval":
-      assert os.path.exists(self.args.dataset_csv), (
-        "Cannot find dataset_csv file {}.".format(self.args.dataset_csv))
+      assert os.path.exists(self.args.dataset_meta), (
+        "Cannot find dataset_meta file {}.".format(self.args.dataset_meta))
 
       images_path = []
       labels_path = []
-      dirname = os.path.dirname(self.args.dataset_csv)
-      with open(self.args.dataset_csv) as f:
+      dirname = os.path.dirname(self.args.dataset_meta)
+      with open(self.args.dataset_meta) as f:
         parsed = csv.reader(f, delimiter=",", quotechar="'")
         for row in parsed:
           images_path.append(os.path.join(dirname, row[0]))

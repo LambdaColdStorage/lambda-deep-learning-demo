@@ -4,7 +4,6 @@ Licensed under
 ==========================================================================
 
 """
-import importlib
 import numpy as np
 
 import tensorflow as tf

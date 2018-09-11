@@ -6,125 +6,39 @@ Licensed under
 Resnet32
 
 Train:
-python demo/image_classification.py \
---num_gpu=4 \
---augmenter_speed_mode \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz
-
-python demo/image_classification.py \
---num_gpu=4 \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz
+python demo/image_classification.py --mode=train \
+--num_gpu=4 --batch_size_per_gpu=256 --epochs=100 \
+--piecewise_boundaries=50,75,90 --piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
+--dataset_meta=~/demo/data/cifar10/train.csv \
+--model_dir=~/demo/model/image_classification_cifar10
 
 Evaluation:
 python demo/image_classification.py --mode=eval \
---num_gpu=4 --epochs=1 \
---augmenter_speed_mode \
---dataset_csv=~/demo/data/cifar10/eval.csv
-
-python demo/image_classification.py --mode=eval \
---num_gpu=4 --epochs=1 \
---dataset_csv=~/demo/data/cifar10/eval.csv
+--num_gpu=4 --batch_size_per_gpu=256 --epochs=1 \
+--dataset_meta=~/demo/data/cifar10/eval.csv \
+--model_dir=~/demo/model/image_classification_cifar10
 
 Infer:
 python demo/image_classification.py --mode=infer \
 --num_gpu=1 --batch_size_per_gpu=1 --epochs=1 \
+--model_dir=~/demo/model/image_classification_cifar10 \
 --test_samples=~/demo/data/cifar10/test/appaloosa_s_001975.png,~/demo/data/cifar10/test/domestic_cat_s_001598.png,~/demo/data/cifar10/test/rhea_s_000225.png,~/demo/data/cifar10/test/trucking_rig_s_001216.png
 
 Tune:
 python demo/image_classification.py --mode=tune \
+--model_dir=~/demo/model/image_classification_cifar10 \
 --num_gpu=4
 
-Run with synthetic data:
-Train
-python demo/image_classification.py \
---inputter=image_classification_syn_inputter \
---augmenter="" \
---num_gpu=4
+Pre-trained Model:
+curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10-resnet32-20180824.tar.gz | tar xvz -C ~/demo/model
 
-Evaluation
 python demo/image_classification.py --mode=eval \
---inputter=image_classification_syn_inputter \
---augmenter="" \
---num_gpu=4 --epochs=1
-
-Resnet50
-
-python demo/image_classification.py \
---mode=train \
---num_gpu=4 --batch_size_per_gpu=128 --epochs=10 --piecewise_boundaries=10 \
---network=resnet50 \
---augmenter=vgg_augmenter \
+--num_gpu=4 --batch_size_per_gpu=256 --epochs=1 \
 --augmenter_speed_mode \
---image_height=224 --image_width=224 --num_classes=120 \
---dataset_csv=~/demo/data/StanfordDogs120/train.csv \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
---model_dir=~/demo/model/image_classification_StanfordDog120
+--dataset_meta=~/demo/data/cifar10/eval.csv \
+--model_dir=~/demo/model/cifar10-resnet32-20180824
 
-python demo/image_classification.py \
---mode=train \
---num_gpu=4 --batch_size_per_gpu=64 --epochs=20000 --piecewise_boundaries=10 \
---network=resnet50 \
---inputter=image_classification_syn_inputter \
---augmenter="" \
---image_height=224 --image_width=224 --num_classes=120 \
---model_dir=~/demo/model/image_classification_StanfordDog120
-
-Transfer Learning:
-
-wget http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz  \
--O /tmp/resnet_v2_50_2017_04_14.tar.gz && if ! [ -d "~/demo/model/resnet_v2_50_2017_04_14" ]; then mkdir ~/demo/model/resnet_v2_50_2017_04_14; \
-fi && tar -xzf /tmp/resnet_v2_50_2017_04_14.tar.gz --directory=${HOME}/demo/model/resnet_v2_50_2017_04_14 && rm -rf /tmp/resnet_v2_50_2017_04_14.tar.gz
-
-Train with real data:
-python demo/image_classification.py \
---mode=train \
---num_gpu=4 --batch_size_per_gpu=64 --epochs=20 --piecewise_boundaries=10 \
---network=resnet50 \
---augmenter=vgg_augmenter \
---augmenter_speed_mode=True \
---image_height=224 --image_width=224 --num_classes=120 \
---dataset_csv=~/demo/data/StanfordDogs120/train.csv \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
---model_dir=~/demo/model/image_classification_StanfordDog120 \
---pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
---skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
---trainable_var_list="resnet_v2_50/logits"
-
-Train with synthetic data:
-
-python demo/image_classification.py \
---mode=train \
---num_gpu=4 --batch_size_per_gpu=256 --epochs=20000 --piecewise_boundaries=10 \
---network=resnet50 \
---inputter=image_classification_syn_inputter \
---augmenter="" \
---image_height=224 --image_width=224 --num_classes=120 \
---model_dir=~/demo/model/image_classification_StanfordDog120 \
---pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
---skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
---trainable_var_list="resnet_v2_50/logits"
-
-python demo/image_classification.py \
---mode=train \
---num_gpu=4 --batch_size_per_gpu=256 --epochs=20000 --piecewise_boundaries=10 \
---network=resnet50 \
---inputter=image_classification_syn_inputter \
---augmenter=vgg_augmenter \
---augmenter_speed_mode=False \
---image_height=224 --image_width=224 --num_classes=120 \
---model_dir=~/demo/model/image_classification_StanfordDog120 \
---pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
---skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
---trainable_var_list="resnet_v2_50/logits"
-
-python demo/image_classification.py \
---mode=eval \
---num_gpu=4 --epochs=1 \
---network=resnet50 \
---augmenter=vgg_augmenter \
---image_height=224 --image_width=224 --num_classes=120 \
---dataset_csv=~/demo/data/StanfordDogs120/eval.csv \
---model_dir=~/demo/model/image_classification_StanfordDog120
 """
 import os
 import argparse
@@ -166,7 +80,7 @@ def main():
                       type=str,
                       help="Choose a job mode from train, eval, and infer.",
                       default="train")
-  parser.add_argument("--dataset_csv", type=str,
+  parser.add_argument("--dataset_meta", type=str,
                       help="Path to dataset's csv meta file",
                       default=os.path.join(os.environ['HOME'],
                                            "demo/data/cifar10/train.csv"))
@@ -291,11 +205,11 @@ def main():
     print("Use synthetic data")
   else:
     if args.mode != "infer":
-      if not os.path.exists(args.dataset_csv):
-        downloader.download_and_extract(args.dataset_csv,
+      if not os.path.exists(args.dataset_meta):
+        downloader.download_and_extract(args.dataset_meta,
                                         args.dataset_url, False)
       else:
-        print("Found " + args.dataset_csv + ".")
+        print("Found " + args.dataset_meta + ".")
 
   if args.mode == "tune":
     tuner.tune(args)
