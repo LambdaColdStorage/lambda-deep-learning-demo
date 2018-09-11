@@ -15,7 +15,8 @@ class Inputter(object):
   def __init__(self, args):
     self.args = args
     self.augmenter = (None if not self.args.augmenter else
-      importlib.import_module("augmenter." + args.augmenter))
+                      importlib.import_module(
+                        "augmenter." + args.augmenter))
 
   @abc.abstractmethod
   def get_num_samples(self, *argv):

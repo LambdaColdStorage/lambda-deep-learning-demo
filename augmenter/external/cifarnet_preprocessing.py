@@ -31,11 +31,14 @@ def preprocess_for_train(image,
                          output_height,
                          output_width,
                          padding=_PADDING,
-                         add_image_summaries=True):
+                         add_image_summaries=False,
+                         speed_mode=False):
   """Preprocesses the given image for training.
 
   Note that the actual resizing scale is sampled from
     [`resize_size_min`, `resize_size_max`].
+
+  Note speed_mode only does padding, crop and standardization
 
   Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -47,35 +50,47 @@ def preprocess_for_train(image,
   Returns:
     A preprocessed image.
   """
-  if add_image_summaries:
-    tf.summary.image('image', tf.expand_dims(image, 0))
+  if speed_mode:
+    # Transform the image to floats.
+    image = tf.to_float(image)
 
-  # Transform the image to floats.
-  image = tf.to_float(image)
-  if padding > 0:
-    image = tf.pad(image, [[padding, padding], [padding, padding], [0, 0]])
-  # Randomly crop a [height, width] section of the image.
-  distorted_image = tf.random_crop(image,
-                                   [output_height, output_width, 3])
+    # Resize and crop if needed.
+    resized_image = tf.image.resize_image_with_crop_or_pad(image,
+                                                           output_width,
+                                                           output_height)
+    # Subtract off the mean and divide by the variance of the pixels.
+    return tf.image.per_image_standardization(resized_image)
+  else:
+    if add_image_summaries:
+      tf.summary.image('image', tf.expand_dims(image, 0))
 
-  # Randomly flip the image horizontally.
-  distorted_image = tf.image.random_flip_left_right(distorted_image)
+    # Transform the image to floats.
+    image = tf.to_float(image)
+    if padding > 0:
+      image = tf.pad(image, [[padding, padding], [padding, padding], [0, 0]])
+    # Randomly crop a [height, width] section of the image.
+    distorted_image = tf.random_crop(image,
+                                     [output_height, output_width, 3])
 
-  if add_image_summaries:
-    tf.summary.image('distorted_image', tf.expand_dims(distorted_image, 0))
+    # Randomly flip the image horizontally.
+    distorted_image = tf.image.random_flip_left_right(distorted_image)
 
-  # Because these operations are not commutative, consider randomizing
-  # the order their operation.
-  distorted_image = tf.image.random_brightness(distorted_image,
-                                               max_delta=63)
-  distorted_image = tf.image.random_contrast(distorted_image,
-                                             lower=0.2, upper=1.8)
-  # Subtract off the mean and divide by the variance of the pixels.
-  return tf.image.per_image_standardization(distorted_image)
+    if add_image_summaries:
+      tf.summary.image('distorted_image', tf.expand_dims(distorted_image, 0))
+
+    # Because these operations are not commutative, consider randomizing
+    # the order their operation.
+    distorted_image = tf.image.random_brightness(distorted_image,
+                                                 max_delta=63)
+    distorted_image = tf.image.random_contrast(distorted_image,
+                                               lower=0.2, upper=1.8)
+    # Subtract off the mean and divide by the variance of the pixels.
+    return tf.image.per_image_standardization(distorted_image)
 
 
 def preprocess_for_eval(image, output_height, output_width,
-                        add_image_summaries=True):
+                        add_image_summaries=False,
+                        speed_mode=False):
   """Preprocesses the given image for evaluation.
 
   Args:
@@ -87,24 +102,35 @@ def preprocess_for_eval(image, output_height, output_width,
   Returns:
     A preprocessed image.
   """
-  if add_image_summaries:
-    tf.summary.image('image', tf.expand_dims(image, 0))
-  # Transform the image to floats.
-  image = tf.to_float(image)
+  if speed_mode:
+    # Transform the image to floats.
+    image = tf.to_float(image)
 
-  # Resize and crop if needed.
-  resized_image = tf.image.resize_image_with_crop_or_pad(image,
-                                                         output_width,
-                                                         output_height)
-  if add_image_summaries:
-    tf.summary.image('resized_image', tf.expand_dims(resized_image, 0))
+    # Resize and crop if needed.
+    resized_image = tf.image.resize_image_with_crop_or_pad(image,
+                                                           output_width,
+                                                           output_height)
+    # Subtract off the mean and divide by the variance of the pixels.
+    return tf.image.per_image_standardization(resized_image)
+  else:
+    if add_image_summaries:
+      tf.summary.image('image', tf.expand_dims(image, 0))
+    # Transform the image to floats.
+    image = tf.to_float(image)
 
-  # Subtract off the mean and divide by the variance of the pixels.
-  return tf.image.per_image_standardization(resized_image)
+    # Resize and crop if needed.
+    resized_image = tf.image.resize_image_with_crop_or_pad(image,
+                                                           output_width,
+                                                           output_height)
+    if add_image_summaries:
+      tf.summary.image('resized_image', tf.expand_dims(resized_image, 0))
+
+    # Subtract off the mean and divide by the variance of the pixels.
+    return tf.image.per_image_standardization(resized_image)
 
 
 def preprocess_image(image, output_height, output_width, is_training=False,
-                     add_image_summaries=True):
+                     add_image_summaries=False, speed_mode=False):
   """Preprocesses the given image.
 
   Args:
@@ -121,8 +147,10 @@ def preprocess_image(image, output_height, output_width, is_training=False,
   if is_training:
     return preprocess_for_train(
         image, output_height, output_width,
-        add_image_summaries=add_image_summaries)
+        add_image_summaries=add_image_summaries,
+        speed_mode=speed_mode)
   else:
     return preprocess_for_eval(
         image, output_height, output_width,
-        add_image_summaries=add_image_summaries)
+        add_image_summaries=add_image_summaries,
+        speed_mode=speed_mode)

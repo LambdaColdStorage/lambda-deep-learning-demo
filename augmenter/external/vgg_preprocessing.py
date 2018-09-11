@@ -309,43 +309,14 @@ def preprocess_for_train(image,
                          output_height,
                          output_width,
                          resize_side_min=_RESIZE_SIDE_MIN,
-                         resize_side_max=_RESIZE_SIDE_MAX):
+                         resize_side_max=_RESIZE_SIDE_MAX,
+                         speed_mode=False):
   """Preprocesses the given image for training.
 
   Note that the actual resizing scale is sampled from
     [`resize_size_min`, `resize_size_max`].
 
-  Args:
-    image: A `Tensor` representing an image of arbitrary size.
-    output_height: The height of the image after preprocessing.
-    output_width: The width of the image after preprocessing.
-    resize_side_min: The lower bound for the smallest side of the image for
-      aspect-preserving resizing.
-    resize_side_max: The upper bound for the smallest side of the image for
-      aspect-preserving resizing.
-
-  Returns:
-    A preprocessed image.
-  """
-  resize_side = tf.random_uniform(
-      [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
-
-  image = _aspect_preserving_resize(image, resize_side)
-  image = _random_crop([image], output_height, output_width)[0]
-  image.set_shape([output_height, output_width, 3])
-  image = tf.to_float(image)
-  image = tf.image.random_flip_left_right(image)
-  return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
-
-
-def preprocess_for_train_speed(image,
-                               output_height,
-                               output_width,
-                               resize_side_min=_RESIZE_SIDE_MIN,
-                               resize_side_max=_RESIZE_SIDE_MAX):
-  """Preprocesses the given image for training.
-
-  Only resizes the image and does mean substraction for speed.
+  Note that in speed_mode only resize and mean subtraction are used.
 
   Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -359,17 +330,33 @@ def preprocess_for_train_speed(image,
   Returns:
     A preprocessed image.
   """
-  image = tf.image.resize_images(
-    image, [output_height, output_width],
-    method=tf.image.ResizeMethod.BILINEAR, align_corners=False)
+  if speed_mode:
+    image = tf.image.resize_images(
+      image, [output_height, output_width],
+      method=tf.image.ResizeMethod.BILINEAR, align_corners=False)
+    image.set_shape([output_height, output_width, 3])
+    image = tf.to_float(image)
+    image = _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+  else:
+    resize_side = tf.random_uniform(
+        [], minval=resize_side_min, maxval=resize_side_max + 1, dtype=tf.int32)
+    image = _aspect_preserving_resize(image, resize_side)
+    image = _random_crop([image], output_height, output_width)[0]
+    image.set_shape([output_height, output_width, 3])
+    image = tf.to_float(image)
+    image = tf.image.random_flip_left_right(image)
+    image = _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+  return image
 
-  image.set_shape([output_height, output_width, 3])
-  image = tf.to_float(image)
-  return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
 
-
-def preprocess_for_eval(image, output_height, output_width, resize_side):
+def preprocess_for_eval(image,
+                        output_height,
+                        output_width,
+                        resize_side,
+                        speed_mode=False):
   """Preprocesses the given image for evaluation.
+
+  Note that in speed_mode only resize and mean subtraction are used.
 
   Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -380,16 +367,26 @@ def preprocess_for_eval(image, output_height, output_width, resize_side):
   Returns:
     A preprocessed image.
   """
-  image = _aspect_preserving_resize(image, resize_side)
-  image = _central_crop([image], output_height, output_width)[0]
-  image.set_shape([output_height, output_width, 3])
-  image = tf.to_float(image)
-  return _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+  if speed_mode:
+    image = tf.image.resize_images(
+      image, [output_height, output_width],
+      method=tf.image.ResizeMethod.BILINEAR, align_corners=False)
+    image.set_shape([output_height, output_width, 3])
+    image = tf.to_float(image)
+    image = _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+  else:
+    image = _aspect_preserving_resize(image, resize_side)
+    image = _central_crop([image], output_height, output_width)[0]
+    image.set_shape([output_height, output_width, 3])
+    image = tf.to_float(image)
+    image = _mean_image_subtraction(image, [_R_MEAN, _G_MEAN, _B_MEAN])
+  return image
 
 
 def preprocess_image(image, output_height, output_width, is_training=False,
                      resize_side_min=_RESIZE_SIDE_MIN,
-                     resize_side_max=_RESIZE_SIDE_MAX):
+                     resize_side_max=_RESIZE_SIDE_MAX,
+                     speed_mode=False):
   """Preprocesses the given image.
 
   Args:
@@ -410,10 +407,10 @@ def preprocess_image(image, output_height, output_width, is_training=False,
     A preprocessed image.
   """
   if is_training:
-    # return preprocess_for_train(image, output_height, output_width,
-    #                             resize_side_min, resize_side_max)
-    return preprocess_for_train_speed(image, output_height, output_width,
-                                      resize_side_min, resize_side_max)
+    return preprocess_for_train(image, output_height, output_width,
+                                resize_side_min, resize_side_max,
+                                speed_mode)
   else:
     return preprocess_for_eval(image, output_height, output_width,
-                               resize_side_min)
+                               resize_side_min,
+                               speed_mode)

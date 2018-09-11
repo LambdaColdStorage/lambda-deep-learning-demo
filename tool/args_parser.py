@@ -1,5 +1,6 @@
 import os
 
+
 def prepare(args):
 
   args.dataset_csv = os.path.expanduser(args.dataset_csv)
@@ -9,7 +10,7 @@ def prepare(args):
   args.skip_pretrained_var_list = (
     [] if not args.skip_pretrained_var_list else args.skip_pretrained_var_list.split(","))
   args.skip_trainable_var_list = (
-    [] if not args.skip_trainable_var_list else  args.skip_trainable_var_list.split(","))
+    [] if not args.skip_trainable_var_list else args.skip_trainable_var_list.split(","))
   args.trainable_var_list = (
     [] if not args.trainable_var_list else args.trainable_var_list.split(","))
   args.skip_l2_loss_vars = (

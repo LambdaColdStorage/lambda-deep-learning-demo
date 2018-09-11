@@ -8,9 +8,19 @@ Resnet32
 Train:
 python demo/image_classification.py \
 --num_gpu=4 \
+--augmenter_speed_mode \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz
+
+python demo/image_classification.py \
+--num_gpu=4 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz
 
 Evaluation:
+python demo/image_classification.py --mode=eval \
+--num_gpu=4 --epochs=1 \
+--augmenter_speed_mode \
+--dataset_csv=~/demo/data/cifar10/eval.csv
+
 python demo/image_classification.py --mode=eval \
 --num_gpu=4 --epochs=1 \
 --dataset_csv=~/demo/data/cifar10/eval.csv
@@ -44,6 +54,7 @@ python demo/image_classification.py \
 --num_gpu=4 --batch_size_per_gpu=128 --epochs=10 --piecewise_boundaries=10 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
+--augmenter_speed_mode \
 --image_height=224 --image_width=224 --num_classes=120 \
 --dataset_csv=~/demo/data/StanfordDogs120/train.csv \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
@@ -70,6 +81,7 @@ python demo/image_classification.py \
 --num_gpu=4 --batch_size_per_gpu=64 --epochs=20 --piecewise_boundaries=10 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
+--augmenter_speed_mode=True \
 --image_height=224 --image_width=224 --num_classes=120 \
 --dataset_csv=~/demo/data/StanfordDogs120/train.csv \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
@@ -98,6 +110,7 @@ python demo/image_classification.py \
 --network=resnet50 \
 --inputter=image_classification_syn_inputter \
 --augmenter=vgg_augmenter \
+--augmenter_speed_mode=False \
 --image_height=224 --image_width=224 --num_classes=120 \
 --model_dir=~/demo/model/image_classification_StanfordDog120 \
 --pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
@@ -142,6 +155,9 @@ def main():
                       type=str,
                       help="Name of the augmenter",
                       default="cifar_augmenter")
+  parser.add_argument("--augmenter_speed_mode",
+                      action='store_true',
+                      help="Flag to use speed mode in augmentation")
   parser.add_argument("--network", choices=["resnet32", "resnet50"],
                       type=str,
                       help="Choose a network architecture",
@@ -274,11 +290,12 @@ def main():
   if args.inputter == "image_classification_syn_inputter":
     print("Use synthetic data")
   else:
-    if not os.path.exists(args.dataset_csv):
-      downloader.download_and_extract(args.dataset_csv,
-                                      args.dataset_url, False)
-    else:
-      print("Found " + args.dataset_csv + ".")
+    if args.mode != "infer":
+      if not os.path.exists(args.dataset_csv):
+        downloader.download_and_extract(args.dataset_csv,
+                                        args.dataset_url, False)
+      else:
+        print("Found " + args.dataset_csv + ".")
 
   if args.mode == "tune":
     tuner.tune(args)

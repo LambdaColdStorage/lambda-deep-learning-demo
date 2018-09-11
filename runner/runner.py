@@ -22,7 +22,7 @@ class Runner(object):
     self.session_config = self.create_session_config()
     self.sess = None
     self.nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
-                              self.inputter.create_nonreplicated_fn]    
+                              self.inputter.create_nonreplicated_fn]
     self.feed_dict = {}
     self.outputs = None
     self.run_ops = []

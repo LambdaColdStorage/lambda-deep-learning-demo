@@ -4,11 +4,22 @@ Licensed under
 ==========================================================================
 Train:
 python demo/style_transfer.py \
---num_gpu=1
+--num_gpu=4 \
+--augmenter_speed_mode \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz
+
+python demo/style_transfer.py \
+--num_gpu=4 \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz
 
 Eval:
 python demo/style_transfer.py --mode=eval \
---num_gpu=1 --epochs=1 \
+--num_gpu=4 --epochs=1 \
+--augmenter_speed_mode \
+--dataset_csv=~/demo/data/mscoco_fns/eval2014.csv
+
+python demo/style_transfer.py --mode=eval \
+--num_gpu=4 --epochs=1 \
 --dataset_csv=~/demo/data/mscoco_fns/eval2014.csv
 
 Infer:
@@ -49,6 +60,9 @@ def main():
                       type=str,
                       help="Name of the augmenter",
                       default="fns_augmenter")
+  parser.add_argument("--augmenter_speed_mode",
+                      action='store_true',
+                      help="Flag to use speed mode in augmentation")
   parser.add_argument("--network", choices=["fns"],
                       type=str,
                       help="Choose a network architecture",
@@ -62,7 +76,7 @@ def main():
                       default=100)
   parser.add_argument("--content_weight",
                       help="Weight for content loss",
-                      default=15)
+                      default=7.5)
   parser.add_argument("--tv_weight",
                       help="Weight for tv loss",
                       default=200)

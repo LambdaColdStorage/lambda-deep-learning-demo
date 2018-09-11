@@ -37,7 +37,8 @@ class ImageClassificationSynInputter(Inputter):
       image = self.augmenter.augment(image,
                                      self.args.image_height,
                                      self.args.image_width,
-                                     is_training)
+                                     is_training=is_training,
+                                     speed_mode=self.args.augmenter_speed_mode)
     return (image, label)
 
   def input_fn(self, test_samples=[]):

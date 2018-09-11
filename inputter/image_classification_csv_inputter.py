@@ -72,7 +72,8 @@ class ImageClassificationCSVInputter(Inputter):
       image = self.augmenter.augment(image,
                                      self.args.image_height,
                                      self.args.image_width,
-                                     is_training)
+                                     is_training=is_training,
+                                     speed_mode=self.args.augmenter_speed_mode)
 
     label = tf.one_hot(label, depth=self.args.num_classes)
 

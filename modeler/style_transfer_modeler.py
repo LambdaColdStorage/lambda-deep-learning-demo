@@ -65,11 +65,10 @@ class StyleTransferModeler(Modeler):
   def compute_style_feature(self):
     style_image = tf.read_file(self.args.style_image_path)
     style_image = \
-        tf.image.decode_png(style_image,
-                            channels=self.args.image_depth)
-    style_image = tf.image.convert_image_dtype(style_image,
-                                               dtype=tf.float32)
-    style_image = style_image * 255.0
+        tf.image.decode_jpeg(style_image,
+                             channels=self.args.image_depth,
+                             dct_method="INTEGER_ACCURATE")
+    style_image = tf.to_float(style_image)
     style_image = vgg_preprocessing._mean_image_subtraction(style_image)
     style_image = tf.expand_dims(style_image, 0)
 
@@ -199,6 +198,7 @@ class StyleTransferModeler(Modeler):
 
   def model_fn(self, x):
     images = x[0]
+
     stylized_images = self.create_graph_fn(images)
 
     if self.args.mode == "train":

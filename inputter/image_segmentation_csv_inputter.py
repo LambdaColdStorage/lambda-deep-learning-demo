@@ -11,6 +11,7 @@ import csv
 import tensorflow as tf
 
 from inputter import Inputter
+from augmenter.external import vgg_preprocessing
 
 
 class ImageSegmentationCSVInputter(Inputter):
@@ -64,17 +65,17 @@ class ImageSegmentationCSVInputter(Inputter):
     """
     image = tf.read_file(image_path)
     image = tf.image.decode_png(image, channels=self.args.image_depth)
-    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
 
     if self.args.mode == "infer":
-      image = image - 0.5
+      image = tf.to_float(image)
+      image = vgg_preprocessing._mean_image_subtraction(image)
       label = image[0]
       return image, label
     else:
       label = tf.read_file(label_path)
       label = tf.image.decode_png(label, channels=1)
       label = tf.cast(label, dtype=tf.int64)
-      
+
       if self.augmenter:
         is_training = (self.args.mode == "train")
         return self.augmenter.augment(image, label,
@@ -82,7 +83,8 @@ class ImageSegmentationCSVInputter(Inputter):
                                       self.args.output_width,
                                       self.args.resize_side_min,
                                       self.args.resize_side_max,
-                                      is_training=is_training)
+                                      is_training=is_training,
+                                      speed_mode=self.args.augmenter_speed_mode)
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.args.batch_size_per_gpu *

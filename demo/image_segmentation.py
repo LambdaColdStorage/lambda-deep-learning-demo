@@ -4,12 +4,24 @@ Licensed under
 ==========================================================================
 Train:
 python demo/image_segmentation.py \
---num_gpu=1
+--num_gpu=4 \
+--augmenter_speed_mode \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz
+
+python demo/image_segmentation.py \
+--num_gpu=4 \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz
 
 Evaluation:
 python demo/image_segmentation.py --mode=eval \
---num_gpu=1 --epochs=1 \
+--num_gpu=4 --epochs=1 \
+--augmenter_speed_mode \
 --dataset_csv=~/demo/data/camvid/val.csv
+
+python demo/image_segmentation.py --mode=eval \
+--num_gpu=4 --epochs=1 \
+--dataset_csv=~/demo/data/camvid/val.csv
+
 
 Infer:
 python demo/image_segmentation.py --mode=infer \
@@ -49,6 +61,9 @@ def main():
                       type=str,
                       help="Name of the augmenter",
                       default="fcn_augmenter")
+  parser.add_argument("--augmenter_speed_mode",
+                      action='store_true',
+                      help="Flag to use speed mode in augmentation")
   parser.add_argument("--network", choices=["fcn"],
                       type=str,
                       help="Choose a network architecture",
@@ -176,8 +191,8 @@ def main():
                       default="")
   parser.add_argument("--trainable_var_list",
                       help="List of trainable Variables. \
-                           If None all variables in tf.GraphKeys.TRAINABLE_VARIABLES \
-                           will be trained, subjected to the ones blacklisted by skip_trainable_var_list.",
+                           If None, all variables in tf.GraphKeys.TRAINABLE_VARIABLES \
+                           will be trained, apart from the ones blacklisted by skip_trainable_var_list.",
                       type=str,
                       default="")
   parser.add_argument("--skip_trainable_var_list",
@@ -185,7 +200,8 @@ def main():
                       type=str,
                       default="")
   parser.add_argument("--skip_l2_loss_vars",
-                      help="List of blacklisted trainable Variables for L2 regularization.",
+                      help="List of blacklisted trainable Variables \
+                            for L2 regularization.",
                       type=str,
                       default="BatchNorm,preact,postnorm")
 
@@ -194,11 +210,12 @@ def main():
   args = args_parser.prepare(args)
 
   # Download data if necessary
-  if not os.path.exists(args.dataset_csv):
-    downloader.download_and_extract(args.dataset_csv,
-                                    args.dataset_url, False)
-  else:
-    print("Found " + args.dataset_csv + ".")
+  if args.mode != "infer":
+    if not os.path.exists(args.dataset_csv):
+      downloader.download_and_extract(args.dataset_csv,
+                                      args.dataset_url, False)
+    else:
+      print("Found " + args.dataset_csv + ".")
 
   if args.mode == "tune":
     tuner.tune(args)

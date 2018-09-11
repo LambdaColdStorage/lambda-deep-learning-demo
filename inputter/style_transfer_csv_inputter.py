@@ -60,12 +60,14 @@ class StyleTransferCSVInputter(Inputter):
     """Parse a single input sample
     """
     image = tf.read_file(image_path)
-    image = tf.image.decode_png(image, channels=self.args.image_depth)
-    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+    image = tf.image.decode_jpeg(image,
+                                 channels=self.args.image_depth,
+                                 dct_method="INTEGER_ACCURATE")
 
     if self.args.mode == "infer":
-      image = vgg_preprocessing._mean_image_subtraction(
-        image * 255.0)
+      image = tf.to_float(image)
+      image = vgg_preprocessing._mean_image_subtraction(image)
+      pass
     else:
       if self.augmenter:
         is_training = (self.args.mode == "train")
@@ -74,7 +76,8 @@ class StyleTransferCSVInputter(Inputter):
                                        self.args.image_width,
                                        self.args.resize_side_min,
                                        self.args.resize_side_max,
-                                       is_training=is_training)
+                                       is_training=is_training,
+                                       speed_mode=self.args.augmenter_speed_mode)
     return (image,)
 
   def input_fn(self, test_samples=[]):
