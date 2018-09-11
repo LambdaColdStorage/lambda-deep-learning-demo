@@ -12,11 +12,11 @@ from callback import Callback
 class EvalSummary(Callback):
   def __init__(self, args):
     super(EvalSummary, self).__init__(args)
+
+  def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
     self.accumulated_summary = {}
     self.global_step = 0
-
-  def before_run(self, sess, saver):
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     self.trained_step = sess.run(global_step_op)
 

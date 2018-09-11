@@ -16,9 +16,6 @@ from callback import Callback
 class InferDisplayImageSegmentation(Callback):
   def __init__(self, args):
     super(InferDisplayImageSegmentation, self).__init__(args)
-    self.graph = tf.get_default_graph()
-    self.colors = np.random.randint(255,
-                                    size=(self.args.num_classes, 3))
 
   def render_label(self, label, num_classes, label_colors):
 
@@ -40,7 +37,9 @@ class InferDisplayImageSegmentation(Callback):
     return rgb
 
   def before_run(self, sess, saver):
-    pass
+    self.graph = tf.get_default_graph()
+    self.colors = np.random.randint(255,
+                                    size=(self.args.num_classes, 3))
 
   def after_run(self, sess, saver, summary_writer):
     pass

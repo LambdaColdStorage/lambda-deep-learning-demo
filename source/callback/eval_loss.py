@@ -12,12 +12,11 @@ from callback import Callback
 class EvalLoss(Callback):
   def __init__(self, args):
     super(EvalLoss, self).__init__(args)
+
+  def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
     self.accumulated_loss = 0.0
     self.global_step = 0.0
-
-  def before_run(self, sess, saver):
-    pass
 
   def after_run(self, sess, saver, summary_writer):
     eval_loss = self.accumulated_loss / self.global_step

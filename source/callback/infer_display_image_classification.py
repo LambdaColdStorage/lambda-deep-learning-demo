@@ -12,10 +12,9 @@ from callback import Callback
 class InferDisplayImageClassification(Callback):
   def __init__(self, args):
     super(InferDisplayImageClassification, self).__init__(args)
-    self.graph = tf.get_default_graph()
 
   def before_run(self, sess, saver):
-    pass
+    self.graph = tf.get_default_graph()
 
   def after_run(self, sess, saver, summary_writer):
     pass

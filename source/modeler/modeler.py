@@ -5,27 +5,20 @@ Licensed under
 
 """
 from __future__ import print_function
-import importlib
+# import importlib
 
 import tensorflow as tf
 
 
 class Modeler(object):
-  def __init__(self, args, net):
+  def __init__(self, args, net, callbacks):
     self.args = args
     self.net = net
+    self.callbacks = callbacks
 
     self.train_vars = []
-    self.callbacks = []
     self.feed_dict_ops = {}
     self.skip_l2_loss_vars = []
-
-    if self.args.mode == "train":
-      self.callback_names = self.args.train_callbacks.split(",")
-    elif self.args.mode == "eval":
-      self.callback_names = self.args.eval_callbacks.split(",")
-    elif self.args.mode == "infer":
-      self.callback_names = self.args.infer_callbacks.split(",")
 
   def create_nonreplicated_fn(self, *argv):
     raise NotImplementedError()
@@ -41,12 +34,6 @@ class Modeler(object):
 
   def create_loss_fn(self, *argv):
     pass
-
-  def create_callbacks(self):
-    for name in self.callback_names:
-      callback = importlib.import_module(
-        "source.callback." + name).build(self.args)
-      self.callbacks.append(callback)
 
   def gether_train_vars(self):
 
@@ -139,5 +126,5 @@ class Modeler(object):
     return grads
 
 
-def build(args, network):
-  return Modeler(args, network)
+def build(args, network, callbacks):
+  return Modeler(args, network, callbacks)

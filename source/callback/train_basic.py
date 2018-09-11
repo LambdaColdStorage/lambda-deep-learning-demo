@@ -18,10 +18,9 @@ from callback import Callback
 class TrainBasic(Callback):
   def __init__(self, args):
     super(TrainBasic, self).__init__(args)
-    self.graph = tf.get_default_graph()
 
   def before_run(self, sess, saver):
-    print("Basic callback before_run")
+    self.graph = tf.get_default_graph()
 
     if not os.path.isdir(self.args.model_dir):
       os.makedirs(self.args.model_dir)
@@ -35,9 +34,6 @@ class TrainBasic(Callback):
     else:
       print("Initialize global variables ... ")
       sess.run(tf.global_variables_initializer())
-
-    # for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
-    #   print (i.name)
 
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     max_step_op = self.graph.get_tensor_by_name("max_step:0")
@@ -72,14 +68,16 @@ class TrainBasic(Callback):
                 var_list=variables_to_restore)
               for file in glob.glob(self.args.pretrained_dir + "/*.ckpt"):
                 ckpt_file = file
-              saver_pre_trained.restore(sess,
-                  os.path.join(self.args.pretrained_dir, ckpt_file))
+              saver_pre_trained.restore(
+                sess,
+                os.path.join(self.args.pretrained_dir, ckpt_file))
 
               print("Weights restored from pre-trained model.")
             else:
               print("Found no useful weights")
           else:
-            print("Can't find pre-trained model at " + self.args.pretrained_dir)
+            print("Can't find pre-trained model at " +
+                  self.args.pretrained_dir)
             print("Initialize weight randomly.")
       else:
         print("Resume training from step " + str(global_step))

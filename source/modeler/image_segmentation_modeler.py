@@ -12,8 +12,8 @@ from modeler import Modeler
 
 
 class ImageSegmentationModeler(Modeler):
-  def __init__(self, args, net):
-    super(ImageSegmentationModeler, self).__init__(args, net)
+  def __init__(self, args, net, callbacks):
+    super(ImageSegmentationModeler, self).__init__(args, net, callbacks)
 
     self.class_names = self.args.class_names.split(",")
     self.colors = np.random.randint(255,
@@ -80,4 +80,4 @@ class ImageSegmentationModeler(Modeler):
 
 
 def build(args, net):
-  return ImageSegmentationModeler(args, net)
+  return ImageSegmentationModeler(args, net, callbacks)

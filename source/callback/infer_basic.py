@@ -15,9 +15,9 @@ from callback import Callback
 class InferBasic(Callback):
   def __init__(self, args):
     super(InferBasic, self).__init__(args)
-    self.graph = tf.get_default_graph()
 
   def before_run(self, sess, saver):
+    self.graph = tf.get_default_graph()
     ckpt_path = os.path.join(self.args.model_dir, "*ckpt*")
     if tf.train.checkpoint_exists(ckpt_path):
       saver.restore(sess,

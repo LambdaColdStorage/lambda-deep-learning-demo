@@ -15,8 +15,6 @@ from callback import Callback
 class InferDisplayStyleTransfer(Callback):
   def __init__(self, args):
     super(InferDisplayStyleTransfer, self).__init__(args)
-    self.graph = tf.get_default_graph()
-    self.RGB_MEAN = [123.68, 116.78, 103.94]
 
   def render_label(self, label, num_classes, label_colors):
 
@@ -38,7 +36,8 @@ class InferDisplayStyleTransfer(Callback):
     return rgb
 
   def before_run(self, sess, saver):
-    pass
+    self.graph = tf.get_default_graph()
+    self.RGB_MEAN = [123.68, 116.78, 103.94]
 
   def after_run(self, sess, saver, summary_writer):
     pass

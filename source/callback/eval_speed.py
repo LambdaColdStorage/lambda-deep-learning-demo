@@ -14,14 +14,13 @@ from callback import Callback
 class EvalSpeed(Callback):
   def __init__(self, args):
     super(EvalSpeed, self).__init__(args)
+
+  def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
     self.accumulated_num_samples = 0.0
     self.accumulated_time = 0.0
     self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
     self.global_step = 0.0
-
-  def before_run(self, sess, saver):
-    pass
 
   def after_run(self, sess, saver, summary_writer):
     pass

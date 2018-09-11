@@ -12,11 +12,10 @@ from callback import Callback
 class TrainLoss(Callback):
   def __init__(self, args):
     super(TrainLoss, self).__init__(args)
-    self.graph = tf.get_default_graph()
-    self.accumulated_loss = 0.0
 
   def before_run(self, sess, saver):
-    pass
+    self.graph = tf.get_default_graph()
+    self.accumulated_loss = 0.0
 
   def after_run(self, sess, saver, summary_writer):
     pass

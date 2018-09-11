@@ -113,8 +113,6 @@ class ParameterServerRunner(Runner):
       for fn in nonreplicated_fns:
         fn()
 
-      self.modeler.create_callbacks()
-
       reduced_ops = self.replicate_graph()
 
       self.run_ops, self.run_ops_names = self.collect_ops(reduced_ops)

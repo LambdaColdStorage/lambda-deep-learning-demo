@@ -281,11 +281,24 @@ def main():
     net = getattr(importlib.import_module(
       "source.network." + args.network), "net")
 
+    if args.mode == "train":
+      callback_names = args.train_callbacks.split(",")
+    elif args.mode == "eval":
+      callback_names = args.eval_callbacks.split(",")
+    elif args.mode == "infer":
+      callback_names = args.infer_callbacks.split(",")
+
+    callbacks = []
+    for name in callback_names:
+      callback = importlib.import_module(
+        "source.callback." + name).build(args)
+      callbacks.append(callback)
+
     inputter = importlib.import_module(
       "source.inputter." + args.inputter).build(args, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler." + args.modeler).build(args, net)
+      "source.modeler." + args.modeler).build(args, net, callbacks)
 
     runner = importlib.import_module(
       "source.runner." + args.runner).build(args, inputter, modeler)

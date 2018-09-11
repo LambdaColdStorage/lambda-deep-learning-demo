@@ -12,8 +12,8 @@ rnn = tf.contrib.rnn
 
 
 class TextGenerationModeler(Modeler):
-  def __init__(self, args, net):
-    super(TextGenerationModeler, self).__init__(args, net)
+  def __init__(self, args, net, callbacks):
+    super(TextGenerationModeler, self).__init__(args, net, callbacks)
 
     self.rnn_size = 256
     self.num_rnn_layer = 2
@@ -112,5 +112,5 @@ class TextGenerationModeler(Modeler):
       pass
 
 
-def build(args, net):
-  return TextGenerationModeler(args, net)
+def build(args, net, callbacks):
+  return TextGenerationModeler(args, net, callbacks)

@@ -128,11 +128,6 @@ class Runner(object):
 
     with tf.Session(config=self.session_config) as self.sess:
 
-      # self.sess.run(tf.global_variables_initializer())
-      # for i in range(1):
-      #   v = self.sess.run(ops)
-      #   print(v)
-
       # Before run
       self.before_run(self.modeler.callbacks)
 
