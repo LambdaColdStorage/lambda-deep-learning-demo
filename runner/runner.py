@@ -17,6 +17,8 @@ class Runner(object):
     self.modeler = modeler
 
     self.modeler.num_samples = self.inputter.get_num_samples()
+    self.modeler.vocab_size = self.inputter.get_vocab_size()
+
     self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
 
     self.session_config = self.create_session_config()
@@ -122,6 +124,11 @@ class Runner(object):
     self.create_graph()
 
     with tf.Session(config=self.session_config) as self.sess:
+
+      # self.sess.run(tf.global_variables_initializer())
+      # for i in range(1):
+      #   v = self.sess.run(ops)
+      #   print(v)
 
       # Before run
       self.before_run(self.modeler.callbacks)

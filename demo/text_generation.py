@@ -4,7 +4,7 @@ Licensed under
 ==========================================================================
 Train:
 python demo/text_generation.py --mode=train \
---num_gpu=4 --batch_size_per_gpu=128 --epochs=100 \
+--num_gpu=1 --batch_size_per_gpu=128 --epochs=100 \
 --piecewise_boundaries=50,75,90 --piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
 --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
@@ -78,7 +78,7 @@ def main():
   parser.add_argument("--learning_rate",
                       help="Initial learning rate in training.",
                       type=float,
-                      default=0.01)
+                      default=0.002)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
@@ -93,7 +93,7 @@ def main():
                       help="Name of optimizer",
                       choices=["adadelta", "adagrad", "adam", "ftrl",
                                "momentum", "rmsprop", "sgd"],
-                      default="rmsprop")
+                      default="adam")
   parser.add_argument("--log_every_n_iter",
                       help="Number of steps to log",
                       type=int,
@@ -121,6 +121,10 @@ def main():
   parser.add_argument("--dataset_url",
                       help="URL for downloading data",
                       default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz")
+  parser.add_argument("--pretrained_dir",
+                      help="Path to pretrained network (for transfer learning).",
+                      type=str,
+                      default="")  
   parser.add_argument("--skip_pretrained_var_list",
                       help="Variables to skip in restoring from pretrained model (for transfer learning).",
                       type=str,

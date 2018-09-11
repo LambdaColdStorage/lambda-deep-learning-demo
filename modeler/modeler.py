@@ -108,6 +108,7 @@ class Modeler(object):
     initial_learning_rate = self.args.learning_rate
     bs_per_gpu = self.args.batch_size_per_gpu
     num_gpu = self.args.num_gpu
+
     batches_per_epoch = (self.num_samples / (bs_per_gpu * num_gpu))
     boundaries = list(map(float,
                       self.args.piecewise_boundaries.split(",")))
