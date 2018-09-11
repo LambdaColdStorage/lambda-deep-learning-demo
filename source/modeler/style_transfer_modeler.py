@@ -9,7 +9,7 @@ import importlib
 import tensorflow as tf
 
 from modeler import Modeler
-from augmenter.external import vgg_preprocessing
+from source.augmenter.external import vgg_preprocessing
 
 
 class StyleTransferModeler(Modeler):
@@ -17,7 +17,7 @@ class StyleTransferModeler(Modeler):
     super(StyleTransferModeler, self).__init__(args)
 
     self.feature_net = getattr(
-      importlib.import_module("network." + self.args.feature_net),
+      importlib.import_module("source.network." + self.args.feature_net),
       "net")
     self.style_layers = ('vgg_19/conv1/conv1_1', 'vgg_19/conv2/conv2_1',
                          'vgg_19/conv3/conv3_1', 'vgg_19/conv4/conv4_1',

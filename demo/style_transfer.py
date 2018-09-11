@@ -3,44 +3,46 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 Train:
-python demo/style_transfer.py \
---num_gpu=4 \
---augmenter_speed_mode \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz
-
-python demo/style_transfer.py \
---num_gpu=4 \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz
+python demo/style_transfer.py --mode=train \
+--num_gpu=4 --batch_size_per_gpu=4 --epochs=10 \
+--piecewise_boundaries=5 \
+--piecewise_learning_rate_decay=1.0,0.1 \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz \
+--dataset_meta=~/demo/data/mscoco_fns/train2014.csv \
+--model_dir=~/demo/model/style_transfer_mscoco_fns
 
 Eval:
 python demo/style_transfer.py --mode=eval \
---num_gpu=4 --epochs=1 \
---augmenter_speed_mode \
---dataset_meta=~/demo/data/mscoco_fns/eval2014.csv
-
-python demo/style_transfer.py --mode=eval \
---num_gpu=4 --epochs=1 \
---dataset_meta=~/demo/data/mscoco_fns/eval2014.csv
+--num_gpu=4 --batch_size_per_gpu=4 --epochs=1 \
+--dataset_meta=~/demo/data/mscoco_fns/eval2014.csv \
+--model_dir=~/demo/model/style_transfer_mscoco_fns
 
 Infer:
 python demo/style_transfer.py --mode=infer \
 --batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
+--model_dir=~/demo/model/style_transfer_mscoco_fns \
 --test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg
 
 Tune:
 python demo/style_transfer.py --mode=tune \
---num_gpu=1
+--num_gpu=4 \
+--dataset_meta=~/demo/data/mscoco_fns/train2014.csv \
+--model_dir=~/demo/model/style_transfer_mscoco_fns
 """
+import sys
 import os
 import argparse
 
-import app
-from tool import downloader
-from tool import tuner
-from tool import args_parser
-
 
 def main():
+
+  sys.path.append('.')
+
+  from source import app
+  from source.tool import downloader
+  from source.tool import tuner
+  from source.tool import args_parser
+
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 

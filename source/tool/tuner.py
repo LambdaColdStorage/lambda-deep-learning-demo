@@ -1,10 +1,11 @@
 import os
-
-import app
-import config_parser
 import random
 
-CONFIG_TUNE_PATH = "tool/config_tune.yaml"
+from source import app
+from source.tool import config_parser
+
+
+CONFIG_TUNE_PATH = "source/tool/config_tune.yaml"
 
 
 def type_convert(v):

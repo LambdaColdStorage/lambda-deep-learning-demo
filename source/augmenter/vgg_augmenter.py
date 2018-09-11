@@ -1,4 +1,4 @@
-from augmenter.external import vgg_preprocessing
+from source.augmenter.external import vgg_preprocessing
 
 
 def augment(image, output_height, output_width, is_training=False, speed_mode=False):

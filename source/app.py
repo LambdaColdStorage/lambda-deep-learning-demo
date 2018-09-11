@@ -8,6 +8,7 @@ import importlib
 
 import tensorflow as tf
 
+
 class APP(object):
   """ A machine leanring application composed of
       an inputter, a modeler and a runner.
@@ -15,19 +16,19 @@ class APP(object):
   def __init__(self, args):
 
     self.args = args
-    
+
     tf.reset_default_graph()
 
     self.inputter = importlib.import_module(
-      "inputter." + args.inputter).build(self.args)
+      "source.inputter." + args.inputter).build(self.args)
 
     self.modeler = importlib.import_module(
-      "modeler." + args.modeler).build(self.args)
+      "source.modeler." + args.modeler).build(self.args)
 
     self.runner = importlib.import_module(
-      "runner." + args.runner).build(self.args,
-                                     self.inputter,
-                                     self.modeler)
+      "source.runner." + args.runner).build(self.args,
+                                            self.inputter,
+                                            self.modeler)
 
   def run(self):
     # print("Applicaiton is running.")

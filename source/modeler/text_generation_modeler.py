@@ -5,9 +5,10 @@ Licensed under
 
 """
 import tensorflow as tf
-rnn = tf.contrib.rnn
 
 from modeler import Modeler
+
+rnn = tf.contrib.rnn
 
 
 class TextGenerationModeler(Modeler):
@@ -51,7 +52,8 @@ class TextGenerationModeler(Modeler):
         ret = tf.get_variable(n + '_unused', [self.batch_size, self.rnn_size],
                               trainable=False,
                               initializer=tf.constant_initializer())
-        ret = tf.placeholder_with_default(ret, shape=[None, self.rnn_size], name=n)
+        ret = tf.placeholder_with_default(
+          ret, shape=[None, self.rnn_size], name=n)
         return ret
 
     initial = (rnn.LSTMStateTuple(get_v('c0'), get_v('h0')),
@@ -63,7 +65,8 @@ class TextGenerationModeler(Modeler):
 
     input_list = tf.unstack(input_feature, axis=1)
 
-    outputs, last_state = rnn.static_rnn(cell, input_list, initial, scope='rnnlm')
+    outputs, last_state = rnn.static_rnn(
+      cell, input_list, initial, scope='rnnlm')
     last_state = tf.identity(last_state, 'last_state')
 
     output = tf.reshape(tf.concat(outputs, 1), [-1, self.rnn_size])
@@ -81,7 +84,6 @@ class TextGenerationModeler(Modeler):
       reuse=tf.AUTO_REUSE)
 
     return logits
-
 
   def create_eval_metrics_fn(self, logits, labels):
     classes = tf.argmax(logits, axis=1, output_type=tf.int32)
@@ -111,11 +113,11 @@ class TextGenerationModeler(Modeler):
       self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss)
-      accuracy = self.create_eval_metrics_fn(logits, labels)      
+      accuracy = self.create_eval_metrics_fn(logits, labels)
       return {"loss": loss,
               "grads": grads,
               "accuracy": accuracy,
-              "learning_rate": self.learning_rate}       
+              "learning_rate": self.learning_rate}
     elif self.args.mode == "eval":
       pass
     elif self.args.mode == "infer":

@@ -2,24 +2,31 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
+
 Train:
 python demo/text_generation.py --mode=train \
 --num_gpu=1 --batch_size_per_gpu=128 --epochs=100 \
---piecewise_boundaries=50,75,90 --piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
+--piecewise_boundaries=50,75,90 \
+--piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
 --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
 --model_dir=~/demo/model/text_gen_shakespeare
+
 """
+import sys
 import os
 import argparse
 
-import app
-from tool import downloader
-from tool import tuner
-from tool import args_parser
-
 
 def main():
+
+  sys.path.append('.')
+
+  from source import app
+  from source.tool import downloader
+  from source.tool import tuner
+  from source.tool import args_parser
+
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 

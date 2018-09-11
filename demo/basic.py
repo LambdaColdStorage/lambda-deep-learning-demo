@@ -6,8 +6,6 @@ Licensed under
 """
 import argparse
 
-import tensorflow as tf
-
 import app
 
 
@@ -32,10 +30,10 @@ def main():
 
   args = parser.parse_args()
 
-
   demo = app.APP(args)
 
   demo.run()
+
 
 if __name__ == "__main__":
   main()

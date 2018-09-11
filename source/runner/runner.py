@@ -16,9 +16,6 @@ class Runner(object):
     self.inputter = inputter
     self.modeler = modeler
 
-    # self.modeler.num_samples = self.inputter.get_num_samples()
-    # self.modeler.vocab_size = self.inputter.get_vocab_size()
-    
     self.modeler.get_dataset_info(self.inputter)
 
     self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu

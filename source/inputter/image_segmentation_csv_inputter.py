@@ -11,7 +11,7 @@ import csv
 import tensorflow as tf
 
 from inputter import Inputter
-from augmenter.external import vgg_preprocessing
+from source.augmenter.external import vgg_preprocessing
 
 
 class ImageSegmentationCSVInputter(Inputter):

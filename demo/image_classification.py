@@ -8,7 +8,8 @@ Resnet32
 Train:
 python demo/image_classification.py --mode=train \
 --num_gpu=4 --batch_size_per_gpu=256 --epochs=100 \
---piecewise_boundaries=50,75,90 --piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
+--piecewise_boundaries=50,75,90 \
+--piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
 --dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10
@@ -27,6 +28,7 @@ python demo/image_classification.py --mode=infer \
 
 Tune:
 python demo/image_classification.py --mode=tune \
+--dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10 \
 --num_gpu=4
 
@@ -39,17 +41,57 @@ python demo/image_classification.py --mode=eval \
 --dataset_meta=~/demo/data/cifar10/eval.csv \
 --model_dir=~/demo/model/cifar10-resnet32-20180824
 
+Transfer Learning:
+(mkdir ~/demo/model/resnet_v2_50_2017_04_14;
+curl http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz | tar xvz -C ~/demo/model/resnet_v2_50_2017_04_14)
+
+python demo/image_classification.py --mode=train \
+--num_gpu=4 --batch_size_per_gpu=64 --epochs=20 \
+--piecewise_boundaries=10 \
+--piecewise_learning_rate_decay=1.0,0.1 \
+--network=resnet50 \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 --num_classes=120 \
+--dataset_meta=~/demo/data/StanfordDogs120/train.csv \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
+--model_dir=~/demo/model/image_classification_StanfordDog120 \
+--pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
+--skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
+--trainable_var_list="resnet_v2_50/logits"
+
+python demo/image_classification.py \
+--mode=eval \
+--num_gpu=4 --batch_size_per_gpu=64 --epochs=1 \
+--network=resnet50 \
+--augmenter=vgg_augmenter \
+--image_height=224 --image_width=224 --num_classes=120 \
+--dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
+--model_dir=~/demo/model/image_classification_StanfordDog120
+
+Train with synthetic data:
+python demo/image_classification.py \
+--mode=train \
+--num_gpu=4 --batch_size_per_gpu=64 --epochs=1000 --piecewise_boundaries=10 \
+--network=resnet50 \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--image_height=224 --image_width=224 --num_classes=120 \
+--model_dir=~/demo/model/image_classification_StanfordDog120
 """
+import sys
 import os
 import argparse
 
-import app
-from tool import downloader
-from tool import tuner
-from tool import args_parser
-
 
 def main():
+
+  sys.path.append('.')
+
+  from source import app
+  from source.tool import downloader
+  from source.tool import tuner
+  from source.tool import args_parser
+
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -82,8 +124,7 @@ def main():
                       default="train")
   parser.add_argument("--dataset_meta", type=str,
                       help="Path to dataset's csv meta file",
-                      default=os.path.join(os.environ['HOME'],
-                                           "demo/data/cifar10/train.csv"))
+                      default="")
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
@@ -122,8 +163,9 @@ def main():
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
-                      default=os.path.join(os.environ['HOME'],
-                                           "demo/model/image_classification_cifar10"))
+                      default=os.path.join(
+                        os.environ['HOME'],
+                        "demo/model/image_classification_cifar10"))
   parser.add_argument("--l2_weight_decay",
                       help="Weight decay for L2 regularization in training",
                       type=float,
@@ -161,7 +203,8 @@ def main():
                       default=1)
   parser.add_argument("--class_names",
                       help="List of class names.",
-                      default="airplane,automobile,bird,cat,deer,dog,frog,horse,ship,truck")
+                      default="airplane,automobile,bird,\
+                               cat,deer,dog,frog,horse,ship,truck")
   parser.add_argument("--test_samples",
                       help="A string of comma seperated testing data. "
                       "Must be provided for infer mode.",
@@ -174,17 +217,19 @@ def main():
                       help="URL for downloading data",
                       default="")
   parser.add_argument("--pretrained_dir",
-                      help="Path to pretrained network (for transfer learning).",
+                      help="Path to pretrained network for transfer learning.",
                       type=str,
                       default="")
   parser.add_argument("--skip_pretrained_var_list",
-                      help="Variables to skip in restoring from pretrained model (for transfer learning).",
+                      help="Variables to skip in restoring from \
+                            pretrained model (for transfer learning).",
                       type=str,
                       default="")
   parser.add_argument("--trainable_var_list",
                       help="List of trainable Variables. \
-                           If None all variables in tf.GraphKeys.TRAINABLE_VARIABLES \
-                           will be trained, subjected to the ones blacklisted by skip_trainable_var_list.",
+                           If None all variables in TRAINABLE_VARIABLES \
+                           will be trained, subjected to the ones \
+                           blacklisted by skip_trainable_var_list.",
                       type=str,
                       default="")
   parser.add_argument("--skip_trainable_var_list",
@@ -192,7 +237,8 @@ def main():
                       type=str,
                       default="")
   parser.add_argument("--skip_l2_loss_vars",
-                      help="List of blacklisted trainable Variables for L2 regularization.",
+                      help="List of blacklisted trainable Variables for L2 \
+                            regularization.",
                       type=str,
                       default="BatchNorm,preact,postnorm")
 

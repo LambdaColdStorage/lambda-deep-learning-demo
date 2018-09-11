@@ -5,7 +5,6 @@ Licensed under
 
 """
 from __future__ import print_function
-import os
 import six
 from collections import Counter
 import operator
@@ -19,11 +18,11 @@ from inputter import Inputter
 class TextGenerationTXTInputter(Inputter):
   def __init__(self, args):
     super(TextGenerationTXTInputter, self).__init__(args)
-    
+
     self.num_samples = 10000
     self.seq_length = 50
     self.vocab_size = None
-    
+
     self.initial_seq()
 
   def initial_seq(self):
@@ -35,7 +34,8 @@ class TextGenerationTXTInputter(Inputter):
     data = [chr(c) for c in data if c < 128]
 
     counter = Counter(data)
-    char_cnt = sorted(counter.items(), key=operator.itemgetter(1), reverse=True)
+    char_cnt = sorted(counter.items(),
+                      key=operator.itemgetter(1), reverse=True)
     self.chars = [x[0] for x in char_cnt]
     self.vocab_size = len(self.chars)
     self.char2idx = {c: i for i, c in enumerate(self.chars)}
@@ -66,9 +66,6 @@ class TextGenerationTXTInputter(Inputter):
   def parse_fn(self, inputs, outputs):
     """Parse a single input sample
     """
-    batch_size = (self.args.batch_size_per_gpu *
-                  self.args.num_gpu)
-
     inputs.set_shape([self.seq_length])
     outputs.set_shape([self.seq_length])
 
@@ -80,8 +77,9 @@ class TextGenerationTXTInputter(Inputter):
 
     max_step = (self.get_num_samples() * self.args.epochs // batch_size)
 
-    dataset = tf.data.Dataset.from_generator(generator=lambda: self.get_samples_fn(),
-                                             output_types=(tf.int32, tf.int32))
+    dataset = tf.data.Dataset.from_generator(
+      generator=lambda: self.get_samples_fn(),
+      output_types=(tf.int32, tf.int32))
 
     dataset = dataset.repeat(self.args.epochs)
 

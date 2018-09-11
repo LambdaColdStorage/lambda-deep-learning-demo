@@ -5,14 +5,11 @@ Licensed under
 
 """
 from __future__ import print_function
-import abc
-import six
 import importlib
 
 import tensorflow as tf
 
 
-@six.add_metaclass(abc.ABCMeta)
 class Modeler(object):
   def __init__(self, args):
     self.args = args
@@ -22,33 +19,28 @@ class Modeler(object):
     self.skip_l2_loss_vars = []
 
     self.net = getattr(importlib.import_module(
-      "network." + self.args.network),
+      "source.network." + self.args.network),
       "net")
 
-  @abc.abstractmethod
   def create_nonreplicated_fn(self, *argv):
     raise NotImplementedError()
 
-  @abc.abstractmethod
   def model_fn(self, *argv):
-    raise NotImplementedError()
+    pass
 
-  @abc.abstractmethod
   def create_graph_fn(self, *argv):
-    raise NotImplementedError
+    pass
 
-  @abc.abstractmethod
   def create_eval_metrics_fn(self, *argv):
-    raise NotImplementedError
+    pass
 
-  @abc.abstractmethod
   def create_loss_fn(self, *argv):
-    raise NotImplementedError
+    pass
 
   def create_callbacks(self, callback_names):
     for name in callback_names:
       callback = importlib.import_module(
-        "callback." + name).build(self.args)
+        "source.callback." + name).build(self.args)
       self.callbacks.append(callback)
 
   def gether_train_vars(self):

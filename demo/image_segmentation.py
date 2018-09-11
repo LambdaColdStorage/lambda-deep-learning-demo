@@ -3,45 +3,46 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 Train:
-python demo/image_segmentation.py \
---num_gpu=4 \
---augmenter_speed_mode \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz
-
-python demo/image_segmentation.py \
---num_gpu=4 \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz
+python demo/image_segmentation.py --mode=train \
+--num_gpu=4 --batch_size_per_gpu=16 --epochs=200 \
+--piecewise_boundaries=100 \
+--piecewise_learning_rate_decay=1.0,0.1 \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
+--dataset_meta=~/demo/data/camvid/train.csv \
+--model_dir=~/demo/model/image_segmentation_camvid
 
 Evaluation:
 python demo/image_segmentation.py --mode=eval \
---num_gpu=4 --epochs=1 \
---augmenter_speed_mode \
---dataset_meta=~/demo/data/camvid/val.csv
-
-python demo/image_segmentation.py --mode=eval \
---num_gpu=4 --epochs=1 \
---dataset_meta=~/demo/data/camvid/val.csv
-
+--num_gpu=4 --batch_size_per_gpu=16 --epochs=1 \
+--dataset_meta=~/demo/data/camvid/val.csv \
+--model_dir=~/demo/model/image_segmentation_camvid
 
 Infer:
 python demo/image_segmentation.py --mode=infer \
 --batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
+--model_dir=~/demo/model/image_segmentation_camvid \
 --test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
 
 Tune:
 python demo/image_segmentation.py --mode=tune \
---num_gpu=1
+--dataset_meta=~/demo/data/camvid/train.csv \
+--model_dir=~/demo/model/image_segmentation_camvid \
+--num_gpu=4
 """
+import sys
 import os
 import argparse
 
-import app
-from tool import downloader
-from tool import tuner
-from tool import args_parser
-
 
 def main():
+
+  sys.path.append('.')
+
+  from source import app
+  from source.tool import downloader
+  from source.tool import tuner
+  from source.tool import args_parser
+
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -74,8 +75,7 @@ def main():
                       default="train")
   parser.add_argument("--dataset_meta", type=str,
                       help="Path to dataset's csv meta file",
-                      default=os.path.join(os.environ['HOME'],
-                                           "demo/data/camvid/train.csv"))
+                      default="")
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
