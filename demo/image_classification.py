@@ -41,6 +41,16 @@ python demo/image_classification.py --mode=eval \
 --dataset_meta=~/demo/data/cifar10/eval.csv \
 --model_dir=~/demo/model/cifar10-resnet32-20180824
 
+Train with synthetic data:
+python demo/image_classification.py \
+--mode=train \
+--num_gpu=4 --batch_size_per_gpu=64 --epochs=1000 --piecewise_boundaries=10 \
+--network=resnet50 \
+--inputter=image_classification_syn_inputter \
+--augmenter="" \
+--image_height=224 --image_width=224 --num_classes=120 \
+--model_dir=~/demo/model/image_classification_StanfordDog120
+
 Transfer Learning:
 (mkdir ~/demo/model/resnet_v2_50_2017_04_14;
 curl http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz | tar xvz -C ~/demo/model/resnet_v2_50_2017_04_14)
@@ -67,20 +77,11 @@ python demo/image_classification.py \
 --image_height=224 --image_width=224 --num_classes=120 \
 --dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
 --model_dir=~/demo/model/image_classification_StanfordDog120
-
-Train with synthetic data:
-python demo/image_classification.py \
---mode=train \
---num_gpu=4 --batch_size_per_gpu=64 --epochs=1000 --piecewise_boundaries=10 \
---network=resnet50 \
---inputter=image_classification_syn_inputter \
---augmenter="" \
---image_height=224 --image_width=224 --num_classes=120 \
---model_dir=~/demo/model/image_classification_StanfordDog120
 """
 import sys
 import os
 import argparse
+import importlib
 
 
 def main():
@@ -241,6 +242,18 @@ def main():
                             regularization.",
                       type=str,
                       default="BatchNorm,preact,postnorm")
+  parser.add_argument("--train_callbacks",
+                      help="List of callbacks in training.",
+                      type=str,
+                      default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
+  parser.add_argument("--eval_callbacks",
+                      help="List of callbacks in evaluation.",
+                      type=str,
+                      default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
+  parser.add_argument("--infer_callbacks",
+                      help="List of callbacks in inference.",
+                      type=str,
+                      default="infer_basic,infer_display_image_classification")
 
   args = parser.parse_args()
 
@@ -260,7 +273,24 @@ def main():
   if args.mode == "tune":
     tuner.tune(args)
   else:
-    demo = app.APP(args)
+    # Create components of the application
+    augmenter = (None if not args.augmenter else
+                 importlib.import_module(
+                  "source.augmenter." + args.augmenter))
+
+    net = getattr(importlib.import_module(
+      "source.network." + args.network), "net")
+
+    inputter = importlib.import_module(
+      "source.inputter." + args.inputter).build(args, augmenter)
+
+    modeler = importlib.import_module(
+      "source.modeler." + args.modeler).build(args, net)
+
+    runner = importlib.import_module(
+      "source.runner." + args.runner).build(args, inputter, modeler)
+
+    demo = app.APP(args, runner)
     demo.run()
 
 

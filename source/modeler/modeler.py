@@ -11,16 +11,21 @@ import tensorflow as tf
 
 
 class Modeler(object):
-  def __init__(self, args):
+  def __init__(self, args, net):
     self.args = args
+    self.net = net
+
     self.train_vars = []
     self.callbacks = []
     self.feed_dict_ops = {}
     self.skip_l2_loss_vars = []
 
-    self.net = getattr(importlib.import_module(
-      "source.network." + self.args.network),
-      "net")
+    if self.args.mode == "train":
+      self.callback_names = self.args.train_callbacks.split(",")
+    elif self.args.mode == "eval":
+      self.callback_names = self.args.eval_callbacks.split(",")
+    elif self.args.mode == "infer":
+      self.callback_names = self.args.infer_callbacks.split(",")
 
   def create_nonreplicated_fn(self, *argv):
     raise NotImplementedError()
@@ -37,8 +42,8 @@ class Modeler(object):
   def create_loss_fn(self, *argv):
     pass
 
-  def create_callbacks(self, callback_names):
-    for name in callback_names:
+  def create_callbacks(self):
+    for name in self.callback_names:
       callback = importlib.import_module(
         "source.callback." + name).build(self.args)
       self.callbacks.append(callback)
@@ -134,5 +139,5 @@ class Modeler(object):
     return grads
 
 
-def build(args):
-  return Modeler(args)
+def build(args, network):
+  return Modeler(args, network)

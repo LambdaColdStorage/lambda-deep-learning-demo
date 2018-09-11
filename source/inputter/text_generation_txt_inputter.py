@@ -16,8 +16,8 @@ from inputter import Inputter
 
 
 class TextGenerationTXTInputter(Inputter):
-  def __init__(self, args):
-    super(TextGenerationTXTInputter, self).__init__(args)
+  def __init__(self, args, augmenter):
+    super(TextGenerationTXTInputter, self).__init__(args, augmenter)
 
     self.num_samples = 10000
     self.seq_length = 50
@@ -98,5 +98,5 @@ class TextGenerationTXTInputter(Inputter):
     return iterator.get_next()
 
 
-def build(args):
-  return TextGenerationTXTInputter(args)
+def build(args, augmenter):
+  return TextGenerationTXTInputter(args, augmenter)

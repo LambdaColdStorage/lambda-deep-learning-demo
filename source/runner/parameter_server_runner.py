@@ -106,8 +106,14 @@ class ParameterServerRunner(Runner):
   def create_graph(self):
 
     with tf.device("/cpu:0"):
-      for fn in self.nonreplicated_fns:
+
+      nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
+                           self.inputter.create_nonreplicated_fn]
+
+      for fn in nonreplicated_fns:
         fn()
+
+      self.modeler.create_callbacks()
 
       reduced_ops = self.replicate_graph()
 

@@ -32,6 +32,7 @@ python demo/image_segmentation.py --mode=tune \
 import sys
 import os
 import argparse
+import importlib
 
 
 def main():
@@ -204,6 +205,18 @@ def main():
                             for L2 regularization.",
                       type=str,
                       default="BatchNorm,preact,postnorm")
+  parser.add_argument("--train_callbacks",
+                      help="List of callbacks in training.",
+                      type=str,
+                      default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
+  parser.add_argument("--eval_callbacks",
+                      help="List of callbacks in evaluation.",
+                      type=str,
+                      default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
+  parser.add_argument("--infer_callbacks",
+                      help="List of callbacks in inference.",
+                      type=str,
+                      default="infer_basic,infer_display_image_segmentation")
 
   args = parser.parse_args()
 
@@ -220,7 +233,24 @@ def main():
   if args.mode == "tune":
     tuner.tune(args)
   else:
-    demo = app.APP(args)
+    # Create components of the application
+    augmenter = (None if not args.augmenter else
+                 importlib.import_module(
+                  "source.augmenter." + args.augmenter))
+
+    net = getattr(importlib.import_module(
+      "source.network." + args.network), "net")
+
+    inputter = importlib.import_module(
+      "source.inputter." + args.inputter).build(args, augmenter)
+
+    modeler = importlib.import_module(
+      "source.modeler." + args.modeler).build(args, net)
+
+    runner = importlib.import_module(
+      "source.runner." + args.runner).build(args, inputter, modeler)
+
+    demo = app.APP(args, runner)
     demo.run()
 
 

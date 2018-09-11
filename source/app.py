@@ -4,8 +4,6 @@ Licensed under
 ==========================================================================
 
 """
-import importlib
-
 import tensorflow as tf
 
 
@@ -13,23 +11,12 @@ class APP(object):
   """ A machine leanring application composed of
       an inputter, a modeler and a runner.
   """
-  def __init__(self, args):
-
-    self.args = args
+  def __init__(self, args, runner):
 
     tf.reset_default_graph()
 
-    self.inputter = importlib.import_module(
-      "source.inputter." + args.inputter).build(self.args)
-
-    self.modeler = importlib.import_module(
-      "source.modeler." + args.modeler).build(self.args)
-
-    self.runner = importlib.import_module(
-      "source.runner." + args.runner).build(self.args,
-                                            self.inputter,
-                                            self.modeler)
+    self.args = args
+    self.runner = runner
 
   def run(self):
-    # print("Applicaiton is running.")
     self.runner.run()

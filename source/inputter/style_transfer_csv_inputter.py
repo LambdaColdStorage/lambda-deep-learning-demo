@@ -15,8 +15,8 @@ from source.augmenter.external import vgg_preprocessing
 
 
 class StyleTransferCSVInputter(Inputter):
-  def __init__(self, args):
-    super(StyleTransferCSVInputter, self).__init__(args)
+  def __init__(self, args, augmenter):
+    super(StyleTransferCSVInputter, self).__init__(args, augmenter)
 
     self.num_samples = -1
 
@@ -71,13 +71,14 @@ class StyleTransferCSVInputter(Inputter):
     else:
       if self.augmenter:
         is_training = (self.args.mode == "train")
-        image = self.augmenter.augment(image,
-                                       self.args.image_height,
-                                       self.args.image_width,
-                                       self.args.resize_side_min,
-                                       self.args.resize_side_max,
-                                       is_training=is_training,
-                                       speed_mode=self.args.augmenter_speed_mode)
+        image = self.augmenter.augment(
+          image,
+          self.args.image_height,
+          self.args.image_width,
+          self.args.resize_side_min,
+          self.args.resize_side_max,
+          is_training=is_training,
+          speed_mode=self.args.augmenter_speed_mode)
     return (image,)
 
   def input_fn(self, test_samples=[]):
@@ -109,5 +110,5 @@ class StyleTransferCSVInputter(Inputter):
     return iterator.get_next()
 
 
-def build(args):
-  return StyleTransferCSVInputter(args)
+def build(args, augmenter):
+  return StyleTransferCSVInputter(args, augmenter)

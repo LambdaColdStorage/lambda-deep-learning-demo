@@ -7,15 +7,10 @@ Licensed under
 from __future__ import print_function
 
 
-import importlib
-
-
 class Inputter(object):
-  def __init__(self, args):
+  def __init__(self, args, augmenter):
     self.args = args
-    self.augmenter = (None if not self.args.augmenter else
-                      importlib.import_module(
-                        "source.augmenter." + args.augmenter))
+    self.augmenter = augmenter
 
   def get_num_samples(self, *argv):
     pass
@@ -27,5 +22,5 @@ class Inputter(object):
     pass
 
 
-def build(args):
-  return Inputter(args)
+def build(args, augmenter):
+  return Inputter(args, augmenter)

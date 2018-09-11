@@ -1,5 +1,6 @@
 import os
 import random
+import importlib
 
 from source import app
 from source.tool import config_parser
@@ -25,6 +26,58 @@ def type_convert(v):
       assert False, "Unknown type for hyper parameter: {}".format(tp)
 
 
+def train(args):
+  args.mode = "train"
+
+  # Create components of the application
+  augmenter = (None if not args.augmenter else
+               importlib.import_module(
+                "source.augmenter." + args.augmenter))
+
+  net = getattr(importlib.import_module(
+    "source.network." + args.network), "net")
+
+  inputter = importlib.import_module(
+    "source.inputter." + args.inputter).build(args, augmenter)
+
+  modeler = importlib.import_module(
+    "source.modeler." + args.modeler).build(args, net)
+
+  runner = importlib.import_module(
+    "source.runner." + args.runner).build(args, inputter, modeler)
+
+  trainer = app.APP(args, runner)
+  trainer.run()
+
+
+def eval(args):
+  args.mode = "eval"
+  args.epochs = 1
+
+  # Create components of the application
+  augmenter = (None if not args.augmenter else
+               importlib.import_module(
+                "source.augmenter." + args.augmenter))
+
+  net = getattr(importlib.import_module(
+    "source.network." + args.network), "net")
+
+  inputter = importlib.import_module(
+    "source.inputter." + args.inputter).build(args, augmenter)
+
+  modeler = importlib.import_module(
+    "source.modeler." + args.modeler).build(args, net)
+
+  runner = importlib.import_module(
+    "source.runner." + args.runner).build(args, inputter, modeler)
+
+  # Optional, set args.dataset_meta to a validate file
+  # args.dataset_meta = path-to-eval-csv
+
+  evaluator = app.APP(args, runner)
+  evaluator.run()
+
+
 def tune(args):
   # Parse config file
   config = config_parser.parse(CONFIG_TUNE_PATH)
@@ -46,22 +99,14 @@ def tune(args):
       if hasattr(args, field):
         values = config["hyperparams"][field].split(",")
         v = random.choice(values)
-        setattr(args, field, type_convert(v)) 
+        setattr(args, field, type_convert(v))
         dir_update = dir_update + "_" + field + "_" + str(v)
 
     if not os.path.isdir(dir_update):
       args.model_dir = dir_update
 
-      args.mode = "train"
-      trainer = app.APP(args)
-      trainer.run()
+      train(args)
 
-      args.mode = "eval"
-      args.epochs = 1
-      
-      # Optional, set args.dataset_meta to a validate file
-      # args.dataset_meta = path-to-eval-csv
-      
-      evaluator = app.APP(args)
-      evaluator.run()
+      eval(args)
+
       t = t + 1

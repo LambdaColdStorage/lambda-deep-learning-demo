@@ -22,8 +22,7 @@ class Runner(object):
 
     self.session_config = self.create_session_config()
     self.sess = None
-    self.nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
-                              self.inputter.create_nonreplicated_fn]
+
     self.feed_dict = {}
     self.outputs = None
     self.run_ops = []
@@ -117,6 +116,11 @@ class Runner(object):
   def print_trainable_variables(self):
 
     for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
+      print (i.name)
+
+  def print_global_variables(self):
+
+    for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
       print (i.name)
 
   def run(self):

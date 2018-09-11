@@ -13,8 +13,8 @@ from inputter import Inputter
 
 
 class ImageClassificationSynInputter(Inputter):
-  def __init__(self, args):
-    super(ImageClassificationSynInputter, self).__init__(args)
+  def __init__(self, args, augmenter):
+    super(ImageClassificationSynInputter, self).__init__(args, augmenter)
 
     self.num_samples = 256
 
@@ -84,5 +84,5 @@ class ImageClassificationSynInputter(Inputter):
     return iterator.get_next()
 
 
-def build(args):
-  return ImageClassificationSynInputter(args)
+def build(args, augmenter):
+  return ImageClassificationSynInputter(args, augmenter)

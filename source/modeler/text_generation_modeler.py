@@ -12,8 +12,8 @@ rnn = tf.contrib.rnn
 
 
 class TextGenerationModeler(Modeler):
-  def __init__(self, args):
-    super(TextGenerationModeler, self).__init__(args)
+  def __init__(self, args, net):
+    super(TextGenerationModeler, self).__init__(args, net)
 
     self.rnn_size = 256
     self.num_rnn_layer = 2
@@ -22,18 +22,6 @@ class TextGenerationModeler(Modeler):
 
     self.batch_size = (self.args.batch_size_per_gpu *
                        self.args.num_gpu)
-
-    if self.args.mode == "train":
-      self.create_callbacks(["train_basic", "train_loss",
-                             "train_accuracy", "train_speed",
-                             "train_summary"])
-    elif self.args.mode == "eval":
-      self.create_callbacks(["eval_basic", "eval_loss",
-                             "eval_accuracy", "eval_speed",
-                             "eval_summary"])
-    elif self.args.mode == "infer":
-      self.create_callbacks(["infer_basic",
-                             "infer_display_char_rnn"])
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
@@ -124,5 +112,5 @@ class TextGenerationModeler(Modeler):
       pass
 
 
-def build(args):
-  return TextGenerationModeler(args)
+def build(args, net):
+  return TextGenerationModeler(args, net)

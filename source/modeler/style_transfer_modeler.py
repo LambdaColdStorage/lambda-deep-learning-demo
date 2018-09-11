@@ -13,8 +13,8 @@ from source.augmenter.external import vgg_preprocessing
 
 
 class StyleTransferModeler(Modeler):
-  def __init__(self, args):
-    super(StyleTransferModeler, self).__init__(args)
+  def __init__(self, args, net):
+    super(StyleTransferModeler, self).__init__(args, net)
 
     self.feature_net = getattr(
       importlib.import_module("source.network." + self.args.feature_net),
@@ -28,16 +28,6 @@ class StyleTransferModeler(Modeler):
       self.feature_net_init_flag = False
     else:
       self.feature_net_init_flag = True
-
-    if self.args.mode == "train":
-      self.create_callbacks(["train_basic", "train_loss", "train_speed",
-                             "train_summary"])
-    elif self.args.mode == "eval":
-      self.create_callbacks(["eval_basic", "eval_loss",
-                             "eval_speed", "eval_summary"])
-    elif self.args.mode == "infer":
-      self.create_callbacks(["infer_basic",
-                             "infer_display_style_transfer"])
 
   def tensor_size(self, tensor):
     s = tf.shape(tensor)
@@ -87,7 +77,7 @@ class StyleTransferModeler(Modeler):
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
-    
+
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
@@ -220,5 +210,5 @@ class StyleTransferModeler(Modeler):
               "input": images}
 
 
-def build(args):
-  return StyleTransferModeler(args)
+def build(args, net):
+  return StyleTransferModeler(args, net)

@@ -14,8 +14,8 @@ from inputter import Inputter
 
 
 class ImageClassificationCSVInputter(Inputter):
-  def __init__(self, args):
-    super(ImageClassificationCSVInputter, self).__init__(args)
+  def __init__(self, args, augmenter):
+    super(ImageClassificationCSVInputter, self).__init__(args, augmenter)
 
     self.num_samples = -1
 
@@ -108,5 +108,5 @@ class ImageClassificationCSVInputter(Inputter):
     return iterator.get_next()
 
 
-def build(args):
-  return ImageClassificationCSVInputter(args)
+def build(args, augmenter):
+  return ImageClassificationCSVInputter(args, augmenter)

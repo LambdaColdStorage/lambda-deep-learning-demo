@@ -15,8 +15,8 @@ from source.augmenter.external import vgg_preprocessing
 
 
 class ImageSegmentationCSVInputter(Inputter):
-  def __init__(self, args):
-    super(ImageSegmentationCSVInputter, self).__init__(args)
+  def __init__(self, args, augmenter):
+    super(ImageSegmentationCSVInputter, self).__init__(args, augmenter)
 
     self.num_samples = -1
 
@@ -116,5 +116,5 @@ class ImageSegmentationCSVInputter(Inputter):
     return iterator.get_next()
 
 
-def build(args):
-  return ImageSegmentationCSVInputter(args)
+def build(args, augmenter):
+  return ImageSegmentationCSVInputter(args, augmenter)

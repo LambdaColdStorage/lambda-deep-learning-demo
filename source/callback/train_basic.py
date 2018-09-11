@@ -36,6 +36,9 @@ class TrainBasic(Callback):
       print("Initialize global variables ... ")
       sess.run(tf.global_variables_initializer())
 
+    # for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
+    #   print (i.name)
+
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     max_step_op = self.graph.get_tensor_by_name("max_step:0")
     global_step = sess.run(global_step_op)

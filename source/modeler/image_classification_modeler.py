@@ -10,24 +10,12 @@ from modeler import Modeler
 
 
 class ImageClassificationModeler(Modeler):
-  def __init__(self, args):
-    super(ImageClassificationModeler, self).__init__(args)
-
-    if self.args.mode == "train":
-      self.create_callbacks(["train_basic", "train_loss",
-                             "train_accuracy", "train_speed",
-                             "train_summary"])
-    elif self.args.mode == "eval":
-      self.create_callbacks(["eval_basic", "eval_loss",
-                             "eval_accuracy", "eval_speed",
-                             "eval_summary"])
-    elif self.args.mode == "infer":
-      self.create_callbacks(["infer_basic",
-                             "infer_display_image_classification"])
+  def __init__(self, args, net):
+    super(ImageClassificationModeler, self).__init__(args, net)
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
-    
+
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
@@ -81,5 +69,5 @@ class ImageClassificationModeler(Modeler):
               "probabilities": predictions["probabilities"]}
 
 
-def build(args):
-  return ImageClassificationModeler(args)
+def build(args, network):
+  return ImageClassificationModeler(args, network)
