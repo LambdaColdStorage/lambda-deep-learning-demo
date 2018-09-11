@@ -85,6 +85,9 @@ class StyleTransferModeler(Modeler):
 
     return self.style_features_target_op
 
+  def get_dataset_info(self, inputter):
+    self.num_samples = inputter.get_num_samples()
+    
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)

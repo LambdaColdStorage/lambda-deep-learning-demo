@@ -30,6 +30,9 @@ class ImageSegmentationModeler(Modeler):
       self.create_callbacks(["infer_basic",
                              "infer_display_image_segmentation"])
 
+  def get_dataset_info(self, inputter):
+    self.num_samples = inputter.get_num_samples()
+    
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
