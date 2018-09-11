@@ -79,5 +79,5 @@ class ImageSegmentationModeler(Modeler):
               "probabilities": predictions["probabilities"]}
 
 
-def build(args, net):
+def build(args, net, callbacks):
   return ImageSegmentationModeler(args, net, callbacks)
