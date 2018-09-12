@@ -32,9 +32,9 @@ class TextGenerationModeler(Modeler):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
-  def create_graph_fn(self, inputs):
+  def create_graph_fn(self, inputs, initial_state):
     is_training = (self.args.mode == "train")
-    return self.net(inputs, self.rnn_size, self.num_rnn_layer,
+    return self.net(inputs, initial_state, self.rnn_size, self.num_rnn_layer,
                     self.softmax_temprature, self.args.batch_size_per_gpu,
                     self.vocab_size, is_training=is_training)
 
@@ -57,6 +57,7 @@ class TextGenerationModeler(Modeler):
 
   def model_fn(self, x):
 
+    # Input
     if self.args.mode == "train":
       inputs = x[0]
     else:
@@ -68,7 +69,37 @@ class TextGenerationModeler(Modeler):
       initial_value = np.array([[5]], dtype=np.int32)
       self.feed_dict_seq = {inputs: initial_value}
 
-    logits, probabilities = self.create_graph_fn(inputs)
+    # States
+    if self.args.mode == "train":
+      c0 = tf.zeros([self.args.batch_size_per_gpu, self.rnn_size], tf.float32)
+      h0 = tf.zeros([self.args.batch_size_per_gpu, self.rnn_size], tf.float32)
+      c1 = tf.zeros([self.args.batch_size_per_gpu, self.rnn_size], tf.float32)
+      h1 = tf.zeros([self.args.batch_size_per_gpu, self.rnn_size], tf.float32)
+    else:
+      c0 = tf.placeholder(
+        tf.float32,
+        shape=(self.args.batch_size_per_gpu, self.rnn_size), name="c0")
+      h0 = tf.placeholder(
+        tf.float32,
+        shape=(self.args.batch_size_per_gpu, self.rnn_size), name="h0")
+      c1 = tf.placeholder(
+        tf.float32,
+        shape=(self.args.batch_size_per_gpu, self.rnn_size), name="c1")
+      h1 = tf.placeholder(
+        tf.float32,
+        shape=(self.args.batch_size_per_gpu, self.rnn_size), name="h1")
+
+      initial_value = np.zeros(
+        (self.args.batch_size_per_gpu, self.rnn_size), dtype=float)
+      self.feed_dict_seq[c0] = initial_value
+      self.feed_dict_seq[h0] = initial_value
+      self.feed_dict_seq[c1] = initial_value
+      self.feed_dict_seq[h1] = initial_value
+
+    initial_state = (rnn.LSTMStateTuple(c0, h0),
+                     rnn.LSTMStateTuple(c1, h1))
+
+    logits, probabilities, last_state = self.create_graph_fn(inputs, initial_state)
 
     if self.args.mode == "train":
       labels = x[1]
@@ -86,7 +117,8 @@ class TextGenerationModeler(Modeler):
       return {"inputs": inputs,
               "logits": logits,
               "probabilities": probabilities,
-              "chars": tf.convert_to_tensor(self.chars)}
+              "chars": tf.convert_to_tensor(self.chars),
+              "last_state": last_state}
 
 
 def build(args, net, callbacks):

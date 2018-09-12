@@ -46,11 +46,20 @@ class InferDisplayTextGeneration(Callback):
 
       self.output += chars[pick_id]
 
-      # Get the placeholder for inputs
+      # Get the placeholder for inputs and states
       inputs_place_holder = self.graph.get_tensor_by_name("inputs:0")
+      feed_dict[inputs_place_holder] = np.array([[pick_id]], dtype=np.int32)
 
       # Python passes dictionary by reference
-      feed_dict[inputs_place_holder] = np.array([[pick_id]], dtype=np.int32)
+      c0_place_holder = self.graph.get_tensor_by_name("c0:0")
+      h0_place_holder = self.graph.get_tensor_by_name("h0:0")
+      c1_place_holder = self.graph.get_tensor_by_name("c1:0")
+      h1_place_holder = self.graph.get_tensor_by_name("h1:0")
+
+      feed_dict[c0_place_holder] = outputs_dict["last_state"][0][0]
+      feed_dict[h0_place_holder] = outputs_dict["last_state"][0][1]
+      feed_dict[c1_place_holder] = outputs_dict["last_state"][1][0]
+      feed_dict[h1_place_holder] = outputs_dict["last_state"][1][1]
 
 
 def build(args):
