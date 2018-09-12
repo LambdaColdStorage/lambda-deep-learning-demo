@@ -124,7 +124,9 @@ class Runner(object):
       print (i.name)
 
   def run(self):
-    self.create_graph()
+    output = self.create_graph()
+
+    self.print_global_variables()
 
     with tf.Session(config=self.session_config) as self.sess:
 

@@ -23,8 +23,8 @@ class TextGenerationTXTInputter(Inputter):
       self.num_samples = 10000
       self.seq_length = 50
     elif self.args.mode == "infer":
-      self.num_samples = 1000
-      self.seq_length = 1
+      self.num_samples = 1
+      self.seq_length = 1000
 
     self.vocab_size = None
 

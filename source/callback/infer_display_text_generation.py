@@ -22,12 +22,13 @@ def pick(prob):
 class InferDisplayTextGeneration(Callback):
   def __init__(self, args):
     super(InferDisplayTextGeneration, self).__init__(args)
+    self.output = ""
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
 
   def after_run(self, sess, saver, summary_writer):
-    pass
+    print(self.output)
 
   def before_step(self, sess):
     pass
@@ -35,7 +36,8 @@ class InferDisplayTextGeneration(Callback):
   def after_step(self, sess, outputs_dict, saver, summary_writer):
     chars = outputs_dict["chars"]
     for p in outputs_dict["probabilities"]:
-      print(chars[pick(p)], end="")
+      # print(chars[pick(p)])
+      self.output += chars[pick(p)]
 
 
 def build(args):

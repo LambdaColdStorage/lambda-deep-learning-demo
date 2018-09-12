@@ -13,16 +13,13 @@ def net(inputs, rnn_size, num_rnn_layer, softmax_temprature,
     cell = rnn.MultiRNNCell([rnn.LSTMBlockCell(num_units=rnn_size)
                             for _ in range(num_rnn_layer)])
 
-    def get_v(n):
-        ret = tf.get_variable(n + '_unused', [batch_size, rnn_size],
-                              trainable=False,
-                              initializer=tf.constant_initializer())
-        ret = tf.placeholder_with_default(
-          ret, shape=[None, rnn_size], name=n)
-        return ret
+    c0 = tf.zeros([batch_size, rnn_size], tf.float32)
+    h0 = tf.zeros([batch_size, rnn_size], tf.float32)
+    c1 = tf.zeros([batch_size, rnn_size], tf.float32)
+    h1 = tf.zeros([batch_size, rnn_size], tf.float32)
 
-    initial = (rnn.LSTMStateTuple(get_v('c0'), get_v('h0')),
-               rnn.LSTMStateTuple(get_v('c1'), get_v('h1')))
+    initial = (rnn.LSTMStateTuple(c0, h0),
+               rnn.LSTMStateTuple(c1, h1))
 
     embeddingW = tf.get_variable('embedding', [vocab_size, rnn_size])
 
