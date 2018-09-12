@@ -29,9 +29,9 @@ class InferDisplayTextGeneration(Callback):
     self.graph = tf.get_default_graph()
 
   def after_run(self, sess, saver, summary_writer):
-    print(self.input)
     print('-------------------------------------------------')
-    print(self.output)
+    print(self.input[0] + self.output)
+    print('-------------------------------------------------')
 
   def before_step(self, sess):
     pass
@@ -48,14 +48,13 @@ class InferDisplayTextGeneration(Callback):
 
       # Get the placeholder for inputs and states
       inputs_place_holder = self.graph.get_tensor_by_name("inputs:0")
-      feed_dict[inputs_place_holder] = np.array([[pick_id]], dtype=np.int32)
-
-      # Python passes dictionary by reference
       c0_place_holder = self.graph.get_tensor_by_name("c0:0")
       h0_place_holder = self.graph.get_tensor_by_name("h0:0")
       c1_place_holder = self.graph.get_tensor_by_name("c1:0")
       h1_place_holder = self.graph.get_tensor_by_name("h1:0")
 
+      # Python passes dictionary by reference
+      feed_dict[inputs_place_holder] = np.array([[pick_id]], dtype=np.int32)
       feed_dict[c0_place_holder] = outputs_dict["last_state"][0][0]
       feed_dict[h0_place_holder] = outputs_dict["last_state"][0][1]
       feed_dict[c1_place_holder] = outputs_dict["last_state"][1][0]

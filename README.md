@@ -144,10 +144,16 @@ __Text Generation__
 ```
 Train:
 python demo/text_generation.py --mode=train \
---num_gpu=1 --batch_size_per_gpu=128 --epochs=100 \
---piecewise_boundaries=50,75,90 \
+--num_gpu=4 --batch_size_per_gpu=128 --epochs=1000 \
+--piecewise_boundaries=500,750,900 \
 --piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
 --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+--model_dir=~/demo/model/text_gen_shakespeare
+
+
+Inference:
+python demo/text_generation.py --mode=infer \
+--num_gpu=1 --batch_size_per_gpu=1 --epochs=1 \
 --model_dir=~/demo/model/text_gen_shakespeare
 ```

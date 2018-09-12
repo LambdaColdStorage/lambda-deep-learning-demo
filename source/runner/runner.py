@@ -130,6 +130,8 @@ class Runner(object):
   def run(self):
     self.create_graph()
 
+    # self.print_trainable_variables()
+
     with tf.Session(config=self.session_config) as self.sess:
 
       # Before run

@@ -20,10 +20,10 @@ class TextGenerationTXTInputter(Inputter):
     super(TextGenerationTXTInputter, self).__init__(args, augmenter)
 
     if self.args.mode == "train":
-      self.num_samples = 10000
+      self.num_samples = 100000
       self.seq_length = 50
     elif self.args.mode == "infer":
-      self.num_samples = 100
+      self.num_samples = 1000
       self.seq_length = 1
 
     self.vocab_size = None
@@ -45,6 +45,8 @@ class TextGenerationTXTInputter(Inputter):
     self.vocab_size = len(self.chars)
     self.char2idx = {c: i for i, c in enumerate(self.chars)}
     self.whole_seq = np.array([self.char2idx[c] for c in data], dtype='int32')
+    print("char2idx: ")
+    print(self.char2idx)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.args.batch_size_per_gpu *
@@ -108,8 +110,6 @@ class TextGenerationTXTInputter(Inputter):
       iterator = dataset.make_one_shot_iterator()
       return iterator.get_next()
     else:
-      # return (tf.placeholder(tf.int32, shape=(batch_size, 1)),)
-      # return (tf.constant(5, dtype=tf.int32, shape=[batch_size, self.seq_length]),)
       return (tf.zeros([batch_size, self.seq_length], tf.int32),)
 
 

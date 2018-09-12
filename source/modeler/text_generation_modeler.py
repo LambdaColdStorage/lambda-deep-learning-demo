@@ -49,9 +49,7 @@ class TextGenerationModeler(Modeler):
         tf.nn.sparse_softmax_cross_entropy_with_logits(
           logits=logits, labels=tf.reshape(labels, [-1])))
 
-      loss_l2 = self.l2_regularization()
-
-      loss = tf.identity(loss_cross_entropy + loss_l2, "total_loss")
+      loss = tf.identity(loss_cross_entropy, "total_loss")
 
       return loss
 
@@ -66,7 +64,8 @@ class TextGenerationModeler(Modeler):
         shape=(self.args.batch_size_per_gpu, self.seq_length),
         name="inputs")
 
-      initial_value = np.array([[5]], dtype=np.int32)
+      # 28 is "T"
+      initial_value = np.array([[28]], dtype=np.int32)
       self.feed_dict_seq = {inputs: initial_value}
 
     # States
@@ -99,7 +98,8 @@ class TextGenerationModeler(Modeler):
     initial_state = (rnn.LSTMStateTuple(c0, h0),
                      rnn.LSTMStateTuple(c1, h1))
 
-    logits, probabilities, last_state = self.create_graph_fn(inputs, initial_state)
+    logits, probabilities, last_state = \
+        self.create_graph_fn(inputs, initial_state)
 
     if self.args.mode == "train":
       labels = x[1]
