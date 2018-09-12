@@ -52,8 +52,6 @@ class Runner(object):
     for callback in callbacks:
       callback.before_run(self.sess, self.saver)
 
-    self.run_feed_dict_pre()
-
   def before_step(self, callbacks):
     for callback in callbacks:
       callback.before_step(self.sess)
@@ -81,12 +79,23 @@ class Runner(object):
     for callback in callbacks:
       callback.after_run(self.sess, self.saver, self.summary_writer)
 
-  def run_feed_dict_pre(self):
-      for key in self.modeler.feed_dict_ops:
-        self.feed_dict[key] = self.sess.run(
-          self.modeler.feed_dict_ops[key])
+  def prepare_feed_dict(self):
+
+      # Get the pre-computation feed_dict
+      for key in self.modeler.feed_dict_pre:
+        if isinstance(self.modeler.feed_dict_pre[key], tf.Tensor):
+          self.feed_dict[key] = self.sess.run(
+            self.modeler.feed_dict_pre[key])
+        else:
+          self.feed_dict[key] = self.modeler.feed_dict_pre[key]
+
+      # Get the sequential feed_dict (Updated by previous step's output)
       for key in self.modeler.feed_dict_seq:
-        self.feed_dict[key] = self.modeler.feed_dict_seq[key]
+        if isinstance(self.modeler.feed_dict_seq[key], tf.Tensor):
+          self.feed_dict[key] = self.sess.run(
+            self.modeler.feed_dict_seq[key])
+        else:
+          self.feed_dict[key] = self.modeler.feed_dict_seq[key]
 
   def collect_summary(self, run_ops_names, run_ops):
     for name, op in zip(run_ops_names, run_ops):
@@ -130,12 +139,12 @@ class Runner(object):
   def run(self):
     self.create_graph()
 
-    # self.print_trainable_variables()
-
     with tf.Session(config=self.session_config) as self.sess:
 
       # Before run
       self.before_run(self.modeler.callbacks)
+
+      self.prepare_feed_dict()
 
       global_step = 0
       if self.args.mode == "train":

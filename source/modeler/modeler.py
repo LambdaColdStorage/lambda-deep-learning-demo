@@ -17,7 +17,7 @@ class Modeler(object):
     self.callbacks = callbacks
 
     self.train_vars = []
-    self.feed_dict_ops = {}
+    self.feed_dict_pre = {}
     self.feed_dict_seq = {}
     self.skip_l2_loss_vars = []
 

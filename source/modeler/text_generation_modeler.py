@@ -20,7 +20,7 @@ class TextGenerationModeler(Modeler):
     self.rnn_size = 256
     self.num_rnn_layer = 2
     self.grad_clip = 5.
-    self.softmax_temprature = 1.0
+    self.softmax_temprature = 0.2
 
   def get_dataset_info(self, inputter):
     self.seq_length = inputter.get_seq_length()

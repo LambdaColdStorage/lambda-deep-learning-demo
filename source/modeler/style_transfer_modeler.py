@@ -85,9 +85,10 @@ class StyleTransferModeler(Modeler):
     if self.args.mode == "train" or self.args.mode == "eval":
       self.style_features_target = {}
       for layer in self.style_layers:
-        self.style_features_target[layer] = tf.placeholder(tf.float32)
+        self.style_features_target[layer] = tf.placeholder(
+          tf.float32, name="style_feature_target_" + layer)
       self.style_features_target_op = self.compute_style_feature()
-      self.feed_dict_ops = {self.style_features_target[key]:
+      self.feed_dict_pre = {self.style_features_target[key]:
                             self.style_features_target_op[key]
                             for key in self.style_features_target}
 
