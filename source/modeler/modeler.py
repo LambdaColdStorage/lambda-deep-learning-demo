@@ -18,6 +18,7 @@ class Modeler(object):
 
     self.train_vars = []
     self.feed_dict_ops = {}
+    self.feed_dict_seq = {}
     self.skip_l2_loss_vars = []
 
   def create_nonreplicated_fn(self, *argv):

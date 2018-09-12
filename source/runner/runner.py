@@ -24,6 +24,7 @@ class Runner(object):
     self.sess = None
 
     self.feed_dict = {}
+
     self.outputs = None
     self.run_ops = []
     self.run_ops_names = []
@@ -51,7 +52,7 @@ class Runner(object):
     for callback in callbacks:
       callback.before_run(self.sess, self.saver)
 
-    self.run_feed_dict()
+    self.run_feed_dict_pre()
 
   def before_step(self, callbacks):
     for callback in callbacks:
@@ -66,7 +67,8 @@ class Runner(object):
     print_msg = "\r"
     for callback in callbacks:
       return_dict = callback.after_step(self.sess, outputs_dict,
-                                        self.saver, self.summary_writer)
+                                        self.saver, self.summary_writer,
+                                        self.feed_dict)
       if return_dict:
         for key in return_dict:
           print_msg = print_msg + return_dict[key] + " "
@@ -79,10 +81,12 @@ class Runner(object):
     for callback in callbacks:
       callback.after_run(self.sess, self.saver, self.summary_writer)
 
-  def run_feed_dict(self):
+  def run_feed_dict_pre(self):
       for key in self.modeler.feed_dict_ops:
         self.feed_dict[key] = self.sess.run(
           self.modeler.feed_dict_ops[key])
+      for key in self.modeler.feed_dict_seq:
+        self.feed_dict[key] = self.modeler.feed_dict_seq[key]
 
   def collect_summary(self, run_ops_names, run_ops):
     for name, op in zip(run_ops_names, run_ops):
@@ -124,9 +128,7 @@ class Runner(object):
       print (i.name)
 
   def run(self):
-    output = self.create_graph()
-
-    self.print_global_variables()
+    self.create_graph()
 
     with tf.Session(config=self.session_config) as self.sess:
 

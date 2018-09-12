@@ -28,7 +28,7 @@ class EvalSpeed(Callback):
   def before_step(self, sess):
     self.time_before_step = time.time()
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer):
+  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
     self.time_after_step = time.time()
 
     self.global_step = self.global_step + 1

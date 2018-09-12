@@ -22,22 +22,35 @@ def pick(prob):
 class InferDisplayTextGeneration(Callback):
   def __init__(self, args):
     super(InferDisplayTextGeneration, self).__init__(args)
+    self.input = ""
     self.output = ""
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
 
   def after_run(self, sess, saver, summary_writer):
+    print(self.input)
+    print('-------------------------------------------------')
     print(self.output)
 
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer):
+  def after_step(self, sess, outputs_dict,
+                 saver, summary_writer, feed_dict=None):
     chars = outputs_dict["chars"]
-    for p in outputs_dict["probabilities"]:
-      # print(chars[pick(p)])
-      self.output += chars[pick(p)]
+    for i, p in zip(outputs_dict["inputs"], outputs_dict["probabilities"]):
+      self.input += chars[i[0]]
+
+      pick_id = pick(p)
+
+      self.output += chars[pick_id]
+
+      # Get the placeholder for inputs
+      inputs_place_holder = self.graph.get_tensor_by_name("inputs:0")
+
+      # Python passes dictionary by reference
+      feed_dict[inputs_place_holder] = np.array([[pick_id]], dtype=np.int32)
 
 
 def build(args):

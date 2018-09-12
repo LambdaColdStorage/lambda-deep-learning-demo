@@ -25,7 +25,7 @@ class EvalAccuracy(Callback):
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer):
+  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
 
     self.global_step = self.global_step + 1
 

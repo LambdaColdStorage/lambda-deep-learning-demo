@@ -33,7 +33,7 @@ class EvalSummary(Callback):
   def before_step(self, sess):
     pass
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer):
+  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
     if not self.accumulated_summary:
       self.accumulated_summary = outputs_dict
     else:

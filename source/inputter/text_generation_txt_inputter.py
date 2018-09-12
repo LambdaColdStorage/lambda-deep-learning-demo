@@ -23,8 +23,8 @@ class TextGenerationTXTInputter(Inputter):
       self.num_samples = 10000
       self.seq_length = 50
     elif self.args.mode == "infer":
-      self.num_samples = 1
-      self.seq_length = 1000
+      self.num_samples = 100
+      self.seq_length = 1
 
     self.vocab_size = None
 
@@ -61,6 +61,9 @@ class TextGenerationTXTInputter(Inputter):
   def get_chars(self):
     return self.chars
 
+  def get_seq_length(self):
+    return self.seq_length
+
   def get_samples_fn(self):
     random_starts = np.random.randint(
       0,
@@ -82,28 +85,32 @@ class TextGenerationTXTInputter(Inputter):
   def input_fn(self, test_samples=[]):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
+    if self.args.mode == "train":
+      max_step = (self.get_num_samples() * self.args.epochs // batch_size)
 
-    max_step = (self.get_num_samples() * self.args.epochs // batch_size)
+      dataset = tf.data.Dataset.from_generator(
+        generator=lambda: self.get_samples_fn(),
+        output_types=(tf.int32, tf.int32))
 
-    dataset = tf.data.Dataset.from_generator(
-      generator=lambda: self.get_samples_fn(),
-      output_types=(tf.int32, tf.int32))
+      dataset = dataset.repeat(self.args.epochs)
 
-    dataset = dataset.repeat(self.args.epochs)
+      dataset = dataset.map(
+        lambda inputs, outputs: self.parse_fn(inputs, outputs),
+        num_parallel_calls=4)
 
-    dataset = dataset.map(
-      lambda inputs, outputs: self.parse_fn(inputs, outputs),
-      num_parallel_calls=4)
+      dataset = dataset.apply(
+          tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.apply(
-        tf.contrib.data.batch_and_drop_remainder(batch_size))
+      dataset = dataset.take(max_step)
 
-    dataset = dataset.take(max_step)
+      dataset = dataset.prefetch(2)
 
-    dataset = dataset.prefetch(2)
-
-    iterator = dataset.make_one_shot_iterator()
-    return iterator.get_next()
+      iterator = dataset.make_one_shot_iterator()
+      return iterator.get_next()
+    else:
+      # return (tf.placeholder(tf.int32, shape=(batch_size, 1)),)
+      # return (tf.constant(5, dtype=tf.int32, shape=[batch_size, self.seq_length]),)
+      return (tf.zeros([batch_size, self.seq_length], tf.int32),)
 
 
 def build(args, augmenter):
