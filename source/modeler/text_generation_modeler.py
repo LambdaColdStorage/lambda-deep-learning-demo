@@ -4,6 +4,8 @@ Licensed under
 ==========================================================================
 
 """
+import numpy as np
+
 import tensorflow as tf
 
 from modeler import Modeler

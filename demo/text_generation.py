@@ -14,7 +14,7 @@ python demo/text_generation.py --mode=train \
 
 
 python demo/text_generation.py --mode=infer \
---num_gpu=1 --batch_size_per_gpu=128 --epochs=1 \
+--num_gpu=1 --batch_size_per_gpu=1 --epochs=1 \
 --model_dir=~/demo/model/text_gen_shakespeare
 """
 import sys

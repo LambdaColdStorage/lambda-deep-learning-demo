@@ -19,8 +19,13 @@ class TextGenerationTXTInputter(Inputter):
   def __init__(self, args, augmenter):
     super(TextGenerationTXTInputter, self).__init__(args, augmenter)
 
-    self.num_samples = 10000
-    self.seq_length = 50
+    if self.args.mode == "train":
+      self.num_samples = 10000
+      self.seq_length = 50
+    elif self.args.mode == "infer":
+      self.num_samples = 1000
+      self.seq_length = 1
+
     self.vocab_size = None
 
     self.initial_seq()
