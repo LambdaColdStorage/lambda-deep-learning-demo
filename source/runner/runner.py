@@ -140,7 +140,8 @@ class Runner(object):
       while global_step < max_step:
         self.before_step(self.modeler.callbacks)
 
-        self.outputs = self.sess.run(self.run_ops, feed_dict=self.feed_dict)
+        self.outputs = self.sess.run(self.run_ops,
+                                     feed_dict=self.feed_dict)
 
         self.after_step(self.modeler.callbacks)
 

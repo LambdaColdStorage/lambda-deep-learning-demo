@@ -119,10 +119,11 @@ class Modeler(object):
       [tf.nn.l2_loss(v) for v in l2_var_list])
     return loss_l2
 
-  def create_grad_fn(self, loss):
+  def create_grad_fn(self, loss, clipping=None):
     self.optimizer = self.create_optimizer(self.learning_rate)
     grads = self.optimizer.compute_gradients(loss, var_list=self.train_vars)
-
+    if clipping:
+      grads = [(tf.clip_by_value(g, -clipping, clipping), v) for g, v in grads]
     return grads
 
 

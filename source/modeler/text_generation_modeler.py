@@ -20,9 +20,6 @@ class TextGenerationModeler(Modeler):
     self.grad_clip = 5.
     self.softmax_temprature = 1
 
-    self.batch_size = (self.args.batch_size_per_gpu *
-                       self.args.num_gpu)
-
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
     self.vocab_size = inputter.get_vocab_size()
@@ -35,7 +32,7 @@ class TextGenerationModeler(Modeler):
   def create_graph_fn(self, inputs):
     is_training = (self.args.mode == "train")
     return self.net(inputs, self.rnn_size, self.num_rnn_layer,
-                    self.softmax_temprature, self.batch_size,
+                    self.softmax_temprature, self.args.batch_size_per_gpu,
                     self.vocab_size, is_training=is_training)
 
   def create_eval_metrics_fn(self, logits, labels):
@@ -65,7 +62,7 @@ class TextGenerationModeler(Modeler):
     if self.args.mode == "train":
       self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
-      grads = self.create_grad_fn(loss)
+      grads = self.create_grad_fn(loss, self.grad_clip)
       accuracy = self.create_eval_metrics_fn(logits, labels)
       return {"loss": loss,
               "grads": grads,
@@ -74,9 +71,6 @@ class TextGenerationModeler(Modeler):
     elif self.args.mode == "eval":
       pass
     elif self.args.mode == "infer":
-      print(type(self.chars))
-      print(self.chars)
-      print(type(logits))
       return {"logits": logits,
               "probabilities": probabilities,
               "chars": tf.convert_to_tensor(self.chars)}

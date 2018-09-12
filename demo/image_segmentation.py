@@ -235,13 +235,13 @@ def main():
   else:
 
     """
-    An application is composed of an inputter, a modeler and a runner.
-    Inputter: Handles data pipeline.
-              It (optionally) owns an data augmenter.
+    An application owns a runner.
+    Runner: Distributes a job across devices, schedules the excution.
+            It owns an inputter and a modeler.
+    Inputter: Handles the data pipeline.
+              It (optionally) owns a data augmenter.
     Modeler: Creates functions for network, loss, optimization and evaluation.
              It owns a network and a list of callbacks as inputs.
-    Runner: Distributes a graph across devices, schedules the excution.
-            It owns an inputter and a modeler.
     """
 
     augmenter = (None if not args.augmenter else

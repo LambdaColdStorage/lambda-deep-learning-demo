@@ -5,7 +5,7 @@ Licensed under
 
 Train:
 python demo/text_generation.py --mode=train \
---num_gpu=1 --batch_size_per_gpu=128 --epochs=100 \
+--num_gpu=4 --batch_size_per_gpu=128 --epochs=100 \
 --piecewise_boundaries=50,75,90 \
 --piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
@@ -186,13 +186,14 @@ def main():
   else:
 
     """
-    An application is composed of an inputter, a modeler and a runner.
-    Inputter: Handles data pipeline.
-              It (optionally) owns an data augmenter.
+    An application owns a runner.
+    Runner: Distributes a job across devices, schedules the excution.
+            It owns an inputter and a modeler.
+    Inputter: Handles the data pipeline.
+              It (optionally) owns a data augmenter.
     Modeler: Creates functions for network, loss, optimization and evaluation.
              It owns a network and a list of callbacks as inputs.
-    Runner: Distributes a graph across devices, schedules the excution.
-            It owns an inputter and a modeler.
+
     """
 
     augmenter = (None if not args.augmenter else
