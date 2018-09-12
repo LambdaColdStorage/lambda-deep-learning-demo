@@ -273,7 +273,17 @@ def main():
   if args.mode == "tune":
     tuner.tune(args)
   else:
-    # Create components of the application
+
+    """
+    An application is composed of an inputter, a modeler and a runner.
+    Inputter: Handles data pipeline.
+              It (optionally) owns an data augmenter.
+    Modeler: Creates functions for network, loss, optimization and evaluation.
+             It owns a network and a list of callbacks as inputs.
+    Runner: Distributes a graph across devices, schedules the excution.
+            It owns an inputter and a modeler.
+    """
+
     augmenter = (None if not args.augmenter else
                  importlib.import_module(
                   "source.augmenter." + args.augmenter))
@@ -303,6 +313,7 @@ def main():
     runner = importlib.import_module(
       "source.runner." + args.runner).build(args, inputter, modeler)
 
+    # Run application
     demo = app.APP(args, runner)
     demo.run()
 

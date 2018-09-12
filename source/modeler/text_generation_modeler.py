@@ -26,52 +26,17 @@ class TextGenerationModeler(Modeler):
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
     self.vocab_size = inputter.get_vocab_size()
+    self.chars = inputter.get_chars()
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, inputs):
-
-    cell = rnn.MultiRNNCell([rnn.LSTMBlockCell(num_units=self.rnn_size)
-                            for _ in range(self.num_rnn_layer)])
-
-    def get_v(n):
-        ret = tf.get_variable(n + '_unused', [self.batch_size, self.rnn_size],
-                              trainable=False,
-                              initializer=tf.constant_initializer())
-        ret = tf.placeholder_with_default(
-          ret, shape=[None, self.rnn_size], name=n)
-        return ret
-
-    initial = (rnn.LSTMStateTuple(get_v('c0'), get_v('h0')),
-               rnn.LSTMStateTuple(get_v('c1'), get_v('h1')))
-
-    embeddingW = tf.get_variable('embedding', [self.vocab_size, self.rnn_size])
-
-    input_feature = tf.nn.embedding_lookup(embeddingW, inputs)
-
-    input_list = tf.unstack(input_feature, axis=1)
-
-    outputs, last_state = rnn.static_rnn(
-      cell, input_list, initial, scope='rnnlm')
-    last_state = tf.identity(last_state, 'last_state')
-
-    output = tf.reshape(tf.concat(outputs, 1), [-1, self.rnn_size])
-
-    logits = tf.layers.dense(
-      inputs=tf.layers.flatten(output),
-      units=self.vocab_size,
-      activation=tf.identity,
-      use_bias=True,
-      kernel_initializer=tf.contrib.layers.variance_scaling_initializer(2.0),
-      bias_initializer=tf.zeros_initializer(),
-      kernel_regularizer=None,
-      bias_regularizer=None,
-      activity_regularizer=None,
-      reuse=tf.AUTO_REUSE)
-
-    return logits
+    is_training = (self.args.mode == "train")
+    return self.net(inputs, self.rnn_size, self.num_rnn_layer,
+                    self.softmax_temprature, self.batch_size,
+                    self.vocab_size, is_training=is_training)
 
   def create_eval_metrics_fn(self, logits, labels):
     classes = tf.argmax(logits, axis=1, output_type=tf.int32)
@@ -95,7 +60,7 @@ class TextGenerationModeler(Modeler):
     inputs = x[0]
     labels = x[1]
 
-    logits = self.create_graph_fn(inputs)
+    logits, probabilities = self.create_graph_fn(inputs)
 
     if self.args.mode == "train":
       self.gether_train_vars()
@@ -109,7 +74,12 @@ class TextGenerationModeler(Modeler):
     elif self.args.mode == "eval":
       pass
     elif self.args.mode == "infer":
-      pass
+      print(type(self.chars))
+      print(self.chars)
+      print(type(logits))
+      return {"logits": logits,
+              "probabilities": probabilities,
+              "chars": tf.convert_to_tensor(self.chars)}
 
 
 def build(args, net, callbacks):

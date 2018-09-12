@@ -53,6 +53,9 @@ class TextGenerationTXTInputter(Inputter):
   def get_vocab_size(self):
     return self.vocab_size
 
+  def get_chars(self):
+    return self.chars
+
   def get_samples_fn(self):
     random_starts = np.random.randint(
       0,

@@ -12,6 +12,10 @@ python demo/text_generation.py --mode=train \
 --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
 --model_dir=~/demo/model/text_gen_shakespeare
 
+
+python demo/text_generation.py --mode=infer \
+--num_gpu=1 --batch_size_per_gpu=128 --epochs=1 \
+--model_dir=~/demo/model/text_gen_shakespeare
 """
 import sys
 import os
@@ -50,7 +54,7 @@ def main():
   parser.add_argument("--augmenter_speed_mode",
                       action='store_true',
                       help="Flag to use speed mode in augmentation")
-  parser.add_argument("--network", choices=["fns"],
+  parser.add_argument("--network", choices=["char_rnn"],
                       type=str,
                       help="Choose a network architecture",
                       default="char_rnn")
@@ -121,7 +125,8 @@ def main():
   parser.add_argument("--test_samples",
                       help="A string of comma seperated testing data. "
                       "Must be provided for infer mode.",
-                      type=str)
+                      type=str,
+                      default="The ")
   parser.add_argument("--summary_names",
                       help="A string of comma seperated names for summary",
                       type=str,
@@ -132,7 +137,7 @@ def main():
   parser.add_argument("--pretrained_dir",
                       help="Path to pretrained network (for transfer learning).",
                       type=str,
-                      default="")  
+                      default="")
   parser.add_argument("--skip_pretrained_var_list",
                       help="Variables to skip in restoring from pretrained model (for transfer learning).",
                       type=str,
@@ -162,23 +167,34 @@ def main():
   parser.add_argument("--infer_callbacks",
                       help="List of callbacks in inference.",
                       type=str,
-                      default="infer_basic")
+                      default="infer_basic,infer_display_text_generation")
 
   args = parser.parse_args()
 
   args = args_parser.prepare(args)
 
   # Download data if necessary
-  if not os.path.exists(args.dataset_meta):
-    downloader.download_and_extract(args.dataset_meta,
-                                    args.dataset_url, False)
-  else:
-    print("Found " + args.dataset_meta + ".")
+  if args.mode != "infer":
+    if not os.path.exists(args.dataset_meta):
+      downloader.download_and_extract(args.dataset_meta,
+                                      args.dataset_url, False)
+    else:
+      print("Found " + args.dataset_meta + ".")
 
   if args.mode == "tune":
     tuner.tune(args)
   else:
-    # Create components of the application
+
+    """
+    An application is composed of an inputter, a modeler and a runner.
+    Inputter: Handles data pipeline.
+              It (optionally) owns an data augmenter.
+    Modeler: Creates functions for network, loss, optimization and evaluation.
+             It owns a network and a list of callbacks as inputs.
+    Runner: Distributes a graph across devices, schedules the excution.
+            It owns an inputter and a modeler.
+    """
+
     augmenter = (None if not args.augmenter else
                  importlib.import_module(
                   "source.augmenter." + args.augmenter))

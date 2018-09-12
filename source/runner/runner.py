@@ -116,7 +116,7 @@ class Runner(object):
   def print_trainable_variables(self):
 
     for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
-      print (i.name)
+      print (i)
 
   def print_global_variables(self):
 
