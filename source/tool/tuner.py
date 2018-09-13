@@ -54,10 +54,10 @@ def train(args):
     "source.inputter." + args.inputter).build(args, augmenter)
 
   modeler = importlib.import_module(
-    "source.modeler." + args.modeler).build(args, net, callbacks)
+    "source.modeler." + args.modeler).build(args, net)
 
   runner = importlib.import_module(
-    "source.runner." + args.runner).build(args, inputter, modeler)
+    "source.runner." + args.runner).build(args, inputter, modeler, callbacks)
 
   trainer = app.APP(args, runner)
   trainer.run()
@@ -92,10 +92,10 @@ def eval(args):
     "source.inputter." + args.inputter).build(args, augmenter)
 
   modeler = importlib.import_module(
-    "source.modeler." + args.modeler).build(args, net, callbacks)
+    "source.modeler." + args.modeler).build(args, net)
 
   runner = importlib.import_module(
-    "source.runner." + args.runner).build(args, inputter, modeler)
+    "source.runner." + args.runner).build(args, inputter, modeler, callbacks)
 
   # Optional, set args.dataset_meta to a validate file
   # args.dataset_meta = path-to-eval-csv

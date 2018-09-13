@@ -13,8 +13,8 @@ from source.augmenter.external import vgg_preprocessing
 
 
 class StyleTransferModeler(Modeler):
-  def __init__(self, args, net, callbacks):
-    super(StyleTransferModeler, self).__init__(args, net, callbacks)
+  def __init__(self, args, net):
+    super(StyleTransferModeler, self).__init__(args, net)
 
     self.feature_net = getattr(
       importlib.import_module("source.network." + self.args.feature_net),
@@ -211,5 +211,5 @@ class StyleTransferModeler(Modeler):
               "input": images}
 
 
-def build(args, net, callbacks):
-  return StyleTransferModeler(args, net, callbacks)
+def build(args, net):
+  return StyleTransferModeler(args, net)

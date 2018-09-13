@@ -219,10 +219,10 @@ def main():
       "source.inputter." + args.inputter).build(args, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler." + args.modeler).build(args, net, callbacks)
+      "source.modeler." + args.modeler).build(args, net)
 
     runner = importlib.import_module(
-      "source.runner." + args.runner).build(args, inputter, modeler)
+      "source.runner." + args.runner).build(args, inputter, modeler, callbacks)
 
     demo = app.APP(args, runner)
     demo.run()

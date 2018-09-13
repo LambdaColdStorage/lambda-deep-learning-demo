@@ -11,14 +11,13 @@ import tensorflow as tf
 
 
 class Runner(object):
-  def __init__(self, args, inputter, modeler):
+  def __init__(self, args, inputter, modeler, callbacks):
     self.args = args
     self.inputter = inputter
     self.modeler = modeler
+    self.callbacks = callbacks
 
     self.modeler.get_dataset_info(self.inputter)
-
-    self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
 
     self.session_config = self.create_session_config()
     self.sess = None
@@ -48,22 +47,22 @@ class Runner(object):
 
     return session_config
 
-  def before_run(self, callbacks):
-    for callback in callbacks:
+  def before_run(self):
+    for callback in self.callbacks:
       callback.before_run(self.sess, self.saver)
 
-  def before_step(self, callbacks):
-    for callback in callbacks:
+  def before_step(self):
+    for callback in self.callbacks:
       callback.before_step(self.sess)
 
-  def after_step(self, callbacks):
+  def after_step(self):
 
     outputs_dict = {}
     for key, value in zip(self.run_ops_names, self.outputs):
       outputs_dict[key] = value
 
     print_msg = "\r"
-    for callback in callbacks:
+    for callback in self.callbacks:
       return_dict = callback.after_step(self.sess, outputs_dict,
                                         self.saver, self.summary_writer,
                                         self.feed_dict)
@@ -75,8 +74,8 @@ class Runner(object):
       print(print_msg, end='')
       sys.stdout.flush()
 
-  def after_run(self, callbacks):
-    for callback in callbacks:
+  def after_run(self):
+    for callback in self.callbacks:
       callback.after_run(self.sess, self.saver, self.summary_writer)
 
   def prepare_feed_dict(self):
@@ -142,7 +141,7 @@ class Runner(object):
     with tf.Session(config=self.session_config) as self.sess:
 
       # Before run
-      self.before_run(self.modeler.callbacks)
+      self.before_run()
 
       self.prepare_feed_dict()
 
@@ -153,17 +152,17 @@ class Runner(object):
       max_step = self.sess.run(self.max_step_op)
 
       while global_step < max_step:
-        self.before_step(self.modeler.callbacks)
+        self.before_step()
 
         self.outputs = self.sess.run(self.run_ops,
                                      feed_dict=self.feed_dict)
 
-        self.after_step(self.modeler.callbacks)
+        self.after_step()
 
         global_step = global_step + 1
 
-      self.after_run(self.modeler.callbacks)
+      self.after_run()
 
 
-def build(args, inputter, modeler):
-  return Runner(args, inputter, modeler)
+def build(args, inputter, modeler, callbacks):
+  return Runner(args, inputter, modeler, callbacks)

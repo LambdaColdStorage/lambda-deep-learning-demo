@@ -12,10 +12,11 @@ from runner import Runner
 
 
 class ParameterServerRunner(Runner):
-  def __init__(self, args, inputter, modeler):
+  def __init__(self, args, inputter, modeler, callbacks):
     super(ParameterServerRunner, self).__init__(args,
                                                 inputter,
-                                                modeler)
+                                                modeler,
+                                                callbacks)
     self.ps_ops = ["Variable", "VariableV2", "AutoReloadVariable"]
 
   def assign_to_device(self, device, ps_device="/cpu:0"):
@@ -135,5 +136,5 @@ class ParameterServerRunner(Runner):
         name="global_saver")
 
 
-def build(args, inputter, modeler):
-  return ParameterServerRunner(args, inputter, modeler)
+def build(args, inputter, modeler, callbacks):
+  return ParameterServerRunner(args, inputter, modeler, callbacks)

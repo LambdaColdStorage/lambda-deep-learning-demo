@@ -12,8 +12,8 @@ rnn = tf.contrib.rnn
 
 
 class TextGenerationModeler(Modeler):
-  def __init__(self, args, net, callbacks):
-    super(TextGenerationModeler, self).__init__(args, net, callbacks)
+  def __init__(self, args, net):
+    super(TextGenerationModeler, self).__init__(args, net)
     self.grad_clip = 5.
 
   def get_dataset_info(self, inputter):
@@ -74,5 +74,5 @@ class TextGenerationModeler(Modeler):
               "last_state": last_state}
 
 
-def build(args, net, callbacks):
-  return TextGenerationModeler(args, net, callbacks)
+def build(args, net):
+  return TextGenerationModeler(args, net)

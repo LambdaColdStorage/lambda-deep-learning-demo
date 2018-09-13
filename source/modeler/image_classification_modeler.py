@@ -10,8 +10,8 @@ from modeler import Modeler
 
 
 class ImageClassificationModeler(Modeler):
-  def __init__(self, args, net, callbacks):
-    super(ImageClassificationModeler, self).__init__(args, net, callbacks)
+  def __init__(self, args, net):
+    super(ImageClassificationModeler, self).__init__(args, net)
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
@@ -69,5 +69,5 @@ class ImageClassificationModeler(Modeler):
               "probabilities": predictions["probabilities"]}
 
 
-def build(args, network, callbacks):
-  return ImageClassificationModeler(args, network, callbacks)
+def build(args, network):
+  return ImageClassificationModeler(args, network)

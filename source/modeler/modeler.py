@@ -11,10 +11,9 @@ import tensorflow as tf
 
 
 class Modeler(object):
-  def __init__(self, args, net, callbacks):
+  def __init__(self, args, net):
     self.args = args
     self.net = net
-    self.callbacks = callbacks
 
     self.train_vars = []
     self.feed_dict_pre = {}
