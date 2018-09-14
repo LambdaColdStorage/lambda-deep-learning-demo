@@ -224,7 +224,7 @@ def main():
     runner = importlib.import_module(
       "source.runner." + args.runner).build(args, inputter, modeler, callbacks)
 
-    demo = app.APP(args, runner)
+    demo = app.APP(runner)
     demo.run()
 
 

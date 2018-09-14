@@ -314,7 +314,7 @@ def main():
       "source.runner." + args.runner).build(args, inputter, modeler, callbacks)
 
     # Run application
-    demo = app.APP(args, runner)
+    demo = app.APP(runner)
     demo.run()
 
 

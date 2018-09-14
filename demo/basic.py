@@ -30,7 +30,7 @@ def main():
 
   args = parser.parse_args()
 
-  demo = app.APP(args)
+  demo = app.APP()
 
   demo.run()
 
