@@ -10,10 +10,25 @@ from __future__ import print_function
 import tensorflow as tf
 
 
+class ModelerConfig(Object):
+    def __init__(self, training_mode="train", optimizer="momentum", learning_rate=0.1, gpu_count=1, batch_size=16, trainable_var_list=None, skip_trainable_var_list=None, piecewise_boundaries=None):
+        self.training_mode = training_mode
+        self.optimizer = optimizer
+        self.learning_rate = learning_rate
+        self.gpu_count = gpu_count
+        self.batch_size = batch_size
+        self.trainable_var_list = trainable_vars if trainable_vars is not None else []
+        self.skip_trainable_var_list = skip_trainable_vars if skip_trainable_vars is not None else []
+        self.piecewise_boundaries = piecewise_boundaries if piecewise_boundaries is not None else [] 
+        self.piecewise_learning_rate_decay = piecewise_learning_rate_decay if piecewise_learning_rate_decay is not None else [] 
+        self.skip_l2_loss_vars = skip_l2_loss_vars if skip_l2_loss_vars is not None else []
+
+
 class Modeler(object):
-  def __init__(self, args, net):
+  def __init__(self, args, net, config):
     self.args = args
     self.net = net
+    self.config = config
 
     self.train_vars = []
     self.feed_dict_pre = {}
