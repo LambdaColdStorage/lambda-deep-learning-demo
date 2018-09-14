@@ -28,16 +28,6 @@ class InferBasic(Callback):
 
     print("Start inference.")
 
-  def after_run(self, sess, saver, summary_writer):
-    pass
-
-  def before_step(self, sess):
-    pass
-
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
-    # return feed_dict
-    pass
-
 
 def build(args):
   return InferBasic(args)

@@ -22,9 +22,6 @@ class EvalAccuracy(Callback):
     eval_accuracy = self.accumulated_accuracy / self.global_step
     print("Evaluation accuracy: " + "{0:.4f}".format(eval_accuracy))
 
-  def before_step(self, sess):
-    pass
-
   def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
 
     self.global_step = self.global_step + 1

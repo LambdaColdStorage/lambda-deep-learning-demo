@@ -22,9 +22,6 @@ class EvalSpeed(Callback):
     self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
     self.global_step = 0.0
 
-  def after_run(self, sess, saver, summary_writer):
-    pass
-
   def before_step(self, sess):
     self.time_before_step = time.time()
 

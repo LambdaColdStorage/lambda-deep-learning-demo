@@ -94,9 +94,6 @@ class TrainBasic(Callback):
                              global_step=max_step)
       print("Checkpoint " + save_path + " has been saved.")
 
-  def before_step(self, sess):
-    pass
-
   def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
 
     global_step_op = self.graph.get_tensor_by_name("global_step:0")

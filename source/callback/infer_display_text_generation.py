@@ -33,9 +33,6 @@ class InferDisplayTextGeneration(Callback):
     print(self.input[0] + self.output)
     print('-------------------------------------------------')
 
-  def before_step(self, sess):
-    pass
-
   def after_step(self, sess, outputs_dict,
                  saver, summary_writer, feed_dict=None):
     chars = outputs_dict["chars"]

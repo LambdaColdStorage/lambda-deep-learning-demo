@@ -39,12 +39,6 @@ class InferDisplayStyleTransfer(Callback):
     self.graph = tf.get_default_graph()
     self.RGB_MEAN = [123.68, 116.78, 103.94]
 
-  def after_run(self, sess, saver, summary_writer):
-    pass
-
-  def before_step(self, sess):
-    pass
-
   def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
     for input_image, output_image in zip(
       outputs_dict["input"], outputs_dict["output"]):

@@ -31,12 +31,6 @@ class EvalBasic(Callback):
   def after_run(self, sess, saver, summary_writer):
     print("\n")
 
-  def before_step(self, sess):
-    pass
-
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
-    pass
-
 
 def build(args):
   return EvalBasic(args)

@@ -22,9 +22,6 @@ class EvalLoss(Callback):
     eval_loss = self.accumulated_loss / self.global_step
     print("Evaluation loss: " + "{0:.4f}".format(eval_loss))
 
-  def before_step(self, sess):
-    pass
-
   def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
     self.global_step = self.global_step + 1
 

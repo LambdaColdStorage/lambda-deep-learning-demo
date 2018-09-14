@@ -21,9 +21,6 @@ class TrainSpeed(Callback):
     self.accumulated_time = 0.0
     self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
 
-  def after_run(self, sess, saver, summary_writer):
-    pass
-
   def before_step(self, sess):
     self.time_before_step = time.time()
 

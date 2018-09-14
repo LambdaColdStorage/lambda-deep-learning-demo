@@ -17,12 +17,6 @@ class TrainLoss(Callback):
     self.graph = tf.get_default_graph()
     self.accumulated_loss = 0.0
 
-  def after_run(self, sess, saver, summary_writer):
-    pass
-
-  def before_step(self, sess):
-    pass
-
   def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     global_step = sess.run(global_step_op)
