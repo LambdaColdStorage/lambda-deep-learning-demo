@@ -33,6 +33,9 @@ class ImageClassificationModeler(Modeler):
     return accuracy
 
   def create_loss_fn(self, logits, labels):
+
+    self.gether_train_vars()
+
     loss_cross_entropy = tf.losses.softmax_cross_entropy(
       logits=logits, onehot_labels=labels)
 
@@ -48,7 +51,6 @@ class ImageClassificationModeler(Modeler):
     logits, predictions = self.create_graph_fn(images)
 
     if self.args.mode == "train":
-      self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss)
       accuracy = self.create_eval_metrics_fn(
@@ -58,7 +60,6 @@ class ImageClassificationModeler(Modeler):
               "accuracy": accuracy,
               "learning_rate": self.learning_rate}
     elif self.args.mode == "eval":
-      self.gether_train_vars()
       loss = self.create_loss_fn(logits, labels)
       accuracy = self.create_eval_metrics_fn(
         predictions, labels)

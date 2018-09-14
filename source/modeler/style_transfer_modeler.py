@@ -125,6 +125,8 @@ class StyleTransferModeler(Modeler):
     Returns:
       loss
     """
+    self.gether_train_vars()
+
     (logits, vgg_net_target), self.feature_net_init_flag = self.feature_net(
       inputs, self.args.data_format, is_training=False,
       init_flag=self.feature_net_init_flag,
@@ -196,14 +198,14 @@ class StyleTransferModeler(Modeler):
     stylized_images = self.create_graph_fn(images)
 
     if self.args.mode == "train":
-      self.gether_train_vars()
+
       loss = self.create_loss_fn(stylized_images, images)
       grads = self.create_grad_fn(loss)
       return {"loss": loss,
               "grads": grads,
               "learning_rate": self.learning_rate}
     elif self.args.mode == "eval":
-      self.gether_train_vars()
+
       loss = self.create_loss_fn(stylized_images, images)
       return {"loss": loss}
     elif self.args.mode == "infer":

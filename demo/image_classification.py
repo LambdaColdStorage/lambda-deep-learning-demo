@@ -7,7 +7,7 @@ Resnet32
 
 Train:
 python demo/image_classification.py --mode=train \
---num_gpu=4 --batch_size_per_gpu=256 --epochs=100 \
+--num_gpu=4 --batch_size_per_gpu=256 --epochs=10 \
 --piecewise_boundaries=50,75,90 \
 --piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \

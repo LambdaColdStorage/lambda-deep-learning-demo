@@ -39,6 +39,9 @@ class TextGenerationModeler(Modeler):
     return accuracy
 
   def create_loss_fn(self, logits, labels):
+
+      self.gether_train_vars()
+
       loss_cross_entropy = tf.reduce_mean(
         tf.nn.sparse_softmax_cross_entropy_with_logits(
           logits=logits, labels=tf.reshape(labels, [-1])))
@@ -56,7 +59,7 @@ class TextGenerationModeler(Modeler):
 
     if self.args.mode == "train":
       labels = x[1]
-      self.gether_train_vars()
+
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss, self.grad_clip)
       accuracy = self.create_eval_metrics_fn(logits, labels)

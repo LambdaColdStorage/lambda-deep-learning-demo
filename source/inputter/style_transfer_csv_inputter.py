@@ -84,7 +84,6 @@ class StyleTransferCSVInputter(Inputter):
   def input_fn(self, test_samples=[]):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
-    max_step = (self.get_num_samples() * self.args.epochs // batch_size)
 
     samples = self.get_samples_fn()
 
@@ -101,8 +100,6 @@ class StyleTransferCSVInputter(Inputter):
 
     dataset = dataset.apply(
         tf.contrib.data.batch_and_drop_remainder(batch_size))
-
-    dataset = dataset.take(max_step)
 
     dataset = dataset.prefetch(2)
 

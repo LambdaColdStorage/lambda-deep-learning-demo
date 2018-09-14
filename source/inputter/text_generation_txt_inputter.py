@@ -88,7 +88,6 @@ class TextGenerationTXTInputter(Inputter):
     batch_size = (self.args.batch_size_per_gpu *
                   self.args.num_gpu)
     if self.args.mode == "train":
-      max_step = (self.get_num_samples() * self.args.epochs // batch_size)
 
       dataset = tf.data.Dataset.from_generator(
         generator=lambda: self.get_samples_fn(),
@@ -102,8 +101,6 @@ class TextGenerationTXTInputter(Inputter):
 
       dataset = dataset.apply(
           tf.contrib.data.batch_and_drop_remainder(batch_size))
-
-      dataset = dataset.take(max_step)
 
       dataset = dataset.prefetch(2)
 
