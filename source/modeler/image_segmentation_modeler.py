@@ -15,9 +15,6 @@ class ImageSegmentationModeler(Modeler):
   def __init__(self, config, net):
     super(ImageSegmentationModeler, self).__init__(config, net)
 
-    self.colors = np.random.randint(255,
-                                    size=(self.config.num_classes, 3))
-
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
 
