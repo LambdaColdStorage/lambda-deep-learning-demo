@@ -40,7 +40,7 @@ def cifarnet(images, num_classes=10, is_training=False,
         probabilities = tf.nn.softmax(logits)
         predictions = tf.argmax(logits, 1)
 
-  Args:
+  config:
     images: A batch of `Tensors` of size [batch_size, height, width, channels].
     num_classes: the number of classes in the dataset. If 0 or None, the logits
       layer is omitted and the input features to the logits layer are returned
@@ -98,7 +98,7 @@ cifarnet.default_image_size = 32
 def cifarnet_arg_scope(weight_decay=0.004):
   """Defines the default cifarnet argument scope.
 
-  Args:
+  config:
     weight_decay: The weight decay to use for regularizing the model.
 
   Returns:

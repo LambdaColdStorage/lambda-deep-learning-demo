@@ -12,8 +12,8 @@ rnn = tf.contrib.rnn
 
 
 class TextGenerationModeler(Modeler):
-  def __init__(self, args, net):
-    super(TextGenerationModeler, self).__init__(args, net)
+  def __init__(self, config, net):
+    super(TextGenerationModeler, self).__init__(config, net)
     self.grad_clip = 5.
 
   def get_dataset_info(self, inputter):
@@ -27,9 +27,9 @@ class TextGenerationModeler(Modeler):
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, inputs):
-    is_training = (self.args.mode == "train")
+    is_training = (self.config.mode == "train")
     return self.net(inputs, self.feed_dict_seq, self.seq_length,
-                    self.args.batch_size_per_gpu, self.vocab_size,
+                    self.config.batch_size_per_gpu, self.vocab_size,
                     is_training=is_training)
 
   def create_eval_metrics_fn(self, logits, labels):
@@ -57,7 +57,7 @@ class TextGenerationModeler(Modeler):
     logits, probabilities, last_state, inputs = \
         self.create_graph_fn(inputs)
 
-    if self.args.mode == "train":
+    if self.config.mode == "train":
       labels = x[1]
 
       loss = self.create_loss_fn(logits, labels)
@@ -67,9 +67,9 @@ class TextGenerationModeler(Modeler):
               "grads": grads,
               "accuracy": accuracy,
               "learning_rate": self.learning_rate}
-    elif self.args.mode == "eval":
+    elif self.config.mode == "eval":
       pass
-    elif self.args.mode == "infer":
+    elif self.config.mode == "infer":
       return {"inputs": inputs,
               "logits": logits,
               "probabilities": probabilities,
@@ -77,5 +77,5 @@ class TextGenerationModeler(Modeler):
               "last_state": last_state}
 
 
-def build(args, net):
-  return TextGenerationModeler(args, net)
+def build(config, net):
+  return TextGenerationModeler(config, net)

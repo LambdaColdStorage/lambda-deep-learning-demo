@@ -50,7 +50,7 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
   Note that the method doesn't assume we know the input image size but it does
   assume we know the input image rank.
 
-  Args:
+  config:
     image: an image of shape [height, width, channels].
     offset_height: a scalar tensor indicating the height offset.
     offset_width: a scalar tensor indicating the width offset.
@@ -96,7 +96,7 @@ def _random_crop(image_list, crop_height, crop_width):
 
     image, depths, normals = _random_crop([image, depths, normals], 120, 150)
 
-  Args:
+  config:
     image_list: a list of image tensors of the same dimension but possibly
       varying channel.
     crop_height: the new height.
@@ -173,7 +173,7 @@ def _random_crop(image_list, crop_height, crop_width):
 def _central_crop(image_list, crop_height, crop_width):
   """Performs central crops of the given image list.
 
-  Args:
+  config:
     image_list: a list of image tensors of the same dimension but possibly
       varying channel.
     crop_height: the height of the image following the crop.
@@ -204,7 +204,7 @@ def _mean_image_subtraction(image, means=[_R_MEAN, _G_MEAN, _B_MEAN]):
 
   Note that the rank of `image` must be known.
 
-  Args:
+  config:
     image: a tensor of size [height, width, C].
     means: a C-vector of values to subtract from each channel.
 
@@ -242,7 +242,7 @@ def _smallest_size_at_least(height, width, smallest_side):
   Computes new shape with the smallest side equal to `smallest_side` while
   preserving the original aspect ratio.
 
-  Args:
+  config:
     height: an int32 scalar tensor indicating the current height.
     width: an int32 scalar tensor indicating the current width.
     smallest_side: A python integer or scalar `Tensor` indicating the size of
@@ -269,7 +269,7 @@ def _smallest_size_at_least(height, width, smallest_side):
 def _aspect_preserving_resize(image, smallest_side, depth=3, resize_mode="bilinear"):
   """Resize images preserving the original aspect ratio.
 
-  Args:
+  config:
     image: A 3-D image `Tensor`.
     smallest_side: A python integer or scalar `Tensor` indicating the size of
       the smallest side after resize.
@@ -318,7 +318,7 @@ def preprocess_for_train(image,
 
   Note that in speed_mode only resize and mean subtraction are used.
 
-  Args:
+  config:
     image: A `Tensor` representing an image of arbitrary size.
     output_height: The height of the image after preprocessing.
     output_width: The width of the image after preprocessing.
@@ -358,7 +358,7 @@ def preprocess_for_eval(image,
 
   Note that in speed_mode only resize and mean subtraction are used.
 
-  Args:
+  config:
     image: A `Tensor` representing an image of arbitrary size.
     output_height: The height of the image after preprocessing.
     output_width: The width of the image after preprocessing.
@@ -389,7 +389,7 @@ def preprocess_image(image, output_height, output_width, is_training=False,
                      speed_mode=False):
   """Preprocesses the given image.
 
-  Args:
+  config:
     image: A `Tensor` representing an image of arbitrary size.
     output_height: The height of the image after preprocessing.
     output_width: The width of the image after preprocessing.

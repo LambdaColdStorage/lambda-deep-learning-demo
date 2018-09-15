@@ -10,8 +10,8 @@ from callback import Callback
 
 
 class EvalAccuracy(Callback):
-  def __init__(self, args):
-    super(EvalAccuracy, self).__init__(args)
+  def __init__(self, config):
+    super(EvalAccuracy, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
@@ -29,7 +29,7 @@ class EvalAccuracy(Callback):
     self.accumulated_accuracy = (self.accumulated_accuracy +
                                  outputs_dict["accuracy"])
 
-    every_n_iter = self.args.log_every_n_iter
+    every_n_iter = self.config.log_every_n_iter
 
     if self.global_step % every_n_iter == 0:
       running_accuracy = self.accumulated_accuracy / self.global_step
@@ -38,5 +38,5 @@ class EvalAccuracy(Callback):
       return {}
 
 
-def build(args):
-  return EvalAccuracy(args)
+def build(config):
+  return EvalAccuracy(config)

@@ -10,8 +10,8 @@ from callback import Callback
 
 
 class InferDisplayImageClassification(Callback):
-  def __init__(self, args):
-    super(InferDisplayImageClassification, self).__init__(args)
+  def __init__(self, config):
+    super(InferDisplayImageClassification, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
@@ -22,5 +22,5 @@ class InferDisplayImageClassification(Callback):
       print("Predict: " + str(c) + ", Probability: " + str(p[c]))
 
 
-def build(args):
-  return InferDisplayImageClassification(args)
+def build(config):
+  return InferDisplayImageClassification(config)

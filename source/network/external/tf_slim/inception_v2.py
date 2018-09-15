@@ -39,7 +39,7 @@ def inception_v2_base(inputs,
   This method can construct the network up to the layer inception(5b) as
   described in http://arxiv.org/abs/1502.03167.
 
-  Args:
+  config:
     inputs: a tensor of shape [batch_size, height, width, channels].
     final_endpoint: specifies the endpoint to construct the network up to. It
       can be one of ['Conv2d_1a_7x7', 'MaxPool_2a_3x3', 'Conv2d_2b_1x1',
@@ -467,7 +467,7 @@ def inception_v2(inputs,
 
   The default image size used to train this network is 224x224.
 
-  Args:
+  config:
     inputs: a tensor of shape [batch_size, height, width, channels].
     num_classes: number of predicted classes. If 0 or None, the logits layer
       is omitted and the input features to the logits layer (before dropout)
@@ -544,7 +544,7 @@ def _reduced_kernel_size_for_small_input(input_tensor, kernel_size):
   If the shape of the input images is unknown at graph construction time this
   function assumes that the input images are is large enough.
 
-  Args:
+  config:
     input_tensor: input tensor of size [batch_size, height, width, channels].
     kernel_size: desired kernel size of length 2: [kernel_height, kernel_width]
 

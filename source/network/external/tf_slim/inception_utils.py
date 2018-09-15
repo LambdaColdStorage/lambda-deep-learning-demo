@@ -36,7 +36,7 @@ def inception_arg_scope(weight_decay=0.00004,
                         activation_fn=tf.nn.relu):
   """Defines the default arg scope for inception models.
 
-  Args:
+  config:
     weight_decay: The weight decay to use for regularizing the model.
     use_batch_norm: "If `True`, batch_norm is applied after each convolution.
     batch_norm_decay: Decay for batch norm moving average.

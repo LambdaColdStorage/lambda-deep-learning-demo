@@ -12,8 +12,8 @@ from runner import Runner
 
 
 class ParameterServerRunner(Runner):
-  def __init__(self, args, inputter, modeler, callbacks):
-    super(ParameterServerRunner, self).__init__(args,
+  def __init__(self, config, inputter, modeler, callbacks):
+    super(ParameterServerRunner, self).__init__(config,
                                                 inputter,
                                                 modeler,
                                                 callbacks)
@@ -29,7 +29,7 @@ class ParameterServerRunner(Runner):
       return _assign
 
   def batch_split(self, batch, idx):
-    bs_per_gpu = self.args.batch_size_per_gpu
+    bs_per_gpu = self.config.batch_size_per_gpu
     batch_per_gpu = ()
     for x in batch:
       batch_per_gpu = (batch_per_gpu +
@@ -74,7 +74,7 @@ class ParameterServerRunner(Runner):
 
     batch = self.inputter.input_fn()
 
-    if self.args.mode == "infer":
+    if self.config.mode == "infer":
       with tf.device(self.assign_to_device("/gpu:{}".format(0),
                      ps_device="/cpu:0")):
         ops = self.modeler.model_fn(batch)
@@ -83,7 +83,7 @@ class ParameterServerRunner(Runner):
     else:
       output = {}
       # Map
-      for i in range(self.args.num_gpu):
+      for i in range(self.config.gpu_count):
         with tf.device(self.assign_to_device("/gpu:{}".format(i),
                        ps_device="/cpu:0")):
           # Split input data across multiple devices
@@ -122,19 +122,19 @@ class ParameterServerRunner(Runner):
       self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
       self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
 
-      if self.args.mode == "train":
+      if self.config.mode == "train":
         self.summary_writer = tf.summary.FileWriter(
-          self.args.model_dir,
+          self.config.model_dir,
           graph=self.graph)
-      elif self.args.mode == "eval":
+      elif self.config.mode == "eval":
         self.summary_writer = tf.summary.FileWriter(
-          os.path.join(self.args.model_dir, "eval"),
+          os.path.join(self.config.model_dir, "eval"),
           graph=self.graph)
 
       self.saver = tf.train.Saver(
-        max_to_keep=self.args.keep_checkpoint_max,
+        max_to_keep=self.config.keep_checkpoint_max,
         name="global_saver")
 
 
-def build(args, inputter, modeler, callbacks):
-  return ParameterServerRunner(args, inputter, modeler, callbacks)
+def build(config, inputter, modeler, callbacks):
+  return ParameterServerRunner(config, inputter, modeler, callbacks)

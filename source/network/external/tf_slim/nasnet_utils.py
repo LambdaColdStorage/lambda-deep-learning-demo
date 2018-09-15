@@ -160,7 +160,7 @@ def _operation_to_info(operation):
 
   An example would be 'separable_3x3_4' -> (3, 4).
 
-  Args:
+  config:
     operation: String that corresponds to convolution operation.
 
   Returns:
@@ -238,7 +238,7 @@ def _pooling(net, stride, operation):
 class NasNetABaseCell(object):
   """NASNet Cell class that is used as a 'layer' in image architectures.
 
-  Args:
+  config:
     num_conv_filters: The number of filters for each convolution operation.
     operations: List of operations that are performed in the NASNet Cell in
       order.
@@ -404,7 +404,7 @@ class NasNetABaseCell(object):
                        use_summaries=False, drop_connect_version='v3'):
     """Apply drop_path regularization.
 
-    Args:
+    config:
       net: the Tensor that gets drop_path regularization applied.
       current_step: a float32 Tensor with the current global_step value,
         to be divided by hparams.total_training_steps. Usually None, which

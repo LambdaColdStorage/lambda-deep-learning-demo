@@ -10,8 +10,8 @@ from callback import Callback
 
 
 class EvalLoss(Callback):
-  def __init__(self, args):
-    super(EvalLoss, self).__init__(args)
+  def __init__(self, config):
+    super(EvalLoss, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
@@ -28,7 +28,7 @@ class EvalLoss(Callback):
     self.accumulated_loss = (self.accumulated_loss +
                              outputs_dict["loss"])
 
-    every_n_iter = self.args.log_every_n_iter
+    every_n_iter = self.config.log_every_n_iter
 
     if self.global_step % every_n_iter == 0:
       running_loss = self.accumulated_loss / self.global_step
@@ -37,5 +37,5 @@ class EvalLoss(Callback):
       return {}
 
 
-def build(args):
-  return EvalLoss(args)
+def build(config):
+  return EvalLoss(config)

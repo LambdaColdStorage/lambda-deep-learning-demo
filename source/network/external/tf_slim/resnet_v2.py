@@ -70,7 +70,7 @@ def bottleneck(inputs, depth, depth_bottleneck, stride, rate=1,
   When putting together two consecutive ResNet blocks that use this unit, one
   should use stride = 2 in the last unit of the first block.
 
-  Args:
+  config:
     inputs: A tensor of size [batch, height, width, channels].
     depth: The depth of the ResNet unit output.
     depth_bottleneck: The depth of the bottleneck layers.
@@ -141,7 +141,7 @@ def resnet_v2(inputs,
   output_stride=16 in order to increase the density of the computed features at
   small computational and memory overhead, cf. http://arxiv.org/abs/1606.00915.
 
-  Args:
+  config:
     inputs: A tensor of size [batch, height_in, width_in, channels].
     blocks: A list of length equal to the number of ResNet blocks. Each element
       is a resnet_utils.Block object describing the units in the block.
@@ -259,7 +259,7 @@ def resnet_small_v2(inputs,
   output_stride=16 in order to increase the density of the computed features at
   small computational and memory overhead, cf. http://arxiv.org/abs/1606.00915.
 
-  Args:
+  config:
     inputs: A tensor of size [batch, height_in, width_in, channels].
     blocks: A list of length equal to the number of ResNet blocks. Each element
       is a resnet_utils.Block object describing the units in the block.
@@ -344,7 +344,7 @@ resnet_small_v2.default_image_size = 32
 def resnet_v2_block(scope, base_depth, num_units, stride):
   """Helper function for creating a resnet_v2 bottleneck block.
 
-  Args:
+  config:
     scope: The scope of the block.
     base_depth: The depth of the bottleneck layer for each unit.
     num_units: The number of units in the block.

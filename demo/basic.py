@@ -28,7 +28,7 @@ def main():
                       help="Name of the runner",
                       default="runner")
 
-  args = parser.parse_args()
+  config = parser.parse_config()
 
   demo = app.APP()
 

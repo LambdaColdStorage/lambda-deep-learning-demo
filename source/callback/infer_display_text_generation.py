@@ -20,8 +20,8 @@ def pick(prob):
 
 
 class InferDisplayTextGeneration(Callback):
-  def __init__(self, args):
-    super(InferDisplayTextGeneration, self).__init__(args)
+  def __init__(self, config):
+    super(InferDisplayTextGeneration, self).__init__(config)
     self.input = ""
     self.output = ""
 
@@ -59,5 +59,5 @@ class InferDisplayTextGeneration(Callback):
       feed_dict[h1_place_holder] = outputs_dict["last_state"][1][1]
 
 
-def build(args):
-  return InferDisplayTextGeneration(args)
+def build(config):
+  return InferDisplayTextGeneration(config)

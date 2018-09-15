@@ -4,22 +4,22 @@ Licensed under
 ==========================================================================
 Train:
 python demo/image_segmentation.py --mode=train \
---num_gpu=4 --batch_size_per_gpu=16 --epochs=200 \
+--gpu_count=4 --batch_size_per_gpu=16 --epochs=200 \
 --piecewise_boundaries=100 \
---piecewise_learning_rate_decay=1.0,0.1 \
+--piecewise_lr_decay=1.0,0.1 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
 --dataset_meta=~/demo/data/camvid/train.csv \
 --model_dir=~/demo/model/image_segmentation_camvid
 
 Evaluation:
 python demo/image_segmentation.py --mode=eval \
---num_gpu=4 --batch_size_per_gpu=16 --epochs=1 \
+--gpu_count=4 --batch_size_per_gpu=16 --epochs=1 \
 --dataset_meta=~/demo/data/camvid/val.csv \
 --model_dir=~/demo/model/image_segmentation_camvid
 
 Infer:
 python demo/image_segmentation.py --mode=infer \
---batch_size_per_gpu=1 --epochs=1 --num_gpu=1 \
+--batch_size_per_gpu=1 --epochs=1 --gpu_count=1 \
 --model_dir=~/demo/model/image_segmentation_camvid \
 --test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
 
@@ -27,7 +27,7 @@ Tune:
 python demo/image_segmentation.py --mode=tune \
 --dataset_meta=~/demo/data/camvid/train.csv \
 --model_dir=~/demo/model/image_segmentation_camvid \
---num_gpu=4
+--gpu_count=4
 """
 import sys
 import os
@@ -42,7 +42,7 @@ def main():
   from source import app
   from source.tool import downloader
   from source.tool import tuner
-  from source.tool import args_parser
+  from source.tool import config_parser
 
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -81,7 +81,7 @@ def main():
                       help="Number of images on each GPU.",
                       type=int,
                       default=16)
-  parser.add_argument("--num_gpu",
+  parser.add_argument("--gpu_count",
                       help="Number of GPUs.",
                       type=int,
                       default=4)
@@ -144,7 +144,7 @@ def main():
   parser.add_argument("--piecewise_boundaries",
                       help="Epochs to decay learning rate",
                       default="100")
-  parser.add_argument("--piecewise_learning_rate_decay",
+  parser.add_argument("--piecewise_lr_decay",
                       help="Decay ratio for learning rate",
                       default="1.0,0.1")
   parser.add_argument("--optimizer",
@@ -186,17 +186,17 @@ def main():
                       help="Path to pretrained network (for transfer learning).",
                       type=str,
                       default="")
-  parser.add_argument("--skip_pretrained_var_list",
+  parser.add_argument("--skip_pretrained_var",
                       help="Variables to skip in restoring from pretrained model (for transfer learning).",
                       type=str,
                       default="")
-  parser.add_argument("--trainable_var_list",
+  parser.add_argument("--trainable_vars",
                       help="List of trainable Variables. \
                            If None, all variables in tf.GraphKeys.TRAINABLE_VARIABLES \
-                           will be trained, apart from the ones blacklisted by skip_trainable_var_list.",
+                           will be trained, apart from the ones blacklisted by skip_trainable_vars.",
                       type=str,
                       default="")
-  parser.add_argument("--skip_trainable_var_list",
+  parser.add_argument("--skip_trainable_vars",
                       help="List of blacklisted trainable Variables.",
                       type=str,
                       default="")
@@ -218,20 +218,20 @@ def main():
                       type=str,
                       default="infer_basic,infer_display_image_segmentation")
 
-  args = parser.parse_args()
+  config = parser.parse_args()
 
-  args = args_parser.prepare(args)
+  config = config_parser.prepare(config)
 
   # Download data if necessary
-  if args.mode != "infer":
-    if not os.path.exists(args.dataset_meta):
-      downloader.download_and_extract(args.dataset_meta,
-                                      args.dataset_url, False)
+  if config.mode != "infer":
+    if not os.path.exists(config.dataset_meta):
+      downloader.download_and_extract(config.dataset_meta,
+                                      config.dataset_url, False)
     else:
-      print("Found " + args.dataset_meta + ".")
+      print("Found " + config.dataset_meta + ".")
 
-  if args.mode == "tune":
-    tuner.tune(args)
+  if config.mode == "tune":
+    tuner.tune(config)
   else:
 
     """
@@ -244,34 +244,34 @@ def main():
              It owns a network and a list of callbacks as inputs.
     """
 
-    augmenter = (None if not args.augmenter else
+    augmenter = (None if not config.augmenter else
                  importlib.import_module(
-                  "source.augmenter." + args.augmenter))
+                  "source.augmenter." + config.augmenter))
 
     net = getattr(importlib.import_module(
-      "source.network." + args.network), "net")
+      "source.network." + config.network), "net")
 
-    if args.mode == "train":
-      callback_names = args.train_callbacks.split(",")
-    elif args.mode == "eval":
-      callback_names = args.eval_callbacks.split(",")
-    elif args.mode == "infer":
-      callback_names = args.infer_callbacks.split(",")
+    if config.mode == "train":
+      callback_names = config.train_callbacks.split(",")
+    elif config.mode == "eval":
+      callback_names = config.eval_callbacks.split(",")
+    elif config.mode == "infer":
+      callback_names = config.infer_callbacks.split(",")
 
     callbacks = []
     for name in callback_names:
       callback = importlib.import_module(
-        "source.callback." + name).build(args)
+        "source.callback." + name).build(config)
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter." + args.inputter).build(args, augmenter)
+      "source.inputter." + config.inputter).build(config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler." + args.modeler).build(args, net)
+      "source.modeler." + config.modeler).build(config, net)
 
     runner = importlib.import_module(
-      "source.runner." + args.runner).build(args, inputter, modeler, callbacks)
+      "source.runner." + config.runner).build(config, inputter, modeler, callbacks)
 
     demo = app.APP(runner)
     demo.run()

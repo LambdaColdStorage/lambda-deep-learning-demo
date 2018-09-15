@@ -147,7 +147,7 @@ def block_inception_c(inputs, scope=None, reuse=tf.AUTO_REUSE):
 def inception_v4_base(inputs, final_endpoint='Mixed_7d', scope=None):
   """Creates the Inception V4 network up to the given final endpoint.
 
-  Args:
+  config:
     inputs: a 4-D tensor of size [batch_size, height, width, 3].
     final_endpoint: specifies the endpoint to construct the network up to.
       It can be one of [ 'Conv2d_1a_3x3', 'Conv2d_2a_3x3', 'Conv2d_2b_3x3',
@@ -261,7 +261,7 @@ def inception_v4(inputs, num_classes=1001, is_training=True,
                  create_aux_logits=True):
   """Creates the Inception V4 model.
 
-  Args:
+  config:
     inputs: a 4-D tensor of size [batch_size, height, width, 3].
     num_classes: number of predicted classes. If 0 or None, the logits layer
       is omitted and the input features to the logits layer (before dropout)

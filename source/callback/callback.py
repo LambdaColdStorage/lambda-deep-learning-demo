@@ -8,8 +8,8 @@ from __future__ import print_function
 
 
 class Callback(object):
-  def __init__(self, args):
-    self.args = args
+  def __init__(self, config):
+    self.config = config
 
   def before_run(self, *argv):
     pass
@@ -24,5 +24,5 @@ class Callback(object):
     pass
 
 
-def build(args):
-  return Callback(args)
+def build(config):
+  return Callback(config)

@@ -10,8 +10,8 @@ from modeler import Modeler
 
 
 class ImageClassificationModeler(Modeler):
-  def __init__(self, args, net):
-    super(ImageClassificationModeler, self).__init__(args, net)
+  def __init__(self, config, net):
+    super(ImageClassificationModeler, self).__init__(config, net)
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
@@ -21,9 +21,11 @@ class ImageClassificationModeler(Modeler):
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, input):
-    is_training = (self.args.mode == "train")
-    return self.net(input, self.args.num_classes,
-                    is_training=is_training, data_format=self.args.data_format)
+    is_training = (self.config.mode == "train")
+    return self.net(input,
+                    self.config.num_classes,
+                    is_training=is_training,
+                    data_format=self.config.data_format)
 
   def create_eval_metrics_fn(self, predictions, labels):
     equality = tf.equal(predictions["classes"],
@@ -50,7 +52,7 @@ class ImageClassificationModeler(Modeler):
     labels = x[1]
     logits, predictions = self.create_graph_fn(images)
 
-    if self.args.mode == "train":
+    if self.config.mode == "train":
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss)
       accuracy = self.create_eval_metrics_fn(
@@ -59,16 +61,16 @@ class ImageClassificationModeler(Modeler):
               "grads": grads,
               "accuracy": accuracy,
               "learning_rate": self.learning_rate}
-    elif self.args.mode == "eval":
+    elif self.config.mode == "eval":
       loss = self.create_loss_fn(logits, labels)
       accuracy = self.create_eval_metrics_fn(
         predictions, labels)
       return {"loss": loss,
               "accuracy": accuracy}
-    elif self.args.mode == "infer":
+    elif self.config.mode == "infer":
       return {"classes": predictions["classes"],
               "probabilities": predictions["probabilities"]}
 
 
-def build(args, network):
-  return ImageClassificationModeler(args, network)
+def build(config, network):
+  return ImageClassificationModeler(config, network)

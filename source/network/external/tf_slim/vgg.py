@@ -49,7 +49,7 @@ slim = tf.contrib.slim
 def vgg_arg_scope(weight_decay=0.0005):
   """Defines the VGG arg scope.
 
-  Args:
+  config:
     weight_decay: The l2 regularization coefficient.
 
   Returns:
@@ -76,7 +76,7 @@ def vgg_a(inputs,
   Note: All the fully_connected layers have been transformed to conv2d layers.
         To use in classification mode, resize input to 224x224.
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     num_classes: number of predicted classes. If 0 or None, the logits layer is
       omitted and the input features to the logits layer are returned instead.
@@ -154,7 +154,7 @@ def vgg_16(inputs,
   Note: All the fully_connected layers have been transformed to conv2d layers.
         To use in classification mode, resize input to 224x224.
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     num_classes: number of predicted classes. If 0 or None, the logits layer is
       omitted and the input features to the logits layer are returned instead.
@@ -232,7 +232,7 @@ def vgg_19(inputs,
   Note: All the fully_connected layers have been transformed to conv2d layers.
         To use in classification mode, resize input to 224x224.
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     num_classes: number of predicted classes. If 0 or None, the logits layer is
       omitted and the input features to the logits layer are returned instead.
@@ -309,7 +309,7 @@ def vgg_19_conv(inputs,
 
   Note: Fully conneceted layers are removed.
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     is_training: whether or not the model is being trained.
     dropout_keep_prob: the probability that activations are kept in the dropout

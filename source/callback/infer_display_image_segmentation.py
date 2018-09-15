@@ -14,8 +14,8 @@ from callback import Callback
 
 
 class InferDisplayImageSegmentation(Callback):
-  def __init__(self, args):
-    super(InferDisplayImageSegmentation, self).__init__(args)
+  def __init__(self, config):
+    super(InferDisplayImageSegmentation, self).__init__(config)
 
   def render_label(self, label, num_classes, label_colors):
 
@@ -39,19 +39,19 @@ class InferDisplayImageSegmentation(Callback):
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
     self.colors = np.random.randint(255,
-                                    size=(self.args.num_classes, 3))
+                                    size=(self.config.num_classes, 3))
 
   def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
     for p, c in zip(outputs_dict["probabilities"],
                     outputs_dict["classes"]):
 
       render_label = self.render_label(c,
-                                       self.args.num_classes,
+                                       self.config.num_classes,
                                        self.colors)
       image_out = Image.fromarray(render_label, 'RGB')
       plt.imshow(image_out)
       plt.show()
 
 
-def build(args):
-  return InferDisplayImageSegmentation(args)
+def build(config):
+  return InferDisplayImageSegmentation(config)

@@ -8,8 +8,8 @@ from __future__ import print_function
 
 
 class Inputter(object):
-  def __init__(self, args, augmenter):
-    self.args = args
+  def __init__(self, config, augmenter):
+    self.config = config
     self.augmenter = augmenter
 
   def get_num_samples(self, *argv):
@@ -22,5 +22,5 @@ class Inputter(object):
     pass
 
 
-def build(args, augmenter):
-  return Inputter(args, augmenter)
+def build(config, augmenter):
+  return Inputter(config, augmenter)

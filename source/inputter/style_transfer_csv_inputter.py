@@ -15,42 +15,41 @@ from source.augmenter.external import vgg_preprocessing
 
 
 class StyleTransferCSVInputter(Inputter):
-  def __init__(self, args, augmenter):
-    super(StyleTransferCSVInputter, self).__init__(args, augmenter)
+  def __init__(self, config, augmenter):
+    super(StyleTransferCSVInputter, self).__init__(config, augmenter)
 
     self.num_samples = -1
 
-    if self.args.mode == "infer":
-      self.test_samples = [os.path.expanduser(x) for x
-                           in self.args.test_samples.split(",")]
+    if self.config.mode == "infer":
+      self.test_samples = self.config.test_samples
 
   def create_nonreplicated_fn(self):
-    batch_size = (self.args.batch_size_per_gpu *
-                  self.args.num_gpu)
-    max_step = (self.get_num_samples() * self.args.epochs // batch_size)
+    batch_size = (self.config.batch_size_per_gpu *
+                  self.config.gpu_count)
+    max_step = (self.get_num_samples() * self.config.epochs // batch_size)
     tf.constant(max_step, name="max_step")
 
   def get_num_samples(self):
     if self.num_samples < 0:
-      if self.args.mode == "infer":
+      if self.config.mode == "infer":
         self.num_samples = len(self.test_samples)
       else:
-        with open(self.args.dataset_meta) as f:
+        with open(self.config.dataset_meta) as f:
           parsed = csv.reader(f, delimiter=",", quotechar="'")
           self.num_samples = len(list(parsed))
     return self.num_samples
 
   def get_samples_fn(self):
-    if self.args.mode == "infer":
+    if self.config.mode == "infer":
       images_path = self.test_samples
-    elif self.args.mode == "train" or \
-            self.args.mode == "eval":
-      assert os.path.exists(self.args.dataset_meta), (
-        "Cannot find dataset_meta file {}.".format(self.args.dataset_meta))
+    elif self.config.mode == "train" or \
+            self.config.mode == "eval":
+      assert os.path.exists(self.config.dataset_meta), (
+        "Cannot find dataset_meta file {}.".format(self.config.dataset_meta))
 
       images_path = []
-      dirname = os.path.dirname(self.args.dataset_meta)
-      with open(self.args.dataset_meta) as f:
+      dirname = os.path.dirname(self.config.dataset_meta)
+      with open(self.config.dataset_meta) as f:
         parsed = csv.reader(f, delimiter=",", quotechar="'")
         for row in parsed:
           images_path.append(os.path.join(dirname, row[0]))
@@ -61,38 +60,38 @@ class StyleTransferCSVInputter(Inputter):
     """
     image = tf.read_file(image_path)
     image = tf.image.decode_jpeg(image,
-                                 channels=self.args.image_depth,
+                                 channels=self.config.image_depth,
                                  dct_method="INTEGER_ACCURATE")
 
-    if self.args.mode == "infer":
+    if self.config.mode == "infer":
       image = tf.to_float(image)
       image = vgg_preprocessing._mean_image_subtraction(image)
       pass
     else:
       if self.augmenter:
-        is_training = (self.args.mode == "train")
+        is_training = (self.config.mode == "train")
         image = self.augmenter.augment(
           image,
-          self.args.image_height,
-          self.args.image_width,
-          self.args.resize_side_min,
-          self.args.resize_side_max,
+          self.config.image_height,
+          self.config.image_width,
+          self.config.resize_side_min,
+          self.config.resize_side_max,
           is_training=is_training,
-          speed_mode=self.args.augmenter_speed_mode)
+          speed_mode=self.config.augmenter_speed_mode)
     return (image,)
 
   def input_fn(self, test_samples=[]):
-    batch_size = (self.args.batch_size_per_gpu *
-                  self.args.num_gpu)
+    batch_size = (self.config.batch_size_per_gpu *
+                  self.config.gpu_count)
 
     samples = self.get_samples_fn()
 
     dataset = tf.data.Dataset.from_tensor_slices(samples)
 
-    if self.args.mode == "train":
-      dataset = dataset.shuffle(self.args.shuffle_buffer_size)
+    if self.config.mode == "train":
+      dataset = dataset.shuffle(self.config.shuffle_buffer_size)
 
-    dataset = dataset.repeat(self.args.epochs)
+    dataset = dataset.repeat(self.config.epochs)
 
     dataset = dataset.map(
       lambda image: self.parse_fn(image),
@@ -107,5 +106,5 @@ class StyleTransferCSVInputter(Inputter):
     return iterator.get_next()
 
 
-def build(args, augmenter):
-  return StyleTransferCSVInputter(args, augmenter)
+def build(config, augmenter):
+  return StyleTransferCSVInputter(config, augmenter)

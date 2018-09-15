@@ -10,25 +10,10 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-class ModelerConfig(Object):
-    def __init__(self, training_mode="train", optimizer="momentum", learning_rate=0.1, gpu_count=1, batch_size=16, trainable_var_list=None, skip_trainable_var_list=None, piecewise_boundaries=None):
-        self.training_mode = training_mode
-        self.optimizer = optimizer
-        self.learning_rate = learning_rate
-        self.gpu_count = gpu_count
-        self.batch_size = batch_size
-        self.trainable_var_list = trainable_vars if trainable_vars is not None else []
-        self.skip_trainable_var_list = skip_trainable_vars if skip_trainable_vars is not None else []
-        self.piecewise_boundaries = piecewise_boundaries if piecewise_boundaries is not None else [] 
-        self.piecewise_learning_rate_decay = piecewise_learning_rate_decay if piecewise_learning_rate_decay is not None else [] 
-        self.skip_l2_loss_vars = skip_l2_loss_vars if skip_l2_loss_vars is not None else []
-
-
 class Modeler(object):
-  def __init__(self, args, net, config):
-    self.args = args
-    self.net = net
+  def __init__(self, config, net):
     self.config = config
+    self.net = net
 
     self.train_vars = []
     self.feed_dict_pre = {}
@@ -56,81 +41,55 @@ class Modeler(object):
       tf.GraphKeys.TRAINABLE_VARIABLES)
 
     # Collect all trainale variables
-    if self.args.trainable_var_list:
+    if self.config.trainable_vars:
       self.train_vars = [v for v in self.train_vars
                          if any(x in v.name
                                 for x in
-                                self.args.trainable_var_list)]
+                                self.config.trainable_vars)]
 
     # Remove the blacklisted trainable variables
-    if self.args.skip_trainable_var_list:
+    if self.config.skip_trainable_vars:
       self.train_vars = [v for v in self.train_vars
                          if not any(x in v.name
                                     for x in
-                                    self.args.skip_trainable_var_list)]
+                                    self.config.skip_trainable_vars)]
 
   def create_optimizer(self, learning_rate):
     # Setup optimizer
-    if self.args.optimizer == "adadelta":
+    if self.config.optimizer == "adadelta":
       optimizer = tf.train.AdadeltaOptimizer(
           learning_rate=learning_rate)
-    elif self.args.optimizer == "adagrad":
+    elif self.config.optimizer == "adagrad":
       optimizer = tf.train.AdagradOptimizer(
           learning_rate=learning_rate)
-    elif self.args.optimizer == "adam":
+    elif self.config.optimizer == "adam":
       optimizer = tf.train.AdamOptimizer(
           learning_rate=learning_rate)
-    elif self.args.optimizer == "ftrl":
+    elif self.config.optimizer == "ftrl":
       optimizer = tf.train.FtrlOptimizer(
           learning_rate=learning_rate)
-    elif self.args.optimizer == "momentum":
+    elif self.config.optimizer == "momentum":
       optimizer = tf.train.MomentumOptimizer(
           learning_rate=learning_rate,
           momentum=0.9,
           name="Momentum")
-    elif self.args.optimizer == "rmsprop":
+    elif self.config.optimizer == "rmsprop":
       optimizer = tf.train.RMSPropOptimizer(
           learning_rate=learning_rate)
-    elif self.args.optimizer == "sgd":
+    elif self.config.optimizer == "sgd":
       optimizer = tf.train.GradientDescentOptimizer(
         learning_rate=learning_rate)
     else:
       raise ValueError("Optimizer [%s] was not recognized" %
-                       self.args.optimizer)
+                       self.config.optimizer)
     return optimizer
-
-  def create_learning_rate_fn(self, global_step):
-    """Create learning rate
-    Returns:
-      A learning rate calcualtor used by TF"s optimizer.
-    """
-    initial_learning_rate = self.args.learning_rate
-    bs_per_gpu = self.args.batch_size_per_gpu
-    num_gpu = self.args.num_gpu
-
-    batches_per_epoch = (self.num_samples / (bs_per_gpu * num_gpu))
-    boundaries = list(map(float,
-                      self.args.piecewise_boundaries.split(",")))
-    boundaries = [int(batches_per_epoch * boundary) for boundary in boundaries]
-
-    decays = list(map(float,
-                  self.args.piecewise_learning_rate_decay.split(",")))
-    values = [initial_learning_rate * decay for decay in decays]
-
-    learning_rate = tf.train.piecewise_constant(
-      tf.cast(global_step, tf.int32), boundaries, values)
-
-    tf.identity(learning_rate, name="learning_rate")
-    # tf.summary.scalar("learning_rate", learning_rate)
-
-    return learning_rate
 
   def l2_regularization(self):
     l2_var_list = [v for v in self.train_vars
                    if not any(x in v.name for
-                              x in self.args.skip_l2_loss_vars)]
+                              x in self.config.skip_l2_loss_vars)]
 
-    loss_l2 = self.args.l2_weight_decay * tf.add_n(
+    loss_l2 = self.config.l2_weight_decay * tf.add_n(
       [tf.nn.l2_loss(v) for v in l2_var_list])
     return loss_l2
 
@@ -141,6 +100,30 @@ class Modeler(object):
       grads = [(tf.clip_by_value(g, -clipping, clipping), v) for g, v in grads]
     return grads
 
+  def create_learning_rate_fn(self, global_step):
+    """Create learning rate
+    Returns:
+      A learning rate calcualtor used by TF"s optimizer.
+    """
+    initial_learning_rate = self.config.learning_rate
+    bs_per_gpu = self.config.batch_size_per_gpu
+    gpu_count = self.config.gpu_count
 
-def build(args, network, callbacks):
-  return Modeler(args, network, callbacks)
+    batches_per_epoch = (self.num_samples / (bs_per_gpu * gpu_count))
+    boundaries = self.config.piecewise_boundaries
+    boundaries = [int(batches_per_epoch * boundary) for boundary in boundaries]
+
+    decays = self.config.piecewise_lr_decay
+    values = [initial_learning_rate * decay for decay in decays]
+
+    learning_rate = tf.train.piecewise_constant(
+      tf.cast(global_step, tf.int32), boundaries, values)
+
+    tf.identity(learning_rate, name="learning_rate")
+    # tf.summary.scalar("learning_rate", learning_rate)
+
+    return learning_rate
+
+
+def build(config, network):
+  return Modeler(config, network)

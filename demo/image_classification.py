@@ -7,22 +7,22 @@ Resnet32
 
 Train:
 python demo/image_classification.py --mode=train \
---num_gpu=4 --batch_size_per_gpu=256 --epochs=10 \
+--gpu_count=4 --batch_size_per_gpu=256 --epochs=10 \
 --piecewise_boundaries=50,75,90 \
---piecewise_learning_rate_decay=1.0,0.1,0.01,0.001 \
+--piecewise_lr_decay=1.0,0.1,0.01,0.001 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
 --dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10
 
 Evaluation:
 python demo/image_classification.py --mode=eval \
---num_gpu=4 --batch_size_per_gpu=256 --epochs=1 \
+--gpu_count=4 --batch_size_per_gpu=256 --epochs=1 \
 --dataset_meta=~/demo/data/cifar10/eval.csv \
 --model_dir=~/demo/model/image_classification_cifar10
 
 Infer:
 python demo/image_classification.py --mode=infer \
---num_gpu=1 --batch_size_per_gpu=1 --epochs=1 \
+--gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
 --model_dir=~/demo/model/image_classification_cifar10 \
 --test_samples=~/demo/data/cifar10/test/appaloosa_s_001975.png,~/demo/data/cifar10/test/domestic_cat_s_001598.png,~/demo/data/cifar10/test/rhea_s_000225.png,~/demo/data/cifar10/test/trucking_rig_s_001216.png
 
@@ -30,13 +30,13 @@ Tune:
 python demo/image_classification.py --mode=tune \
 --dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10 \
---num_gpu=4
+--gpu_count=4
 
 Pre-trained Model:
 curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10-resnet32-20180824.tar.gz | tar xvz -C ~/demo/model
 
 python demo/image_classification.py --mode=eval \
---num_gpu=4 --batch_size_per_gpu=256 --epochs=1 \
+--gpu_count=4 --batch_size_per_gpu=256 --epochs=1 \
 --augmenter_speed_mode \
 --dataset_meta=~/demo/data/cifar10/eval.csv \
 --model_dir=~/demo/model/cifar10-resnet32-20180824
@@ -44,7 +44,7 @@ python demo/image_classification.py --mode=eval \
 Train with synthetic data:
 python demo/image_classification.py \
 --mode=train \
---num_gpu=4 --batch_size_per_gpu=64 --epochs=1000 --piecewise_boundaries=10 \
+--gpu_count=4 --batch_size_per_gpu=64 --epochs=1000 --piecewise_boundaries=10 \
 --network=resnet50 \
 --inputter=image_classification_syn_inputter \
 --augmenter="" \
@@ -56,9 +56,9 @@ Transfer Learning:
 curl http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz | tar xvz -C ~/demo/model/resnet_v2_50_2017_04_14)
 
 python demo/image_classification.py --mode=train \
---num_gpu=4 --batch_size_per_gpu=64 --epochs=20 \
+--gpu_count=4 --batch_size_per_gpu=64 --epochs=20 \
 --piecewise_boundaries=10 \
---piecewise_learning_rate_decay=1.0,0.1 \
+--piecewise_lr_decay=1.0,0.1 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
@@ -66,12 +66,12 @@ python demo/image_classification.py --mode=train \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
 --model_dir=~/demo/model/image_classification_StanfordDog120 \
 --pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
---skip_pretrained_var_list="resnet_v2_50/logits,global_step" \
---trainable_var_list="resnet_v2_50/logits"
+--skip_pretrained_var="resnet_v2_50/logits,global_step" \
+--trainable_vars="resnet_v2_50/logits"
 
 python demo/image_classification.py \
 --mode=eval \
---num_gpu=4 --batch_size_per_gpu=64 --epochs=1 \
+--gpu_count=4 --batch_size_per_gpu=64 --epochs=1 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
@@ -88,33 +88,21 @@ def main():
 
   sys.path.append('.')
 
-  from source import app
   from source.tool import downloader
   from source.tool import tuner
-  from source.tool import args_parser
+  from source.tool import config_parser
+  from source.config import Config
+  from source.config import InputterConfig
+  from source.config import ModelerConfig
+  from source.config import RunnerConfig
 
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-  parser.add_argument("--inputter",
-                      type=str,
-                      help="Name of the inputter",
-                      default="image_classification_csv_inputter")
-  parser.add_argument("--modeler",
-                      type=str,
-                      help="Name of the modeler",
-                      default="image_classification_modeler")
-  parser.add_argument("--runner",
-                      type=str,
-                      help="Name of the runner",
-                      default="parameter_server_runner")
   parser.add_argument("--augmenter",
                       type=str,
                       help="Name of the augmenter",
                       default="cifar_augmenter")
-  parser.add_argument("--augmenter_speed_mode",
-                      action='store_true',
-                      help="Flag to use speed mode in augmentation")
   parser.add_argument("--network", choices=["resnet32", "resnet50"],
                       type=str,
                       help="Choose a network architecture",
@@ -130,7 +118,7 @@ def main():
                       help="Number of images on each GPU.",
                       type=int,
                       default=128)
-  parser.add_argument("--num_gpu",
+  parser.add_argument("--gpu_count",
                       help="Number of GPUs.",
                       type=int,
                       default=4)
@@ -138,10 +126,6 @@ def main():
                       help="Number of epochs.",
                       type=int,
                       default=5)
-  parser.add_argument("--shuffle_buffer_size",
-                      help="Buffer size for shuffling training images.",
-                      type=int,
-                      default=2000)
   parser.add_argument("--num_classes",
                       help="Number of classes.",
                       type=int,
@@ -158,19 +142,12 @@ def main():
                       help="Number of color channels.",
                       type=int,
                       default=3)
-  parser.add_argument("--data_format",
-                      help="channels_first or channels_last",
-                      default="channels_last")
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
                       default=os.path.join(
                         os.environ['HOME'],
                         "demo/model/image_classification_cifar10"))
-  parser.add_argument("--l2_weight_decay",
-                      help="Weight decay for L2 regularization in training",
-                      type=float,
-                      default=0.0002)
   parser.add_argument("--learning_rate",
                       help="Initial learning rate in training.",
                       type=float,
@@ -178,7 +155,7 @@ def main():
   parser.add_argument("--piecewise_boundaries",
                       help="Epochs to decay learning rate",
                       default="2")
-  parser.add_argument("--piecewise_learning_rate_decay",
+  parser.add_argument("--piecewise_lr_decay",
                       help="Decay ratio for learning rate",
                       default="1.0,0.1")
   parser.add_argument("--optimizer",
@@ -221,19 +198,19 @@ def main():
                       help="Path to pretrained network for transfer learning.",
                       type=str,
                       default="")
-  parser.add_argument("--skip_pretrained_var_list",
+  parser.add_argument("--skip_pretrained_var",
                       help="Variables to skip in restoring from \
                             pretrained model (for transfer learning).",
                       type=str,
                       default="")
-  parser.add_argument("--trainable_var_list",
+  parser.add_argument("--trainable_vars",
                       help="List of trainable Variables. \
                            If None all variables in TRAINABLE_VARIABLES \
                            will be trained, subjected to the ones \
-                           blacklisted by skip_trainable_var_list.",
+                           blacklisted by skip_trainable_vars.",
                       type=str,
                       default="")
-  parser.add_argument("--skip_trainable_var_list",
+  parser.add_argument("--skip_trainable_vars",
                       help="List of blacklisted trainable Variables.",
                       type=str,
                       default="")
@@ -255,23 +232,20 @@ def main():
                       type=str,
                       default="infer_basic,infer_display_image_classification")
 
-  args = parser.parse_args()
+  config = parser.parse_args()
 
-  args = args_parser.prepare(args)
+  config = config_parser.prepare(config)
 
   # Download data if necessary
-  if args.inputter == "image_classification_syn_inputter":
-    print("Use synthetic data")
-  else:
-    if args.mode != "infer":
-      if not os.path.exists(args.dataset_meta):
-        downloader.download_and_extract(args.dataset_meta,
-                                        args.dataset_url, False)
-      else:
-        print("Found " + args.dataset_meta + ".")
+  if config.mode != "infer":
+    if not os.path.exists(config.dataset_meta):
+      downloader.download_and_extract(config.dataset_meta,
+                                      config.dataset_url, False)
+    else:
+      print("Found " + config.dataset_meta + ".")
 
-  if args.mode == "tune":
-    tuner.tune(args)
+  if config.mode == "tune":
+    tuner.tune(config)
   else:
 
     """
@@ -284,38 +258,84 @@ def main():
              It owns a network and a list of callbacks as inputs.
     """
 
-    augmenter = (None if not args.augmenter else
+    # Create configs
+    general_config = Config(
+      mode=config.mode,
+      batch_size_per_gpu=config.batch_size_per_gpu,
+      gpu_count=config.gpu_count)
+
+    inputter_config = InputterConfig(
+      general_config,
+      epochs=config.epochs,
+      dataset_meta=config.dataset_meta,
+      test_samples=config.test_samples,
+      image_height=config.image_height,
+      image_width=config.image_width,
+      image_depth=config.image_depth,
+      num_classes=config.num_classes)
+
+    modeler_config = ModelerConfig(
+      general_config,
+      optimizer=config.optimizer,
+      learning_rate=config.learning_rate,
+      trainable_vars=config.trainable_vars,
+      skip_trainable_vars=config.skip_trainable_vars,
+      piecewise_boundaries=config.piecewise_boundaries,
+      piecewise_lr_decay=config.piecewise_lr_decay,
+      skip_l2_loss_vars=config.skip_l2_loss_vars,
+      num_classes=config.num_classes)
+
+    runner_config = RunnerConfig(
+      general_config,
+      model_dir=config.model_dir,
+      summary_names=config.summary_names,
+      log_every_n_iter=config.log_every_n_iter,
+      save_summary_steps=config.save_summary_steps,
+      pretrained_dir=config.pretrained_dir,
+      skip_pretrained_var=config.skip_pretrained_var,
+      save_checkpoints_steps=config.save_checkpoints_steps,
+      keep_checkpoint_max=config.keep_checkpoint_max,
+      train_callbacks=config.train_callbacks,
+      eval_callbacks=config.eval_callbacks,
+      infer_callbacks=config.infer_callbacks)
+
+    callback_config = runner_config
+
+    augmenter = (None if not config.augmenter else
                  importlib.import_module(
-                  "source.augmenter." + args.augmenter))
+                  "source.augmenter." + config.augmenter))
 
     net = getattr(importlib.import_module(
-      "source.network." + args.network), "net")
+      "source.network." + config.network), "net")
 
-    if args.mode == "train":
-      callback_names = args.train_callbacks.split(",")
-    elif args.mode == "eval":
-      callback_names = args.eval_callbacks.split(",")
-    elif args.mode == "infer":
-      callback_names = args.infer_callbacks.split(",")
+    if config.mode == "train":
+      callback_names = config.train_callbacks
+    elif config.mode == "eval":
+      callback_names = config.eval_callbacks
+    elif config.mode == "infer":
+      callback_names = config.infer_callbacks
 
     callbacks = []
     for name in callback_names:
       callback = importlib.import_module(
-        "source.callback." + name).build(args)
+        "source.callback." + name).build(
+        callback_config)
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter." + args.inputter).build(args, augmenter)
+      "source.inputter.image_classification_csv_inputter").build(
+      inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler." + args.modeler).build(args, net)
+      "source.modeler.image_classification_modeler").build(
+      modeler_config, net)
 
     runner = importlib.import_module(
-      "source.runner." + args.runner).build(args, inputter, modeler, callbacks)
+      "source.runner.parameter_server_runner").build(
+      runner_config, inputter, modeler, callbacks)
 
     # Run application
-    demo = app.APP(runner)
-    demo.run()
+    runner.run()
 
 
 if __name__ == "__main__":

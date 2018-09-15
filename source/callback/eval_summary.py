@@ -10,8 +10,8 @@ from callback import Callback
 
 
 class EvalSummary(Callback):
-  def __init__(self, args):
-    super(EvalSummary, self).__init__(args)
+  def __init__(self, config):
+    super(EvalSummary, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
@@ -40,5 +40,5 @@ class EvalSummary(Callback):
     self.global_step = self.global_step + 1
 
 
-def build(args):
-  return EvalSummary(args)
+def build(config):
+  return EvalSummary(config)

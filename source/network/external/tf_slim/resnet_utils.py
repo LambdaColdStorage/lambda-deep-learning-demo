@@ -43,14 +43,14 @@ import tensorflow as tf
 slim = tf.contrib.slim
 
 
-class Block(collections.namedtuple('Block', ['scope', 'unit_fn', 'args'])):
+class Block(collections.namedtuple('Block', ['scope', 'unit_fn', 'config'])):
   """A named tuple describing a ResNet block.
 
   Its parts are:
     scope: The scope of the `Block`.
     unit_fn: The ResNet unit function which takes as input a `Tensor` and
       returns another `Tensor` with the output of the ResNet unit.
-    args: A list of length equal to the number of units in the `Block`. The list
+    config: A list of length equal to the number of units in the `Block`. The list
       contains one (depth, depth_bottleneck, stride) tuple for each unit in the
       block to serve as argument to unit_fn.
   """
@@ -59,7 +59,7 @@ class Block(collections.namedtuple('Block', ['scope', 'unit_fn', 'args'])):
 def subsample(inputs, factor, scope=None):
   """Subsamples the input along the spatial dimensions.
 
-  Args:
+  config:
     inputs: A `Tensor` of size [batch, height_in, width_in, channels].
     factor: The subsampling factor.
     scope: Optional variable_scope.
@@ -96,7 +96,7 @@ def conv2d_same(inputs, num_outputs, kernel_size, stride, rate=1, scope=None):
   is different when the input's height or width is even, which is why we add the
   current function. For more details, see ResnetUtilsTest.testConv2DSameEven().
 
-  Args:
+  config:
     inputs: A 4-D tensor of size [batch, height_in, width_in, channels].
     num_outputs: An integer, the number of output filters.
     kernel_size: An int with the kernel_size of the filters.
@@ -144,7 +144,7 @@ def stack_blocks_dense(net, blocks, output_stride=None,
 
   Control of the output feature density is implemented by atrous convolution.
 
-  Args:
+  config:
     net: A `Tensor` of size [batch, height, width, channels].
     blocks: A list of length equal to the number of ResNet `Blocks`. Each
       element is a ResNet `Block` object describing the units in the `Block`.
@@ -181,8 +181,8 @@ def stack_blocks_dense(net, blocks, output_stride=None,
   for block in blocks:
     with tf.variable_scope(block.scope, 'block', [net]) as sc:
       block_stride = 1
-      for i, unit in enumerate(block.args):
-        if store_non_strided_activations and i == len(block.args) - 1:
+      for i, unit in enumerate(block.config):
+        if store_non_strided_activations and i == len(block.config) - 1:
           # Move stride from the block's last unit to the end of the block.
           block_stride = unit.get('stride', 1)
           unit = dict(unit, stride=1)
@@ -232,7 +232,7 @@ def resnet_arg_scope(weight_decay=0.0001,
     released at https://github.com/KaimingHe/deep-residual-networks. When
     training ResNets from scratch, they might need to be tuned.
 
-  Args:
+  config:
     weight_decay: The weight decay to use for regularizing the model.
     batch_norm_decay: The moving average decay when estimating layer activation
       statistics in batch normalization.

@@ -13,8 +13,8 @@ from callback import Callback
 
 
 class InferDisplayStyleTransfer(Callback):
-  def __init__(self, args):
-    super(InferDisplayStyleTransfer, self).__init__(args)
+  def __init__(self, config):
+    super(InferDisplayStyleTransfer, self).__init__(config)
 
   def render_label(self, label, num_classes, label_colors):
 
@@ -61,5 +61,5 @@ class InferDisplayStyleTransfer(Callback):
         plt.show()
 
 
-def build(args):
-  return InferDisplayStyleTransfer(args)
+def build(config):
+  return InferDisplayStyleTransfer(config)

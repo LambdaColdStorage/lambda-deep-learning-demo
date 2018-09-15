@@ -12,14 +12,14 @@ from callback import Callback
 
 
 class EvalSpeed(Callback):
-  def __init__(self, args):
-    super(EvalSpeed, self).__init__(args)
+  def __init__(self, config):
+    super(EvalSpeed, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
     self.accumulated_num_samples = 0.0
     self.accumulated_time = 0.0
-    self.batch_size = self.args.batch_size_per_gpu * self.args.num_gpu
+    self.batch_size = self.config.batch_size_per_gpu * self.config.gpu_count
     self.global_step = 0.0
 
   def before_step(self, sess):
@@ -35,7 +35,7 @@ class EvalSpeed(Callback):
     self.accumulated_time = (self.accumulated_time + self.time_after_step -
                              self.time_before_step)
 
-    every_n_iter = self.args.log_every_n_iter
+    every_n_iter = self.config.log_every_n_iter
 
     if self.global_step % every_n_iter == 0:
       num_samples_per_sec = (self.accumulated_num_samples /
@@ -47,5 +47,5 @@ class EvalSpeed(Callback):
       return {}
 
 
-def build(args):
-  return EvalSpeed(args)
+def build(config):
+  return EvalSpeed(config)

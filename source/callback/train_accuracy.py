@@ -10,8 +10,8 @@ from callback import Callback
 
 
 class TrainAccuracy(Callback):
-  def __init__(self, args):
-    super(TrainAccuracy, self).__init__(args)
+  def __init__(self, config):
+    super(TrainAccuracy, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
@@ -26,7 +26,7 @@ class TrainAccuracy(Callback):
     self.accumulated_accuracy = (self.accumulated_accuracy +
                                  outputs_dict["accuracy"])
 
-    every_n_iter = self.args.log_every_n_iter
+    every_n_iter = self.config.log_every_n_iter
 
     if global_step % every_n_iter == 0:
       running_accuracy = self.accumulated_accuracy / every_n_iter
@@ -36,5 +36,5 @@ class TrainAccuracy(Callback):
       return {}
 
 
-def build(args):
-  return TrainAccuracy(args)
+def build(config):
+  return TrainAccuracy(config)

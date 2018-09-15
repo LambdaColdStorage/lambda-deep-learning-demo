@@ -10,8 +10,8 @@ from callback import Callback
 
 
 class TrainSummary(Callback):
-  def __init__(self, args):
-    super(TrainSummary, self).__init__(args)
+  def __init__(self, config):
+    super(TrainSummary, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
@@ -26,10 +26,10 @@ class TrainSummary(Callback):
 
     global_step = sess.run(global_step_op)
 
-    if global_step % self.args.save_summary_steps == 0:
+    if global_step % self.config.save_summary_steps == 0:
       summary_writer.add_summary(outputs_dict["summary"],
                                  global_step)
 
 
-def build(args):
-  return TrainSummary(args)
+def build(config):
+  return TrainSummary(config)

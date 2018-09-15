@@ -16,20 +16,20 @@ from callback import Callback
 
 
 class TrainBasic(Callback):
-  def __init__(self, args):
-    super(TrainBasic, self).__init__(args)
+  def __init__(self, config):
+    super(TrainBasic, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
 
-    if not os.path.isdir(self.args.model_dir):
-      os.makedirs(self.args.model_dir)
+    if not os.path.isdir(self.config.model_dir):
+      os.makedirs(self.config.model_dir)
 
     if tf.train.checkpoint_exists(
-      os.path.join(self.args.model_dir, "*ckpt*")):
+      os.path.join(self.config.model_dir, "*ckpt*")):
       saver.restore(sess,
                     tf.train.latest_checkpoint(
-                      self.args.model_dir))
+                      self.config.model_dir))
       print("Parameters restored.")
     else:
       print("Initialize global variables ... ")
@@ -47,37 +47,37 @@ class TrainBasic(Callback):
         print("Start training from step " + str(global_step))
 
         # Restore some weights from pre-trained model
-        if self.args.pretrained_dir:
-          self.args.pretrained_dir = os.path.expanduser(
-            self.args.pretrained_dir)
+        if self.config.pretrained_dir:
+          self.config.pretrained_dir = os.path.expanduser(
+            self.config.pretrained_dir)
           print("Try to initialize weights from pre-trained model.")
           if tf.train.checkpoint_exists(
-            os.path.join(self.args.pretrained_dir, "*ckpt*")):
+            os.path.join(self.config.pretrained_dir, "*ckpt*")):
             variables_to_restore = {v.name.split(":")[0]: v
                                     for v in tf.get_collection(
                                         tf.GraphKeys.GLOBAL_VARIABLES)}
-            if self.args.skip_pretrained_var_list:
+            if self.config.skip_pretrained_var:
               variables_to_restore = {
                 v: variables_to_restore[v] for
                 v in variables_to_restore if not
                 any(x in v for
-                    x in self.args.skip_pretrained_var_list)}
+                    x in self.config.skip_pretrained_var)}
 
             if variables_to_restore:
               saver_pre_trained = tf.train.Saver(
                 var_list=variables_to_restore)
-              for file in glob.glob(self.args.pretrained_dir + "/*.ckpt"):
+              for file in glob.glob(self.config.pretrained_dir + "/*.ckpt"):
                 ckpt_file = file
               saver_pre_trained.restore(
                 sess,
-                os.path.join(self.args.pretrained_dir, ckpt_file))
+                os.path.join(self.config.pretrained_dir, ckpt_file))
 
               print("Weights restored from pre-trained model.")
             else:
               print("Found no useful weights")
           else:
             print("Can't find pre-trained model at " +
-                  self.args.pretrained_dir)
+                  self.config.pretrained_dir)
             print("Initialize weight randomly.")
       else:
         print("Resume training from step " + str(global_step))
@@ -86,10 +86,10 @@ class TrainBasic(Callback):
     max_step_op = self.graph.get_tensor_by_name("max_step:0")
     max_step = sess.run(max_step_op)
 
-    if max_step % self.args.save_checkpoints_steps != 0:
+    if max_step % self.config.save_checkpoints_steps != 0:
       print("\nSaving checkpoint for the final step ...")
       save_path = saver.save(sess,
-                             os.path.join(self.args.model_dir,
+                             os.path.join(self.config.model_dir,
                                           "model.ckpt"),
                              global_step=max_step)
       print("Checkpoint " + save_path + " has been saved.")
@@ -99,14 +99,14 @@ class TrainBasic(Callback):
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     global_step = sess.run(global_step_op)
 
-    if global_step % self.args.save_checkpoints_steps == 0:
+    if global_step % self.config.save_checkpoints_steps == 0:
       save_path = saver.save(
         sess,
-        os.path.join(self.args.model_dir,
+        os.path.join(self.config.model_dir,
                      "model.ckpt"),
         global_step=global_step)
       print("Saving checkpoint " + save_path)
 
 
-def build(args):
-  return TrainBasic(args)
+def build(config):
+  return TrainBasic(config)

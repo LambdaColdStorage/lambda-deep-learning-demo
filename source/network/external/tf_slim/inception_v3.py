@@ -63,7 +63,7 @@ def inception_v3_base(inputs,
   mixed_8x8x2048a   | Mixed_7b
   mixed_8x8x2048b   | Mixed_7c
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     final_endpoint: specifies the endpoint to construct the network up to. It
       can be one of ['Conv2d_1a_3x3', 'Conv2d_2a_3x3', 'Conv2d_2b_3x3',
@@ -442,7 +442,7 @@ def inception_v3(inputs,
 
   The default image size used to train this network is 299x299.
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     num_classes: number of predicted classes. If 0 or None, the logits layer
       is omitted and the input features to the logits layer (before dropout)
@@ -551,7 +551,7 @@ def _reduced_kernel_size_for_small_input(input_tensor, kernel_size):
   If the shape of the input images is unknown at graph construction time this
   function assumes that the input images are is large enough.
 
-  Args:
+  config:
     input_tensor: input tensor of size [batch_size, height, width, channels].
     kernel_size: desired kernel size of length 2: [kernel_height, kernel_width]
 

@@ -11,8 +11,8 @@ import tensorflow as tf
 
 
 class Runner(object):
-  def __init__(self, args, inputter, modeler, callbacks):
-    self.args = args
+  def __init__(self, config, inputter, modeler, callbacks):
+    self.config = config
     self.inputter = inputter
     self.modeler = modeler
     self.callbacks = callbacks
@@ -37,7 +37,7 @@ class Runner(object):
                                 allow_growth=True)
 
     # set number of GPU devices
-    device_count = {"GPU": self.args.num_gpu}
+    device_count = {"GPU": self.config.gpu_count}
 
     session_config = tf.ConfigProto(
       allow_soft_placement=True,
@@ -98,7 +98,7 @@ class Runner(object):
 
   def collect_summary(self, run_ops_names, run_ops):
     for name, op in zip(run_ops_names, run_ops):
-      if name in self.args.summary_names:
+      if name in self.config.summary_names:
         tf.summary.scalar(name, op)
     return tf.summary.merge_all()
 
@@ -118,7 +118,7 @@ class Runner(object):
       run_ops.append(op)
       run_ops_names.append(key)
 
-    if self.args.mode == "train":
+    if self.config.mode == "train":
       summary_op = self.collect_summary(run_ops_names, run_ops)
       run_ops.append(summary_op)
       run_ops_names.append("summary")
@@ -146,7 +146,7 @@ class Runner(object):
       self.prepare_feed_dict()
 
       global_step = 0
-      if self.args.mode == "train":
+      if self.config.mode == "train":
         global_step = self.sess.run(self.global_step_op)
 
       max_step = self.sess.run(self.max_step_op)
@@ -164,5 +164,5 @@ class Runner(object):
       self.after_run()
 
 
-def build(args, inputter, modeler, callbacks):
-  return Runner(args, inputter, modeler, callbacks)
+def build(config, inputter, modeler, callbacks):
+  return Runner(config, inputter, modeler, callbacks)

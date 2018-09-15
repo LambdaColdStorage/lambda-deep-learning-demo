@@ -10,8 +10,8 @@ from callback import Callback
 
 
 class TrainLoss(Callback):
-  def __init__(self, args):
-    super(TrainLoss, self).__init__(args)
+  def __init__(self, config):
+    super(TrainLoss, self).__init__(config)
 
   def before_run(self, sess, saver):
     self.graph = tf.get_default_graph()
@@ -23,7 +23,7 @@ class TrainLoss(Callback):
 
     self.accumulated_loss = self.accumulated_loss + outputs_dict["loss"]
 
-    every_n_iter = self.args.log_every_n_iter
+    every_n_iter = self.config.log_every_n_iter
 
     if global_step % every_n_iter == 0:
       loss = self.accumulated_loss / every_n_iter
@@ -34,5 +34,5 @@ class TrainLoss(Callback):
       return {}
 
 
-def build(args):
-  return TrainLoss(args)
+def build(config):
+  return TrainLoss(config)

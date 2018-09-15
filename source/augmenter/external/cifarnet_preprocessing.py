@@ -40,7 +40,7 @@ def preprocess_for_train(image,
 
   Note speed_mode only does padding, crop and standardization
 
-  Args:
+  config:
     image: A `Tensor` representing an image of arbitrary size.
     output_height: The height of the image after preprocessing.
     output_width: The width of the image after preprocessing.
@@ -93,7 +93,7 @@ def preprocess_for_eval(image, output_height, output_width,
                         speed_mode=False):
   """Preprocesses the given image for evaluation.
 
-  Args:
+  config:
     image: A `Tensor` representing an image of arbitrary size.
     output_height: The height of the image after preprocessing.
     output_width: The width of the image after preprocessing.
@@ -133,7 +133,7 @@ def preprocess_image(image, output_height, output_width, is_training=False,
                      add_image_summaries=False, speed_mode=False):
   """Preprocesses the given image.
 
-  Args:
+  config:
     image: A `Tensor` representing an image of arbitrary size.
     output_height: The height of the image after preprocessing.
     output_width: The width of the image after preprocessing.

@@ -37,7 +37,7 @@ def inception_v1_base(inputs,
     Dragomir Anguelov, Dumitru Erhan, Vincent Vanhoucke, Andrew Rabinovich.
     http://arxiv.org/pdf/1409.4842v1.pdf.
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     final_endpoint: specifies the endpoint to construct the network up to. It
       can be one of ['Conv2d_1a_7x7', 'MaxPool_2a_3x3', 'Conv2d_2b_1x1',
@@ -274,7 +274,7 @@ def inception_v1(inputs,
 
   The default image size used to train this network is 224x224.
 
-  Args:
+  config:
     inputs: a tensor of size [batch_size, height, width, channels].
     num_classes: number of predicted classes. If 0 or None, the logits layer
       is omitted and the input features to the logits layer (before dropout)

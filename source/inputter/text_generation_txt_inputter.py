@@ -16,13 +16,13 @@ from inputter import Inputter
 
 
 class TextGenerationTXTInputter(Inputter):
-  def __init__(self, args, augmenter):
-    super(TextGenerationTXTInputter, self).__init__(args, augmenter)
+  def __init__(self, config, augmenter):
+    super(TextGenerationTXTInputter, self).__init__(config, augmenter)
 
-    if self.args.mode == "train":
+    if self.config.mode == "train":
       self.num_samples = 100000
       self.seq_length = 50
-    elif self.args.mode == "infer":
+    elif self.config.mode == "infer":
       self.num_samples = 1000
       self.seq_length = 1
 
@@ -32,7 +32,7 @@ class TextGenerationTXTInputter(Inputter):
 
   def initial_seq(self):
 
-    with open(self.args.dataset_meta, 'rb') as f:
+    with open(self.config.dataset_meta, 'rb') as f:
       data = f.read()
     if six.PY2:
       data = bytearray(data)
@@ -49,9 +49,9 @@ class TextGenerationTXTInputter(Inputter):
     print(self.char2idx)
 
   def create_nonreplicated_fn(self):
-    batch_size = (self.args.batch_size_per_gpu *
-                  self.args.num_gpu)
-    max_step = (self.get_num_samples() * self.args.epochs // batch_size)
+    batch_size = (self.config.batch_size_per_gpu *
+                  self.config.gpu_count)
+    max_step = (self.get_num_samples() * self.config.epochs // batch_size)
     tf.constant(max_step, name="max_step")
 
   def get_num_samples(self):
@@ -85,15 +85,15 @@ class TextGenerationTXTInputter(Inputter):
     return (inputs, outputs)
 
   def input_fn(self, test_samples=[]):
-    batch_size = (self.args.batch_size_per_gpu *
-                  self.args.num_gpu)
-    if self.args.mode == "train":
+    batch_size = (self.config.batch_size_per_gpu *
+                  self.config.gpu_count)
+    if self.config.mode == "train":
 
       dataset = tf.data.Dataset.from_generator(
         generator=lambda: self.get_samples_fn(),
         output_types=(tf.int32, tf.int32))
 
-      dataset = dataset.repeat(self.args.epochs)
+      dataset = dataset.repeat(self.config.epochs)
 
       dataset = dataset.map(
         lambda inputs, outputs: self.parse_fn(inputs, outputs),
@@ -110,5 +110,5 @@ class TextGenerationTXTInputter(Inputter):
       return (tf.zeros([batch_size, self.seq_length], tf.int32),)
 
 
-def build(args, augmenter):
-  return TextGenerationTXTInputter(args, augmenter)
+def build(config, augmenter):
+  return TextGenerationTXTInputter(config, augmenter)
