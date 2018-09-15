@@ -60,7 +60,7 @@ class InputterConfig(Config):
                dataset_meta=None,
                test_samples=None,
                augmenter_speed_mode=False,
-               shuffle_buffer_size=1000):
+               shuffle_buffer_size=256):
 
     super(InputterConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)

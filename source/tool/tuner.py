@@ -8,7 +8,7 @@ from source.tool import config_parser
 CONFIG_TUNE_PATH = "source/tool/config_tune.yaml"
 CONVERT_STR2NUM = ["piecewise_lr_decay", "piecewise_boundaries"]
 
-def copy_props_backwardmapping(source_obj, target_obj):
+def forward_props(source_obj, target_obj):
   public_props = (
     name for name in dir(target_obj) if not name.startswith('_'))
   for props_name in public_props:
@@ -80,6 +80,9 @@ def train(config,
   inputter_config.mode = "train"
   modeler_config.mode = "train"
 
+  inputter_config.dataset_meta = \
+    os.path.expanduser("~/demo/data/camvid/train.csv")
+
   excute(config,
          runner_config,
          callback_config,
@@ -107,6 +110,11 @@ def eval(config,
 
   inputter_config.epochs = 1
 
+  # Optional: use a different split for evaluation
+  # Should not use testing dataset
+  inputter_config.dataset_meta = \
+    os.path.expanduser("~/demo/data/camvid/val.csv")
+
   excute(config,
          runner_config,
          callback_config,
@@ -124,7 +132,7 @@ def tune(config, runner_config, callback_config,
          runner_module):
 
   # Parse config file
-  tune_config = config_parser.parse(CONFIG_TUNE_PATH)
+  tune_config = config_parser.yaml_parse(CONFIG_TUNE_PATH)
 
   # Setup the tuning jobs
   num_trials = tune_config["num_trials"]
@@ -153,10 +161,10 @@ def tune(config, runner_config, callback_config,
     if not os.path.isdir(dir_update):
       config.model_dir = dir_update
 
-      copy_props_backwardmapping(config, runner_config)
-      copy_props_backwardmapping(config, callback_config)
-      copy_props_backwardmapping(config, inputter_config)
-      copy_props_backwardmapping(config, modeler_config)
+      forward_props(config, runner_config)
+      forward_props(config, callback_config)
+      forward_props(config, inputter_config)
+      forward_props(config, modeler_config)
 
       train(config,
             runner_config,
