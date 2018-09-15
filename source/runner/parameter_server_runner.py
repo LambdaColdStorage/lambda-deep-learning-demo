@@ -4,8 +4,6 @@ Licensed under
 ==========================================================================
 
 """
-import os
-
 import tensorflow as tf
 
 from runner import Runner
@@ -122,18 +120,6 @@ class ParameterServerRunner(Runner):
       self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
       self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
 
-      if self.config.mode == "train":
-        self.summary_writer = tf.summary.FileWriter(
-          self.config.model_dir,
-          graph=self.graph)
-      elif self.config.mode == "eval":
-        self.summary_writer = tf.summary.FileWriter(
-          os.path.join(self.config.model_dir, "eval"),
-          graph=self.graph)
-
-      self.saver = tf.train.Saver(
-        max_to_keep=self.config.keep_checkpoint_max,
-        name="global_saver")
 
 
 def build(config, inputter, modeler, callbacks):

@@ -16,11 +16,17 @@ class EvalBasic(Callback):
   def __init__(self, config):
     super(EvalBasic, self).__init__(config)
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
+
+    # Create saver
+    self.saver = tf.train.Saver(
+      max_to_keep=self.config.keep_checkpoint_max,
+      name="global_saver")
+
     ckpt_path = os.path.join(self.config.model_dir, "*ckpt*")
     if tf.train.checkpoint_exists(ckpt_path):
-      saver.restore(sess,
+      self.saver.restore(sess,
                     tf.train.latest_checkpoint(self.config.model_dir))
       print("Parameters restored.")
     else:
@@ -28,7 +34,7 @@ class EvalBasic(Callback):
 
     print("Start evaluation.")
 
-  def after_run(self, sess, saver, summary_writer):
+  def after_run(self, sess):
     print("\n")
 
 

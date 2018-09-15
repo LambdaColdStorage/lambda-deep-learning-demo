@@ -43,29 +43,23 @@ def main():
   from source.tool import downloader
   from source.tool import tuner
   from source.tool import config_parser
+  from source.config import Config
+  from source.config import RunnerConfig
+  from source.config import CallbackConfig  
+  from source.config import ImageSegmentationInputterConfig
+  from source.config import ImageSegmentationModelerConfig
 
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-  parser.add_argument("--inputter",
-                      type=str,
-                      help="Name of the inputter",
-                      default="image_segmentation_csv_inputter")
-  parser.add_argument("--modeler",
-                      type=str,
-                      help="Name of the modeler",
-                      default="image_segmentation_modeler")
-  parser.add_argument("--runner",
-                      type=str,
-                      help="Name of the runner",
-                      default="parameter_server_runner")
   parser.add_argument("--augmenter",
                       type=str,
                       help="Name of the augmenter",
                       default="fcn_augmenter")
-  parser.add_argument("--augmenter_speed_mode",
-                      action='store_true',
-                      help="Flag to use speed mode in augmentation")
+  parser.add_argument("--epochs",
+                      help="Number of epochs.",
+                      type=int,
+                      default=200)
   parser.add_argument("--network", choices=["fcn"],
                       type=str,
                       help="Choose a network architecture",
@@ -85,10 +79,6 @@ def main():
                       help="Number of GPUs.",
                       type=int,
                       default=4)
-  parser.add_argument("--shuffle_buffer_size",
-                      help="Buffer size for shuffling training images.",
-                      type=int,
-                      default=1000)
   parser.add_argument("--num_classes",
                       help="Number of classes.",
                       type=int,
@@ -101,6 +91,10 @@ def main():
                       help="Image width.",
                       type=int,
                       default=480)
+  parser.add_argument("--image_depth",
+                      help="Number of color channels.",
+                      type=int,
+                      default=3)  
   parser.add_argument("--output_height",
                       help="Output height.",
                       type=int,
@@ -117,10 +111,6 @@ def main():
                       help="The maximul image size in augmentation.",
                       type=int,
                       default=600)
-  parser.add_argument("--image_depth",
-                      help="Number of color channels.",
-                      type=int,
-                      default=3)
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
                       default="channels_first")
@@ -129,18 +119,10 @@ def main():
                       type=str,
                       default=os.path.join(os.environ['HOME'],
                                            "demo/model/image_segmentation_camvid"))
-  parser.add_argument("--l2_weight_decay",
-                      help="Weight decay for L2 regularization in training",
-                      type=float,
-                      default=0.0002)
   parser.add_argument("--learning_rate",
                       help="Initial learning rate in training.",
                       type=float,
                       default=0.1)
-  parser.add_argument("--epochs",
-                      help="Number of epochs.",
-                      type=int,
-                      default=200)
   parser.add_argument("--piecewise_boundaries",
                       help="Epochs to decay learning rate",
                       default="100")
@@ -168,9 +150,6 @@ def main():
                       help="Maximum number of checkpoints to save.",
                       type=int,
                       default=1)
-  parser.add_argument("--class_names",
-                      help="List of class names.",
-                      default="")
   parser.add_argument("--test_samples",
                       help="A string of comma seperated testing data. "
                       "Must be provided for infer mode.",
@@ -244,6 +223,52 @@ def main():
              It owns a network and a list of callbacks as inputs.
     """
 
+    # Create configs
+    general_config = Config(
+      mode=config.mode,
+      batch_size_per_gpu=config.batch_size_per_gpu,
+      gpu_count=config.gpu_count)
+
+    runner_config = RunnerConfig(
+      general_config,
+      summary_names=config.summary_names)
+
+    callback_config = CallbackConfig(
+      general_config,
+      model_dir=config.model_dir,
+      log_every_n_iter=config.log_every_n_iter,
+      save_summary_steps=config.save_summary_steps,
+      pretrained_dir=config.pretrained_dir,
+      skip_pretrained_var=config.skip_pretrained_var,
+      save_checkpoints_steps=config.save_checkpoints_steps,
+      keep_checkpoint_max=config.keep_checkpoint_max)
+
+    inputter_config = ImageSegmentationInputterConfig(
+      general_config,
+      epochs=config.epochs,
+      dataset_meta=config.dataset_meta,
+      test_samples=config.test_samples,
+      image_height=config.image_height,
+      image_width=config.image_width,
+      image_depth=config.image_depth,
+      output_height=config.output_height,
+      output_width=config.output_width,
+      resize_side_min=config.resize_side_min,
+      resize_side_max=config.resize_side_max,
+      num_classes=config.num_classes)
+
+    modeler_config = ImageSegmentationModelerConfig(
+      general_config,
+      data_format=config.data_format,
+      optimizer=config.optimizer,
+      learning_rate=config.learning_rate,
+      trainable_vars=config.trainable_vars,
+      skip_trainable_vars=config.skip_trainable_vars,
+      piecewise_boundaries=config.piecewise_boundaries,
+      piecewise_lr_decay=config.piecewise_lr_decay,
+      skip_l2_loss_vars=config.skip_l2_loss_vars,
+      num_classes=config.num_classes)
+
     augmenter = (None if not config.augmenter else
                  importlib.import_module(
                   "source.augmenter." + config.augmenter))
@@ -252,29 +277,33 @@ def main():
       "source.network." + config.network), "net")
 
     if config.mode == "train":
-      callback_names = config.train_callbacks.split(",")
+      callback_names = config.train_callbacks
     elif config.mode == "eval":
-      callback_names = config.eval_callbacks.split(",")
+      callback_names = config.eval_callbacks
     elif config.mode == "infer":
-      callback_names = config.infer_callbacks.split(",")
+      callback_names = config.infer_callbacks
 
     callbacks = []
     for name in callback_names:
       callback = importlib.import_module(
-        "source.callback." + name).build(config)
+        "source.callback." + name).build(
+        callback_config)
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter." + config.inputter).build(config, augmenter)
+      "source.inputter.image_segmentation_csv_inputter").build(
+      inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler." + config.modeler).build(config, net)
+      "source.modeler.image_segmentation_modeler").build(
+      modeler_config, net)
 
     runner = importlib.import_module(
-      "source.runner." + config.runner).build(config, inputter, modeler, callbacks)
+      "source.runner.parameter_server_runner").build(
+      runner_config, inputter, modeler, callbacks)
 
-    demo = app.APP(runner)
-    demo.run()
+    # Run application
+    runner.run()
 
 
 if __name__ == "__main__":

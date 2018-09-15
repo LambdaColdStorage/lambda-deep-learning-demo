@@ -12,6 +12,9 @@ import tensorflow as tf
 
 class Runner(object):
   def __init__(self, config, inputter, modeler, callbacks):
+
+    tf.reset_default_graph()
+
     self.config = config
     self.inputter = inputter
     self.modeler = modeler
@@ -27,8 +30,6 @@ class Runner(object):
     self.outputs = None
     self.run_ops = []
     self.run_ops_names = []
-    self.saver = None
-    self.summary_writer = None
 
   def create_session_config(self):
     """create session_config
@@ -49,7 +50,7 @@ class Runner(object):
 
   def before_run(self):
     for callback in self.callbacks:
-      callback.before_run(self.sess, self.saver)
+      callback.before_run(self.sess)
 
   def before_step(self):
     for callback in self.callbacks:
@@ -64,7 +65,6 @@ class Runner(object):
     print_msg = "\r"
     for callback in self.callbacks:
       return_dict = callback.after_step(self.sess, outputs_dict,
-                                        self.saver, self.summary_writer,
                                         self.feed_dict)
       if return_dict:
         for key in return_dict:
@@ -76,7 +76,7 @@ class Runner(object):
 
   def after_run(self):
     for callback in self.callbacks:
-      callback.after_run(self.sess, self.saver, self.summary_writer)
+      callback.after_run(self.sess)
 
   def prepare_feed_dict(self):
 

@@ -36,12 +36,12 @@ class InferDisplayImageSegmentation(Callback):
 
     return rgb
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
     self.colors = np.random.randint(255,
                                     size=(self.config.num_classes, 3))
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
+  def after_step(self, sess, outputs_dict, feed_dict=None):
     for p, c in zip(outputs_dict["probabilities"],
                     outputs_dict["classes"]):
 

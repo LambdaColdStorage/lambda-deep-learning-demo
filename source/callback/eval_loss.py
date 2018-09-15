@@ -13,16 +13,16 @@ class EvalLoss(Callback):
   def __init__(self, config):
     super(EvalLoss, self).__init__(config)
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
     self.accumulated_loss = 0.0
     self.global_step = 0.0
 
-  def after_run(self, sess, saver, summary_writer):
+  def after_run(self, sess):
     eval_loss = self.accumulated_loss / self.global_step
     print("Evaluation loss: " + "{0:.4f}".format(eval_loss))
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
+  def after_step(self, sess, outputs_dict, feed_dict=None):
     self.global_step = self.global_step + 1
 
     self.accumulated_loss = (self.accumulated_loss +

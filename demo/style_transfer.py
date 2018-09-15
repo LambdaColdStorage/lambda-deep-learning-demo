@@ -260,6 +260,47 @@ def main():
              It owns a network and a list of callbacks as inputs.
     """
 
+    # Create configs
+    general_config = Config(
+      mode=config.mode,
+      batch_size_per_gpu=config.batch_size_per_gpu,
+      gpu_count=config.gpu_count)
+
+    inputter_config = InputterConfig(
+      general_config,
+      epochs=config.epochs,
+      dataset_meta=config.dataset_meta,
+      test_samples=config.test_samples,
+      image_height=config.image_height,
+      image_width=config.image_width,
+      image_depth=config.image_depth,
+      num_classes=config.num_classes)
+
+    modeler_config = ModelerConfig(
+      general_config,
+      optimizer=config.optimizer,
+      learning_rate=config.learning_rate,
+      trainable_vars=config.trainable_vars,
+      skip_trainable_vars=config.skip_trainable_vars,
+      piecewise_boundaries=config.piecewise_boundaries,
+      piecewise_lr_decay=config.piecewise_lr_decay,
+      skip_l2_loss_vars=config.skip_l2_loss_vars,
+      num_classes=config.num_classes)
+
+    runner_config = RunnerConfig(
+      general_config,
+      summary_names=config.summary_names)
+
+    callback_config = CallbackConfig(
+      general_config,
+      model_dir=config.model_dir,
+      log_every_n_iter=config.log_every_n_iter,
+      save_summary_steps=config.save_summary_steps,
+      pretrained_dir=config.pretrained_dir,
+      skip_pretrained_var=config.skip_pretrained_var,
+      save_checkpoints_steps=config.save_checkpoints_steps,
+      keep_checkpoint_max=config.keep_checkpoint_max)
+
     augmenter = (None if not config.augmenter else
                  importlib.import_module(
                   "source.augmenter." + config.augmenter))
@@ -268,29 +309,33 @@ def main():
       "source.network." + config.network), "net")
 
     if config.mode == "train":
-      callback_names = config.train_callbacks.split(",")
+      callback_names = config.train_callbacks
     elif config.mode == "eval":
-      callback_names = config.eval_callbacks.split(",")
+      callback_names = config.eval_callbacks
     elif config.mode == "infer":
-      callback_names = config.infer_callbacks.split(",")
+      callback_names = config.infer_callbacks
 
     callbacks = []
     for name in callback_names:
       callback = importlib.import_module(
-        "source.callback." + name).build(config)
+        "source.callback." + name).build(
+        callback_config)
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter." + config.inputter).build(config, augmenter)
+      "source.inputter.style_transfer_csv_inputter").build(
+      inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler." + config.modeler).build(config, net)
+      "source.modeler.style_transfer_modeler").build(
+      modeler_config, net)
 
     runner = importlib.import_module(
-      "source.runner." + config.runner).build(config, inputter, modeler, callbacks)
+      "source.runner.parameter_server_runner").build(
+      runner_config, inputter, modeler, callbacks)
 
-    demo = app.APP(runner)
-    demo.run()
+    # Run application
+    runner.run()
 
 
 if __name__ == "__main__":

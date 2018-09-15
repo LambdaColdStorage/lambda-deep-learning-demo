@@ -13,16 +13,16 @@ class EvalAccuracy(Callback):
   def __init__(self, config):
     super(EvalAccuracy, self).__init__(config)
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
     self.accumulated_accuracy = 0.0
     self.global_step = 0.0
 
-  def after_run(self, sess, saver, summary_writer):
+  def after_run(self, sess):
     eval_accuracy = self.accumulated_accuracy / self.global_step
     print("Evaluation accuracy: " + "{0:.4f}".format(eval_accuracy))
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
+  def after_step(self, sess, outputs_dict, feed_dict=None):
 
     self.global_step = self.global_step + 1
 

@@ -1,6 +1,6 @@
 num_trials: 20
 fixedparams:
-  epochs: 2
+  epochs: 1
   piecewise_lr_decay: "1.0,0.1"
   piecewise_boundaries: "1"
 hyperparams:

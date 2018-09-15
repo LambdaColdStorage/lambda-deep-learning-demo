@@ -13,10 +13,10 @@ class InferDisplayImageClassification(Callback):
   def __init__(self, config):
     super(InferDisplayImageClassification, self).__init__(config)
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
+  def after_step(self, sess, outputs_dict, feed_dict=None):
     for p, c in zip(outputs_dict["probabilities"],
                     outputs_dict["classes"]):
       print("Predict: " + str(c) + ", Probability: " + str(p[c]))

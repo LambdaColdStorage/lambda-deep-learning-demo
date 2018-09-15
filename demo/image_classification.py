@@ -7,9 +7,9 @@ Resnet32
 
 Train:
 python demo/image_classification.py --mode=train \
---gpu_count=4 --batch_size_per_gpu=256 --epochs=10 \
---piecewise_boundaries=50,75,90 \
---piecewise_lr_decay=1.0,0.1,0.01,0.001 \
+--gpu_count=1 --batch_size_per_gpu=256 --epochs=2 \
+--piecewise_boundaries=1 \
+--piecewise_lr_decay=1.0,0.1 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
 --dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10
@@ -91,11 +91,10 @@ def main():
   from source.tool import downloader
   from source.tool import tuner
   from source.tool import config_parser
-  from source.config import Config
-  from source.config import InputterConfig
-  from source.config import ModelerConfig
-  from source.config import RunnerConfig
 
+  from source.config.image_classification_config import \
+    ImageClassificationCallbackConfig, ImageClassificationInputterConfig, ImageClassificationModelerConfig
+  
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -244,8 +243,50 @@ def main():
     else:
       print("Found " + config.dataset_meta + ".")
 
+
+  # Generate config
+  runner_config, callback_config, inputter_config, modeler_config = \
+    config_parser.default_config(config)
+
+  runner_config = runner_config
+
+  callback_config = ImageClassificationCallbackConfig(callback_config)
+
+  inputter_config = ImageClassificationInputterConfig(
+    inputter_config,
+    image_height=config.image_height,
+    image_width=config.image_width,
+    image_depth=config.image_depth,               
+    num_classes=config.num_classes)
+
+  modeler_config = ImageClassificationModelerConfig(
+    modeler_config,
+    num_classes=config.num_classes)
+
   if config.mode == "tune":
-    tuner.tune(config)
+
+    augmenter = (None if not config.augmenter else
+                 importlib.import_module(
+                  "source.augmenter." + config.augmenter))
+
+    net = getattr(importlib.import_module(
+      "source.network." + config.network), "net")
+
+    inputter_module = importlib.import_module(
+      "source.inputter.image_classification_csv_inputter")
+    modeler_module = importlib.import_module(
+      "source.modeler.image_classification_modeler")
+    runner_module = importlib.import_module(
+      "source.runner.parameter_server_runner")
+
+    tuner.tune(config,
+               runner_config,
+               callback_config,
+               inputter_config,
+               modeler_config,
+               inputter_module,
+               modeler_module,
+               runner_module)
   else:
 
     """
@@ -257,50 +298,6 @@ def main():
     Modeler: Creates functions for network, loss, optimization and evaluation.
              It owns a network and a list of callbacks as inputs.
     """
-
-    # Create configs
-    general_config = Config(
-      mode=config.mode,
-      batch_size_per_gpu=config.batch_size_per_gpu,
-      gpu_count=config.gpu_count)
-
-    inputter_config = InputterConfig(
-      general_config,
-      epochs=config.epochs,
-      dataset_meta=config.dataset_meta,
-      test_samples=config.test_samples,
-      image_height=config.image_height,
-      image_width=config.image_width,
-      image_depth=config.image_depth,
-      num_classes=config.num_classes)
-
-    modeler_config = ModelerConfig(
-      general_config,
-      optimizer=config.optimizer,
-      learning_rate=config.learning_rate,
-      trainable_vars=config.trainable_vars,
-      skip_trainable_vars=config.skip_trainable_vars,
-      piecewise_boundaries=config.piecewise_boundaries,
-      piecewise_lr_decay=config.piecewise_lr_decay,
-      skip_l2_loss_vars=config.skip_l2_loss_vars,
-      num_classes=config.num_classes)
-
-    runner_config = RunnerConfig(
-      general_config,
-      model_dir=config.model_dir,
-      summary_names=config.summary_names,
-      log_every_n_iter=config.log_every_n_iter,
-      save_summary_steps=config.save_summary_steps,
-      pretrained_dir=config.pretrained_dir,
-      skip_pretrained_var=config.skip_pretrained_var,
-      save_checkpoints_steps=config.save_checkpoints_steps,
-      keep_checkpoint_max=config.keep_checkpoint_max,
-      train_callbacks=config.train_callbacks,
-      eval_callbacks=config.eval_callbacks,
-      infer_callbacks=config.infer_callbacks)
-
-    callback_config = runner_config
-
     augmenter = (None if not config.augmenter else
                  importlib.import_module(
                   "source.augmenter." + config.augmenter))
@@ -318,21 +315,17 @@ def main():
     callbacks = []
     for name in callback_names:
       callback = importlib.import_module(
-        "source.callback." + name).build(
-        callback_config)
+        "source.callback." + name).build(callback_config)
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter.image_classification_csv_inputter").build(
-      inputter_config, augmenter)
+      "source.inputter.image_classification_csv_inputter").build(inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler.image_classification_modeler").build(
-      modeler_config, net)
+      "source.modeler.image_classification_modeler").build(modeler_config, net)
 
     runner = importlib.import_module(
-      "source.runner.parameter_server_runner").build(
-      runner_config, inputter, modeler, callbacks)
+      "source.runner.parameter_server_runner").build(runner_config, inputter, modeler, callbacks)
 
     # Run application
     runner.run()

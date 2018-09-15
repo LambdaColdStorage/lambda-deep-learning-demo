@@ -15,7 +15,7 @@ class EvalSpeed(Callback):
   def __init__(self, config):
     super(EvalSpeed, self).__init__(config)
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
     self.accumulated_num_samples = 0.0
     self.accumulated_time = 0.0
@@ -25,7 +25,7 @@ class EvalSpeed(Callback):
   def before_step(self, sess):
     self.time_before_step = time.time()
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
+  def after_step(self, sess, outputs_dict, feed_dict=None):
     self.time_after_step = time.time()
 
     self.global_step = self.global_step + 1

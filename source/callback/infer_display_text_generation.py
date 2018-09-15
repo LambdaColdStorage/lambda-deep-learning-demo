@@ -25,16 +25,15 @@ class InferDisplayTextGeneration(Callback):
     self.input = ""
     self.output = ""
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
 
-  def after_run(self, sess, saver, summary_writer):
+  def after_run(self, sess):
     print('-------------------------------------------------')
     print(self.input[0] + self.output)
     print('-------------------------------------------------')
 
-  def after_step(self, sess, outputs_dict,
-                 saver, summary_writer, feed_dict=None):
+  def after_step(self, sess, outputs_dict, feed_dict=None):
     chars = outputs_dict["chars"]
     for i, p in zip(outputs_dict["inputs"], outputs_dict["probabilities"]):
 

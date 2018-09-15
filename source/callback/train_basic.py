@@ -19,15 +19,20 @@ class TrainBasic(Callback):
   def __init__(self, config):
     super(TrainBasic, self).__init__(config)
 
-  def before_run(self, sess, saver):
+  def before_run(self, sess):
     self.graph = tf.get_default_graph()
+
+    # Create saver
+    self.saver = tf.train.Saver(
+      max_to_keep=self.config.keep_checkpoint_max,
+      name="global_saver")
 
     if not os.path.isdir(self.config.model_dir):
       os.makedirs(self.config.model_dir)
 
     if tf.train.checkpoint_exists(
       os.path.join(self.config.model_dir, "*ckpt*")):
-      saver.restore(sess,
+      self.saver.restore(sess,
                     tf.train.latest_checkpoint(
                       self.config.model_dir))
       print("Parameters restored.")
@@ -82,25 +87,25 @@ class TrainBasic(Callback):
       else:
         print("Resume training from step " + str(global_step))
 
-  def after_run(self, sess, saver, summary_writer):
+  def after_run(self, sess):
     max_step_op = self.graph.get_tensor_by_name("max_step:0")
     max_step = sess.run(max_step_op)
 
     if max_step % self.config.save_checkpoints_steps != 0:
       print("\nSaving checkpoint for the final step ...")
-      save_path = saver.save(sess,
+      save_path = self.saver.save(sess,
                              os.path.join(self.config.model_dir,
                                           "model.ckpt"),
                              global_step=max_step)
       print("Checkpoint " + save_path + " has been saved.")
 
-  def after_step(self, sess, outputs_dict, saver, summary_writer, feed_dict=None):
+  def after_step(self, sess, outputs_dict, feed_dict=None):
 
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     global_step = sess.run(global_step_op)
 
     if global_step % self.config.save_checkpoints_steps == 0:
-      save_path = saver.save(
+      save_path = self.saver.save(
         sess,
         os.path.join(self.config.model_dir,
                      "model.ckpt"),
