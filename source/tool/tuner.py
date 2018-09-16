@@ -81,7 +81,7 @@ def train(config,
   modeler_config.mode = "train"
 
   inputter_config.dataset_meta = \
-    os.path.expanduser("~/demo/data/camvid/train.csv")
+    os.path.expanduser("~/demo/data/shakespeare/shakespeare_input.txt")
 
   excute(config,
          runner_config,
@@ -113,7 +113,7 @@ def eval(config,
   # Optional: use a different split for evaluation
   # Should not use testing dataset
   inputter_config.dataset_meta = \
-    os.path.expanduser("~/demo/data/camvid/val.csv")
+    os.path.expanduser("~/demo/data/shakespeare/shakespeare_input.txt")
 
   excute(config,
          runner_config,

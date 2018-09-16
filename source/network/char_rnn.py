@@ -12,13 +12,13 @@ SOFTMAX_TEMPRATURE = 1.0
 
 
 def net(inputs, feed_dict_seq, seq_length,
-        batch_size, vocab_size, is_training=True):
+        batch_size, vocab_size, mode="train"):
 
   with tf.variable_scope(name_or_scope='CharRNN',
                          values=[inputs],
                          reuse=tf.AUTO_REUSE):
 
-    if is_training:
+    if mode == "train" or mode == "eval":
       c0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
       h0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
       c1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)

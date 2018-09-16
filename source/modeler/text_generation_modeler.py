@@ -27,10 +27,9 @@ class TextGenerationModeler(Modeler):
     self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, inputs):
-    is_training = (self.config.mode == "train")
     return self.net(inputs, self.feed_dict_seq, self.seq_length,
                     self.config.batch_size_per_gpu, self.vocab_size,
-                    is_training=is_training)
+                    mode=self.config.mode)
 
   def create_eval_metrics_fn(self, logits, labels):
     classes = tf.argmax(logits, axis=1, output_type=tf.int32)
@@ -53,13 +52,12 @@ class TextGenerationModeler(Modeler):
   def model_fn(self, x):
 
     inputs = x[0]
+    labels = x[1]
 
     logits, probabilities, last_state, inputs = \
         self.create_graph_fn(inputs)
 
-    if self.config.mode == "train":
-      labels = x[1]
-
+    if self.config.mode == "train":      
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss, self.grad_clip)
       accuracy = self.create_eval_metrics_fn(logits, labels)
@@ -68,7 +66,11 @@ class TextGenerationModeler(Modeler):
               "accuracy": accuracy,
               "learning_rate": self.learning_rate}
     elif self.config.mode == "eval":
-      pass
+      loss = self.create_loss_fn(logits, labels)
+      accuracy = self.create_eval_metrics_fn(
+        logits, labels)
+      return {"loss": loss,
+              "accuracy": accuracy}
     elif self.config.mode == "infer":
       return {"inputs": inputs,
               "logits": logits,

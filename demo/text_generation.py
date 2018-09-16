@@ -6,6 +6,7 @@ Licensed under
 Train:
 python demo/text_generation.py --mode=train \
 --gpu_count=1 --batch_size_per_gpu=128 --epochs=20 \
+--learning_rate=0.002 --optimizer=adam \
 --piecewise_boundaries=10 \
 --piecewise_lr_decay=1.0,0.1 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
@@ -13,8 +14,15 @@ python demo/text_generation.py --mode=train \
 --model_dir=~/demo/model/text_gen_shakespeare \
 --summary_names=loss,learning_rate
 
+Infer:
 python demo/text_generation.py --mode=infer \
 --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+--dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+--model_dir=~/demo/model/text_gen_shakespeare
+
+Tune:
+python demo/text_generation.py --mode=tune \
+--gpu_count=1 \
 --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
 --model_dir=~/demo/model/text_gen_shakespeare
 """
@@ -87,7 +95,7 @@ def main():
       "source.network." + config.network), "net")
 
     inputter_module = importlib.import_module(
-      "source.inputter.text_generation_csv_inputter")
+      "source.inputter.text_generation_txt_inputter")
     modeler_module = importlib.import_module(
       "source.modeler.text_generation_modeler")
     runner_module = importlib.import_module(

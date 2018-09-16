@@ -25,6 +25,9 @@ class TextGenerationTXTInputter(Inputter):
     elif self.config.mode == "infer":
       self.num_samples = 1000
       self.seq_length = 1
+    elif self.config.mode == "eval":
+      self.num_samples = 10000
+      self.seq_length = 50
 
     self.vocab_size = None
 
@@ -87,7 +90,7 @@ class TextGenerationTXTInputter(Inputter):
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
                   self.config.gpu_count)
-    if self.config.mode == "train":
+    if self.config.mode == "train" or self.config.mode == "eval":
 
       dataset = tf.data.Dataset.from_generator(
         generator=lambda: self.get_samples_fn(),
@@ -107,7 +110,8 @@ class TextGenerationTXTInputter(Inputter):
       iterator = dataset.make_one_shot_iterator()
       return iterator.get_next()
     else:
-      return (tf.zeros([batch_size, self.seq_length], tf.int32),)
+      return (tf.zeros([batch_size, self.seq_length], tf.int32),
+              tf.zeros([batch_size, self.seq_length], tf.int32))
 
 
 def build(config, augmenter):
