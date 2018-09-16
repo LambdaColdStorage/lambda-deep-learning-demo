@@ -8,6 +8,7 @@ from source.tool import config_parser
 CONFIG_TUNE_PATH = "source/tool/config_tune.yaml"
 CONVERT_STR2NUM = ["piecewise_lr_decay", "piecewise_boundaries"]
 
+
 def forward_props(source_obj, target_obj):
   public_props = (
     name for name in dir(target_obj) if not name.startswith('_'))
@@ -81,7 +82,7 @@ def train(config,
   modeler_config.mode = "train"
 
   inputter_config.dataset_meta = \
-    os.path.expanduser("~/demo/data/shakespeare/shakespeare_input.txt")
+    os.path.expanduser(config.train_meta)
 
   excute(config,
          runner_config,
@@ -113,7 +114,7 @@ def eval(config,
   # Optional: use a different split for evaluation
   # Should not use testing dataset
   inputter_config.dataset_meta = \
-    os.path.expanduser("~/demo/data/shakespeare/shakespeare_input.txt")
+    os.path.expanduser(config.eval_meta)
 
   excute(config,
          runner_config,
@@ -136,6 +137,8 @@ def tune(config, runner_config, callback_config,
 
   # Setup the tuning jobs
   num_trials = tune_config["num_trials"]
+  config.train_meta = tune_config["train_meta"]
+  config.eval_meta = tune_config["eval_meta"]
 
   dir_ori = os.path.join(callback_config.model_dir, "tune", "trial")
   t = 0

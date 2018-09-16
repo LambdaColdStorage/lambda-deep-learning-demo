@@ -1,4 +1,6 @@
 num_trials: 20
+train_meta: "~/demo/data/shakespeare/shakespeare_input.txt"
+eval_meta: "~/demo/data/shakespeare/shakespeare_input.txt"
 fixedparams:
   epochs: 1
   piecewise_lr_decay: "1.0,0.1"

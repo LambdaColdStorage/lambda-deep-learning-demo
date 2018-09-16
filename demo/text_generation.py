@@ -11,8 +11,13 @@ python demo/text_generation.py --mode=train \
 --piecewise_lr_decay=1.0,0.1 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
 --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
---model_dir=~/demo/model/text_gen_shakespeare \
---summary_names=loss,learning_rate
+--model_dir=~/demo/model/text_gen_shakespeare
+
+Eval:
+python demo/text_generation.py --mode=eval \
+--gpu_count=1 --batch_size_per_gpu=128 --epochs=1 \
+--dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+--model_dir=~/demo/model/text_gen_shakespeare
 
 Infer:
 python demo/text_generation.py --mode=infer \
@@ -86,13 +91,6 @@ def main():
     config_parser.default_config(config)
 
   if config.mode == "tune":
-
-    augmenter = (None if not config.augmenter else
-                 importlib.import_module(
-                  "source.augmenter." + config.augmenter))
-
-    net = getattr(importlib.import_module(
-      "source.network." + config.network), "net")
 
     inputter_module = importlib.import_module(
       "source.inputter.text_generation_txt_inputter")

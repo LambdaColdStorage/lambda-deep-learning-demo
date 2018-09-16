@@ -147,12 +147,6 @@ def main():
     data_format=config.data_format)
 
   if config.mode == "tune":
-    augmenter = (None if not config.augmenter else
-                 importlib.import_module(
-                  "source.augmenter." + config.augmenter))
-
-    net = getattr(importlib.import_module(
-      "source.network." + config.network), "net")
 
     inputter_module = importlib.import_module(
       "source.inputter.image_segmentation_csv_inputter")

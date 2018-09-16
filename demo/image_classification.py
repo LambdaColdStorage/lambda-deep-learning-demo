@@ -87,11 +87,10 @@ def main():
   from source.tool import downloader
   from source.tool import tuner
   from source.tool import config_parser
-
+  
   from source.config.image_classification_config import \
     ImageClassificationCallbackConfig, ImageClassificationInputterConfig, \
     ImageClassificationModelerConfig
-  
 
   parser = config_parser.default_parser()
 
@@ -164,13 +163,6 @@ def main():
     num_classes=config.num_classes)
 
   if config.mode == "tune":
-
-    augmenter = (None if not config.augmenter else
-                 importlib.import_module(
-                  "source.augmenter." + config.augmenter))
-
-    net = getattr(importlib.import_module(
-      "source.network." + config.network), "net")
 
     inputter_module = importlib.import_module(
       "source.inputter.image_classification_csv_inputter")

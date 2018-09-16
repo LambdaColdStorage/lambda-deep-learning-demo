@@ -53,7 +53,6 @@ def main():
     StyleTransferCallbackConfig, StyleTransferInputterConfig, \
     StyleTransferModelerConfig
   
-
   parser = config_parser.default_parser()
 
   parser.add_argument("--augmenter",
@@ -172,12 +171,6 @@ def main():
     style_image_path = config.style_image_path)
 
   if config.mode == "tune":
-    augmenter = (None if not config.augmenter else
-                 importlib.import_module(
-                  "source.augmenter." + config.augmenter))
-
-    net = getattr(importlib.import_module(
-      "source.network." + config.network), "net")
 
     inputter_module = importlib.import_module(
       "source.inputter.style_transfer_csv_inputter")
