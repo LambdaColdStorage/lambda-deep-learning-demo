@@ -132,6 +132,15 @@ python demo/image_classification.py --mode=train \
 --trainable_vars=final_layer,aux_logits \
 --skip_l2_loss_vars=gamma,beta
 
+Evaluation:
+python demo/image_classification.py \
+--mode=eval \
+--gpu_count=1 --batch_size_per_gpu=64 --epochs=1 \
+--network=nasnet_A_large \
+--augmenter=inception_augmenter \
+--image_height=331 --image_width=331 --num_classes=120 \
+--dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
+--model_dir=~/demo/model/image_classification_StanfordDog120
 """
 import sys
 import os

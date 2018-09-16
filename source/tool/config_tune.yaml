@@ -1,6 +1,6 @@
 num_trials: 20
-train_meta: "~/demo/data/shakespeare/shakespeare_input.txt"
-eval_meta: "~/demo/data/shakespeare/shakespeare_input.txt"
+train_meta: "~/demo/data/camvid/train.csv"
+eval_meta: "~/demo/data/camvid/val.csv"
 fixedparams:
   epochs: 1
   piecewise_lr_decay: "1.0,0.1"

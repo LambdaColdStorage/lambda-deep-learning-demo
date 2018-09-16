@@ -2,8 +2,14 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
+"""
+
+"""
+FCN
+
 Train:
 python demo/image_segmentation.py --mode=train \
+--network=fcn \
 --gpu_count=1 --batch_size_per_gpu=16 --epochs=200 \
 --learning_rate=0.01 \
 --piecewise_boundaries=50 \
@@ -31,6 +37,44 @@ python demo/image_segmentation.py --mode=tune \
 --model_dir=~/demo/model/image_segmentation_camvid \
 --gpu_count=1
 """
+
+"""
+UNET
+
+Train:
+python demo/image_segmentation.py --mode=train \
+--network=unet \
+--gpu_count=1 --batch_size_per_gpu=16 --epochs=200 \
+--learning_rate=0.001 \
+--piecewise_boundaries=50 \
+--piecewise_lr_decay=1.0,0.1 \
+--dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
+--dataset_meta=~/demo/data/camvid/train.csv \
+--model_dir=~/demo/model/image_segmentation_camvid
+
+Evaluation:
+python demo/image_segmentation.py --mode=eval \
+--network=unet \
+--gpu_count=1 --batch_size_per_gpu=16 --epochs=1 \
+--dataset_meta=~/demo/data/camvid/val.csv \
+--model_dir=~/demo/model/image_segmentation_camvid
+
+Infer:
+python demo/image_segmentation.py --mode=infer \
+--network=unet \
+--batch_size_per_gpu=1 --epochs=1 --gpu_count=1 \
+--model_dir=~/demo/model/image_segmentation_camvid \
+--test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
+
+Tune:
+python demo/image_segmentation.py --mode=tune \
+--network=unet \
+--batch_size_per_gpu=16 \
+--dataset_meta=~/demo/data/camvid/train.csv \
+--model_dir=~/demo/model/image_segmentation_camvid \
+--gpu_count=1
+"""
+
 import sys
 import os
 import argparse
@@ -55,7 +99,7 @@ def main():
                       type=str,
                       help="Name of the augmenter",
                       default="fcn_augmenter")
-  parser.add_argument("--network", choices=["fcn"],
+  parser.add_argument("--network", choices=["fcn", "unet"],
                       type=str,
                       help="Choose a network architecture",
                       default="fcn")
