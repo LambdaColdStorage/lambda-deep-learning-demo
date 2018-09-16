@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from network.external.tf_slim import inception_utils
+from source.network.external.tf_slim import inception_utils
 
 slim = tf.contrib.slim
 trunc_normal = lambda stddev: tf.truncated_normal_initializer(0.0, stddev)
