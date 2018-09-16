@@ -69,7 +69,7 @@ def default_parser():
                       help="A string of comma seperated names for summary",
                       type=str,
                       default="loss,accuracy,learning_rate")
-  parser.add_argument("--pretrained_dir",
+  parser.add_argument("--pretrained_model",
                       help="Path to pretrained network for transfer learning.",
                       type=str,
                       default="")
@@ -183,7 +183,7 @@ def default_config(config):
     model_dir=config.model_dir,
     log_every_n_iter=config.log_every_n_iter,
     save_summary_steps=config.save_summary_steps,
-    pretrained_dir=config.pretrained_dir,
+    pretrained_model=config.pretrained_model,
     skip_pretrained_var=config.skip_pretrained_var,
     save_checkpoints_steps=config.save_checkpoints_steps,
     keep_checkpoint_max=config.keep_checkpoint_max)

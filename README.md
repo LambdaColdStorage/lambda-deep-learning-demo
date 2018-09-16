@@ -55,7 +55,7 @@ python demo/image_classification.py --mode=train \
 --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
 --model_dir=~/demo/model/image_classification_StanfordDog120 \
---pretrained_dir=~/demo/model/resnet_v2_50_2017_04_14 \
+--pretrained_model=~/demo/model/resnet_v2_50_2017_04_14 \
 --skip_pretrained_var="resnet_v2_50/logits,global_step" \
 --trainable_vars="resnet_v2_50/logits"
 

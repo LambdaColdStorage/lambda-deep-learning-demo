@@ -34,7 +34,7 @@ class CallbackConfig(Config):
                model_dir=None,
                log_every_n_iter=10,
                save_summary_steps=100,
-               pretrained_dir=None,
+               pretrained_model=None,
                skip_pretrained_var=None,
                save_checkpoints_steps=None,
                keep_checkpoint_max=5):
@@ -45,7 +45,7 @@ class CallbackConfig(Config):
     self.model_dir = model_dir
     self.log_every_n_iter = log_every_n_iter
     self.save_summary_steps = save_summary_steps
-    self.pretrained_dir = pretrained_dir
+    self.pretrained_model = pretrained_model
     self.skip_pretrained_var = skip_pretrained_var
     self.save_checkpoints_steps = save_checkpoints_steps
     self.keep_checkpoint_max = keep_checkpoint_max

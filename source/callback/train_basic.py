@@ -52,12 +52,11 @@ class TrainBasic(Callback):
         print("Start training from step " + str(global_step))
 
         # Restore some weights from pre-trained model
-        if self.config.pretrained_dir:
-          self.config.pretrained_dir = os.path.expanduser(
-            self.config.pretrained_dir)
+        if self.config.pretrained_model:
+          self.config.pretrained_model = os.path.expanduser(
+            self.config.pretrained_model)
           print("Try to initialize weights from pre-trained model.")
-          if tf.train.checkpoint_exists(
-            os.path.join(self.config.pretrained_dir, "*ckpt*")):
+          if tf.train.checkpoint_exists(self.config.pretrained_model):
             variables_to_restore = {v.name.split(":")[0]: v
                                     for v in tf.get_collection(
                                         tf.GraphKeys.GLOBAL_VARIABLES)}
@@ -71,18 +70,14 @@ class TrainBasic(Callback):
             if variables_to_restore:
               saver_pre_trained = tf.train.Saver(
                 var_list=variables_to_restore)
-              for file in glob.glob(self.config.pretrained_dir + "/*.ckpt"):
-                ckpt_file = file
-              saver_pre_trained.restore(
-                sess,
-                os.path.join(self.config.pretrained_dir, ckpt_file))
+              saver_pre_trained.restore(sess, self.config.pretrained_model)
 
               print("Weights restored from pre-trained model.")
             else:
               print("Found no useful weights")
           else:
             print("Can't find pre-trained model at " +
-                  self.config.pretrained_dir)
+                  self.config.pretrained_model)
             print("Initialize weight randomly.")
       else:
         print("Resume training from step " + str(global_step))
