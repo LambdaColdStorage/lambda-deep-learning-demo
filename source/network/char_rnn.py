@@ -8,7 +8,7 @@ rnn = tf.contrib.rnn
 START_CHAR = 28
 RNN_SIZE = 256
 NUM_RNN_LAYER = 2
-SOFTMAX_TEMPRATURE = 0.2
+SOFTMAX_TEMPRATURE = 1.0
 
 
 def net(inputs, feed_dict_seq, seq_length,

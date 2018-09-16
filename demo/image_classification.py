@@ -218,13 +218,16 @@ def main():
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter.image_classification_csv_inputter").build(inputter_config, augmenter)
+      "source.inputter.image_classification_csv_inputter").build(
+      inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler.image_classification_modeler").build(modeler_config, net)
+      "source.modeler.image_classification_modeler").build(
+      modeler_config, net)
 
     runner = importlib.import_module(
-      "source.runner.parameter_server_runner").build(runner_config, inputter, modeler, callbacks)
+      "source.runner.parameter_server_runner").build(
+      runner_config, inputter, modeler, callbacks)
 
     # Run application
     runner.run()
