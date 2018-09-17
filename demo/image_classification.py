@@ -12,9 +12,9 @@ Beginner's demo with Resnet32
 
 Train:
 python demo/image_classification.py --mode=train \
---gpu_count=4 --batch_size_per_gpu=256 --epochs=100 \
---learning_rate=1.0 --optimizer=momentum \
---piecewise_boundaries=50 \
+--gpu_count=4 --batch_size_per_gpu=384 --epochs=100 \
+--learning_rate=0.5 --optimizer=momentum \
+--piecewise_boundaries=75 \
 --piecewise_lr_decay=1.0,0.1 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
 --dataset_meta=~/demo/data/cifar10/train.csv \
@@ -65,7 +65,7 @@ python demo/image_classification.py --mode=train \
 --image_height=224 --image_width=224 --num_classes=120 \
 --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
---model_dir=~/demo/model/image_classification_StanfordDog120 \
+--model_dir=~/demo/model/image_classification_StanfordDogs120 \
 --pretrained_model=~/demo/model/resnet_v2_50_2017_04_14/resnet_v2_50.ckpt \
 --skip_pretrained_var=resnet_v2_50/logits,global_step \
 --trainable_vars=resnet_v2_50/logits
@@ -78,7 +78,7 @@ python demo/image_classification.py \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
 --dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
---model_dir=~/demo/model/image_classification_StanfordDog120
+--model_dir=~/demo/model/image_classification_StanfordDogs120
 """
 
 """
@@ -98,7 +98,7 @@ python demo/image_classification.py --mode=train \
 --image_height=299 --image_width=299 --num_classes=120 \
 --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
---model_dir=~/demo/model/image_classification_StanfordDog120 \
+--model_dir=~/demo/model/image_classification_StanfordDogs120 \
 --pretrained_model=~/demo/model/inception_v4_2016_09_09/inception_v4.ckpt \
 --skip_pretrained_var=InceptionV4/AuxLogits,InceptionV4/Logits,global_step \
 --trainable_vars=InceptionV4/AuxLogits,InceptionV4/Logits
@@ -111,7 +111,7 @@ python demo/image_classification.py \
 --augmenter=inception_augmenter \
 --image_height=299 --image_width=299 --num_classes=120 \
 --dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
---model_dir=~/demo/model/image_classification_StanfordDog120
+--model_dir=~/demo/model/image_classification_StanfordDogs120
 """
 
 """
@@ -122,8 +122,9 @@ Prepare data:
 curl https://storage.googleapis.com/download.tensorflow.org/models/nasnet-a_large_04_10_2017.tar.gz | tar xvz -C ~/demo/model/nasnet-a_large_04_10_2017)
 
 python demo/image_classification.py --mode=train \
---gpu_count=1 --batch_size_per_gpu=64 --epochs=20 \
---learning_rate=0.01 \
+--gpu_count=4 --batch_size_per_gpu=16 --epochs=10 \
+--optimizer=adam \
+--learning_rate=0.0025 \
 --piecewise_boundaries=10 \
 --piecewise_lr_decay=1.0,0.1 \
 --network=nasnet_A_large \
@@ -131,21 +132,35 @@ python demo/image_classification.py --mode=train \
 --image_height=331 --image_width=331 --num_classes=120 \
 --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
---model_dir=~/demo/model/image_classification_StanfordDog120 \
+--model_dir=~/demo/model/image_classification_StanfordDogs120 \
 --pretrained_model=~/demo/model/nasnet-a_large_04_10_2017/model.ckpt \
---skip_pretrained_var=final_layer,aux_logits,global_step \
+--skip_pretrained_var=final_layer,aux_logits,global_step,power \
 --trainable_vars=final_layer,aux_logits \
 --skip_l2_loss_vars=gamma,beta
 
 Evaluation:
 python demo/image_classification.py \
 --mode=eval \
---gpu_count=1 --batch_size_per_gpu=64 --epochs=1 \
+--gpu_count=1 --batch_size_per_gpu=16 --epochs=1 \
 --network=nasnet_A_large \
 --augmenter=inception_augmenter \
 --image_height=331 --image_width=331 --num_classes=120 \
 --dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
---model_dir=~/demo/model/image_classification_StanfordDog120
+--model_dir=~/demo/model/image_classification_StanfordDogs120
+
+Tune:
+python demo/image_classification.py --mode=tune \
+--network=nasnet_A_large \
+--augmenter=inception_augmenter \
+--image_height=331 --image_width=331 --num_classes=120 \
+--gpu_count=4 --batch_size_per_gpu=64 \
+--dataset_meta=~/demo/data/StanfordDogs120/train.csv \
+--model_dir=~/demo/model/image_classification_StanfordDogs120 \
+--pretrained_model=~/demo/model/nasnet-a_large_04_10_2017/model.ckpt \
+--skip_pretrained_var=final_layer,aux_logits,global_step,power \
+--trainable_vars=final_layer,aux_logits \
+--skip_l2_loss_vars=gamma,beta \
+--tune_config=source/tool/ResNet32_CIFAR10_tune.yaml
 """
 
 

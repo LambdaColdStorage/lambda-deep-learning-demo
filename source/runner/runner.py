@@ -130,13 +130,19 @@ class Runner(object):
     for i in tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES):
       print (i)
 
+    print(len(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)))
+
   def print_global_variables(self):
 
     for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
       print (i.name)
 
+    print(len(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)))
+
   def run(self):
     self.create_graph()
+
+    # self.print_global_variables()
 
     with tf.Session(config=self.session_config) as self.sess:
 

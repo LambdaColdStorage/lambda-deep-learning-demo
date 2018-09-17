@@ -33,8 +33,8 @@ class TrainBasic(Callback):
     if tf.train.checkpoint_exists(
       os.path.join(self.config.model_dir, "*ckpt*")):
       self.saver.restore(sess,
-                    tf.train.latest_checkpoint(
-                      self.config.model_dir))
+                         tf.train.latest_checkpoint(
+                           self.config.model_dir))
       print("Parameters restored.")
     else:
       print("Initialize global variables ... ")
@@ -89,9 +89,9 @@ class TrainBasic(Callback):
     if max_step % self.config.save_checkpoints_steps != 0:
       print("\nSaving checkpoint for the final step ...")
       save_path = self.saver.save(sess,
-                             os.path.join(self.config.model_dir,
-                                          "model.ckpt"),
-                             global_step=max_step)
+                                  os.path.join(self.config.model_dir,
+                                               "model.ckpt"),
+                                  global_step=max_step)
       print("Checkpoint " + save_path + " has been saved.")
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
