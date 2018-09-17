@@ -14,11 +14,12 @@ class Config(object):
     for props_name in public_props:
       setattr(self, props_name, getattr(source_obj, props_name))
 
+
 class RunnerConfig(Config):
   def __init__(self,
                mode="train",
                batch_size_per_gpu=10,
-               gpu_count=1,    
+               gpu_count=1,
                summary_names=None):
     super(RunnerConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
@@ -30,7 +31,7 @@ class CallbackConfig(Config):
   def __init__(self,
                mode="train",
                batch_size_per_gpu=10,
-               gpu_count=1,    
+               gpu_count=1,
                model_dir=None,
                log_every_n_iter=10,
                save_summary_steps=100,

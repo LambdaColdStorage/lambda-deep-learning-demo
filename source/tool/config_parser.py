@@ -94,7 +94,13 @@ def default_parser():
                             regularization.",
                       type=str,
                       default="BatchNorm,preact,postnorm")
-  return parser  
+  parser.add_argument("--tune_config_path",
+                      help="Config file for hyper-parameter tunning",
+                      type=str,
+                      default="")
+
+  return parser
+
 
 def yaml_parse(config_path):
   """Parse a config file into a config object.

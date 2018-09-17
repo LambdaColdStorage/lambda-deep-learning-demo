@@ -3,14 +3,18 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 """
+import sys
+import os
+import importlib
 
 """
 Beginner's demo with Resnet32
 
 Train:
 python demo/image_classification.py --mode=train \
---gpu_count=1 --batch_size_per_gpu=256 --epochs=2 \
---piecewise_boundaries=1 \
+--gpu_count=4 --batch_size_per_gpu=256 --epochs=100 \
+--learning_rate=1.0 --optimizer=momentum \
+--piecewise_boundaries=50 \
 --piecewise_lr_decay=1.0,0.1 \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
 --dataset_meta=~/demo/data/cifar10/train.csv \
@@ -32,7 +36,8 @@ Tune:
 python demo/image_classification.py --mode=tune \
 --dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10 \
---gpu_count=4
+--gpu_count=4 \
+--tune_config=source/tool/ResNet32_CIFAR10_tune.yaml
 
 Pre-trained Model:
 curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10-resnet32-20180824.tar.gz | tar xvz -C ~/demo/model
@@ -80,7 +85,7 @@ python demo/image_classification.py \
 Transfer Learning with Inception V4
 
 Prepare data:
-(mkdir ~/demo/model/inception_v4_2016_09_09;                                                   
+(mkdir ~/demo/model/inception_v4_2016_09_09;
 curl http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz | tar xvz -C ~/demo/model/inception_v4_2016_09_09)
 
 python demo/image_classification.py --mode=train \
@@ -113,7 +118,7 @@ python demo/image_classification.py \
 Transfer Learning with NasNet-A-Large
 
 Prepare data:
-(mkdir ~/demo/model/nasnet-a_large_04_10_2017;                                                   
+(mkdir ~/demo/model/nasnet-a_large_04_10_2017;
 curl https://storage.googleapis.com/download.tensorflow.org/models/nasnet-a_large_04_10_2017.tar.gz | tar xvz -C ~/demo/model/nasnet-a_large_04_10_2017)
 
 python demo/image_classification.py --mode=train \
@@ -142,22 +147,19 @@ python demo/image_classification.py \
 --dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
 --model_dir=~/demo/model/image_classification_StanfordDog120
 """
-import sys
-import os
-import argparse
-import importlib
+
 
 def main():
 
   sys.path.append('.')
-  
+
   from source.tool import downloader
   from source.tool import tuner
   from source.tool import config_parser
-  
+
   from source.config.image_classification_config import \
-    ImageClassificationCallbackConfig, ImageClassificationInputterConfig, \
-    ImageClassificationModelerConfig
+      ImageClassificationInputterConfig, \
+      ImageClassificationModelerConfig
 
   parser = config_parser.default_parser()
 
@@ -216,13 +218,13 @@ def main():
 
   # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
-    config_parser.default_config(config)
+      config_parser.default_config(config)
 
   inputter_config = ImageClassificationInputterConfig(
     inputter_config,
     image_height=config.image_height,
     image_width=config.image_width,
-    image_depth=config.image_depth,               
+    image_depth=config.image_depth,
     num_classes=config.num_classes)
 
   modeler_config = ImageClassificationModelerConfig(

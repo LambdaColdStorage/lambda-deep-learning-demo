@@ -5,7 +5,6 @@ import importlib
 from source.tool import config_parser
 
 
-CONFIG_TUNE_PATH = "source/tool/config_tune.yaml"
 CONVERT_STR2NUM = ["piecewise_lr_decay", "piecewise_boundaries"]
 
 
@@ -114,7 +113,7 @@ def eval(config,
   # Optional: use a different split for evaluation
   # Should not use testing dataset
   inputter_config.dataset_meta = \
-    os.path.expanduser(config.eval_meta)
+      os.path.expanduser(config.eval_meta)
 
   excute(config,
          runner_config,
@@ -133,7 +132,7 @@ def tune(config, runner_config, callback_config,
          runner_module):
 
   # Parse config file
-  tune_config = config_parser.yaml_parse(CONFIG_TUNE_PATH)
+  tune_config = config_parser.yaml_parse(config.tune_config_path)
 
   # Setup the tuning jobs
   num_trials = tune_config["num_trials"]
@@ -149,7 +148,7 @@ def tune(config, runner_config, callback_config,
     for field in tune_config["fixedparams"].keys():
       if field in CONVERT_STR2NUM:
         setattr(config, field,
-          list(map(float, tune_config["fixedparams"][field].split(","))))
+                list(map(float, tune_config["fixedparams"][field].split(","))))
       else:
         setattr(config, field, tune_config["fixedparams"][field])
 
