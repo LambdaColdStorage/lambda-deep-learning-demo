@@ -37,7 +37,13 @@ python demo/image_classification.py --mode=tune \
 --dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10 \
 --gpu_count=4 \
---tune_config=source/tool/ResNet32_CIFAR10_tune.yaml
+--tune_config=source/tool/ResNet32_CIFAR10_tune_coarse.yaml
+
+python demo/image_classification.py --mode=tune \
+--dataset_meta=~/demo/data/cifar10/train.csv \
+--model_dir=~/demo/model/image_classification_cifar10 \
+--gpu_count=4 \
+--tune_config=source/tool/ResNet32_CIFAR10_tune_fine.yaml
 
 Pre-trained Model:
 curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10-resnet32-20180824.tar.gz | tar xvz -C ~/demo/model
