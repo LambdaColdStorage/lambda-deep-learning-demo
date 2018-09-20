@@ -7,14 +7,9 @@ Welcome to lambda-deep-learning-demo's documentation!
 =====================================================
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+
+   tutorial/index
+   documentation/index
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
