@@ -81,13 +81,13 @@ def train(config,
   modeler_config.mode = "train"
 
   inputter_config.dataset_meta = \
-    os.path.expanduser(config.train_meta)
+      os.path.expanduser(config.train_meta)
 
   excute(config,
          runner_config,
          callback_config,
          inputter_config,
-         modeler_config,        
+         modeler_config,
          inputter_module,
          modeler_module,
          runner_module,
@@ -98,7 +98,7 @@ def eval(config,
          runner_config,
          callback_config,
          inputter_config,
-         modeler_config,    
+         modeler_config,
          inputter_module,
          modeler_module,
          runner_module):
@@ -153,12 +153,21 @@ def tune(config, runner_config, callback_config,
         setattr(config, field, tune_config["fixedparams"][field])
 
     # Update hyper parameter
-    for field in tune_config["hyperparams"].keys():
-      if hasattr(config, field):
-        values = tune_config["hyperparams"][field].split(",")
-        v = random.choice(values)
-        setattr(config, field, type_convert(v))
-        dir_update = dir_update + "_" + field + "_" + str(v)
+    for sample_type in tune_config["hyperparams"].keys():
+      for field in tune_config["hyperparams"][sample_type].keys():
+        if hasattr(config, field):
+          if sample_type == "generate":
+            values = list(
+              map(float,
+                  tune_config["hyperparams"][sample_type][field].split(",")))
+            v = 10 ** random.uniform(values[0], values[1])
+            setattr(config, field, v)
+            dir_update = dir_update + "_" + field + "_" + "{0:.5f}".format(v)
+          elif sample_type == "select":
+            values = tune_config["hyperparams"][sample_type][field].split(",")
+            v = type_convert(random.choice(values))
+            setattr(config, field, v)
+            dir_update = dir_update + "_" + field + "_" + str(v)
 
     if not os.path.isdir(dir_update):
       config.model_dir = dir_update
@@ -181,7 +190,7 @@ def tune(config, runner_config, callback_config,
            runner_config,
            callback_config,
            inputter_config,
-           modeler_config,       
+           modeler_config,
            inputter_module,
            modeler_module,
            runner_module)

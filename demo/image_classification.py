@@ -37,7 +37,13 @@ python demo/image_classification.py --mode=tune \
 --dataset_meta=~/demo/data/cifar10/train.csv \
 --model_dir=~/demo/model/image_classification_cifar10 \
 --gpu_count=4 \
---tune_config=source/tool/ResNet32_CIFAR10_tune.yaml
+--tune_config=source/tool/ResNet32_CIFAR10_tune_coarse.yaml
+
+python demo/image_classification.py --mode=tune \
+--dataset_meta=~/demo/data/cifar10/train.csv \
+--model_dir=~/demo/model/image_classification_cifar10 \
+--gpu_count=4 \
+--tune_config=source/tool/ResNet32_CIFAR10_tune_fine.yaml
 
 Pre-trained Model:
 curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10-resnet32-20180824.tar.gz | tar xvz -C ~/demo/model
@@ -57,8 +63,10 @@ curl http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz | tar 
 
 Train:
 python demo/image_classification.py --mode=train \
---gpu_count=1 --batch_size_per_gpu=64 --epochs=20 \
---piecewise_boundaries=10 \
+--gpu_count=4 --batch_size_per_gpu=16 --epochs=50 \
+--optimizer=adam \
+--learning_rate=0.0025 \
+--piecewise_boundaries=25 \
 --piecewise_lr_decay=1.0,0.1 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
@@ -67,13 +75,13 @@ python demo/image_classification.py --mode=train \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
 --model_dir=~/demo/model/image_classification_StanfordDogs120 \
 --pretrained_model=~/demo/model/resnet_v2_50_2017_04_14/resnet_v2_50.ckpt \
---skip_pretrained_var=resnet_v2_50/logits,global_step \
+--skip_pretrained_var=resnet_v2_50/logits,global_step,power \
 --trainable_vars=resnet_v2_50/logits
 
 Evaluation:
 python demo/image_classification.py \
 --mode=eval \
---gpu_count=1 --batch_size_per_gpu=64 --epochs=1 \
+--gpu_count=1 --batch_size_per_gpu=16 --epochs=1 \
 --network=resnet50 \
 --augmenter=vgg_augmenter \
 --image_height=224 --image_width=224 --num_classes=120 \
@@ -89,9 +97,10 @@ Prepare data:
 curl http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz | tar xvz -C ~/demo/model/inception_v4_2016_09_09)
 
 python demo/image_classification.py --mode=train \
---gpu_count=1 --batch_size_per_gpu=64 --epochs=20 \
---learning_rate=0.01 \
---piecewise_boundaries=10 \
+--gpu_count=4 --batch_size_per_gpu=16 --epochs=10 \
+--optimizer=adam \
+--learning_rate=0.0025 \
+--piecewise_boundaries=5 \
 --piecewise_lr_decay=1.0,0.1 \
 --network=inception_v4 \
 --augmenter=inception_augmenter \
@@ -100,13 +109,13 @@ python demo/image_classification.py --mode=train \
 --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
 --model_dir=~/demo/model/image_classification_StanfordDogs120 \
 --pretrained_model=~/demo/model/inception_v4_2016_09_09/inception_v4.ckpt \
---skip_pretrained_var=InceptionV4/AuxLogits,InceptionV4/Logits,global_step \
+--skip_pretrained_var=InceptionV4/AuxLogits,InceptionV4/Logits,global_step,power \
 --trainable_vars=InceptionV4/AuxLogits,InceptionV4/Logits
 
 Evaluation:
 python demo/image_classification.py \
 --mode=eval \
---gpu_count=1 --batch_size_per_gpu=64 --epochs=1 \
+--gpu_count=1 --batch_size_per_gpu=16 --epochs=1 \
 --network=inception_v4 \
 --augmenter=inception_augmenter \
 --image_height=299 --image_width=299 --num_classes=120 \
@@ -125,7 +134,7 @@ python demo/image_classification.py --mode=train \
 --gpu_count=4 --batch_size_per_gpu=16 --epochs=10 \
 --optimizer=adam \
 --learning_rate=0.0025 \
---piecewise_boundaries=10 \
+--piecewise_boundaries=5 \
 --piecewise_lr_decay=1.0,0.1 \
 --network=nasnet_A_large \
 --augmenter=inception_augmenter \
@@ -153,14 +162,14 @@ python demo/image_classification.py --mode=tune \
 --network=nasnet_A_large \
 --augmenter=inception_augmenter \
 --image_height=331 --image_width=331 --num_classes=120 \
---gpu_count=4 --batch_size_per_gpu=64 \
+--gpu_count=4 --batch_size_per_gpu=16 \
 --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
 --model_dir=~/demo/model/image_classification_StanfordDogs120 \
 --pretrained_model=~/demo/model/nasnet-a_large_04_10_2017/model.ckpt \
 --skip_pretrained_var=final_layer,aux_logits,global_step,power \
 --trainable_vars=final_layer,aux_logits \
 --skip_l2_loss_vars=gamma,beta \
---tune_config=source/tool/ResNet32_CIFAR10_tune.yaml
+--tune_config=source/tool/NasNet_A_Large_StanfordDogs120_tune.yaml
 """
 
 
