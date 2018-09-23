@@ -11,94 +11,208 @@ def default_parser():
                       type=str,
                       help="Choose a job mode from train, eval, and infer.",
                       default="train")
-  parser.add_argument("--dataset_meta", type=str,
-                      help="Path to dataset's csv meta file",
+  parser.add_argument("--model_dir",
+                      help="Directory to save mode",
+                      type=str,
+                      default="")  
+  parser.add_argument("--dataset_url",
+                      help="URL for downloading data",
                       default="")
+  parser.add_argument("--network", choices=["resnet32", "resnet50", "inception_v4", "nasnet_A_large"],
+                      type=str,
+                      help="Choose a network architecture",
+                      default=None)
+  parser.add_argument("--augmenter",
+                      choices=["cifar_augmenter", "fcn_augmenter", "fns_augmenter",
+                               "inception_augmenter", "vgg_augmenter"],
+                      type=str,
+                      help="Name of the augmenter",
+                      default=None)
   parser.add_argument("--batch_size_per_gpu",
                       help="Number of images on each GPU.",
                       type=int,
-                      default=128)
+                      default=64)
   parser.add_argument("--gpu_count",
                       help="Number of GPUs.",
                       type=int,
-                      default=4)
+                      default=1)
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,
                       default=5)
-  parser.add_argument("--model_dir",
-                      help="Directory to save mode",
-                      type=str,
-                      default="")
-  parser.add_argument("--learning_rate",
-                      help="Initial learning rate in training.",
-                      type=float,
-                      default=0.5)
-  parser.add_argument("--piecewise_boundaries",
-                      help="Epochs to decay learning rate",
-                      default="2")
-  parser.add_argument("--piecewise_lr_decay",
-                      help="Decay ratio for learning rate",
-                      default="1.0,0.1")
-  parser.add_argument("--optimizer",
-                      help="Name of optimizer",
-                      choices=["adadelta", "adagrad", "adam", "ftrl",
-                               "momentum", "rmsprop", "sgd"],
-                      default="momentum")
-  parser.add_argument("--log_every_n_iter",
-                      help="Number of steps to log",
-                      type=int,
-                      default=2)
-  parser.add_argument("--save_summary_steps",
-                      help="Number of steps to save summary.",
-                      type=int,
-                      default=2)
-  parser.add_argument("--save_checkpoints_steps",
-                      help="Number of steps to save checkpoints",
-                      type=int,
-                      default=100)
-  parser.add_argument("--keep_checkpoint_max",
-                      help="Maximum number of checkpoints to save.",
-                      type=int,
-                      default=1)
-  parser.add_argument("--test_samples",
-                      help="A string of comma seperated testing data. "
-                      "Must be provided for infer mode.",
-                      type=str)
-  parser.add_argument("--summary_names",
-                      help="A string of comma seperated names for summary",
-                      type=str,
-                      default="loss,accuracy,learning_rate")
-  parser.add_argument("--pretrained_model",
-                      help="Path to pretrained network for transfer learning.",
-                      type=str,
-                      default="")
-  parser.add_argument("--skip_pretrained_var",
-                      help="Variables to skip in restoring from \
-                            pretrained model (for transfer learning).",
-                      type=str,
-                      default="")
-  parser.add_argument("--trainable_vars",
-                      help="List of trainable Variables. \
-                           If None all variables in TRAINABLE_VARIABLES \
-                           will be trained, subjected to the ones \
-                           blacklisted by skip_trainable_vars.",
-                      type=str,
-                      default="")
-  parser.add_argument("--skip_trainable_vars",
-                      help="List of blacklisted trainable Variables.",
-                      type=str,
-                      default="")
-  parser.add_argument("--skip_l2_loss_vars",
-                      help="List of blacklisted trainable Variables for L2 \
-                            regularization.",
-                      type=str,
-                      default="BatchNorm,preact,postnorm")
-  parser.add_argument("--tune_config_path",
-                      help="Config file for hyper-parameter tunning",
-                      type=str,
-                      default="")
 
+  subparsers = parser.add_subparsers(title='mode', dest='action')
+
+  train_parser = subparsers.add_parser("train_args", help="Train help")
+  train_parser.add_argument("--dataset_meta", type=str,
+                            help="Path to dataset's meta file",
+                            default="")
+  train_parser.add_argument("--learning_rate",
+                            help="Initial learning rate in training.",
+                            type=float,
+                            default=0.5)
+  train_parser.add_argument("--piecewise_boundaries",
+                            help="Epochs to decay learning rate",
+                            default="2")
+  train_parser.add_argument("--piecewise_lr_decay",
+                            help="Decay ratio for learning rate",
+                            default="1.0,0.1")
+  train_parser.add_argument("--optimizer",
+                            help="Name of optimizer",
+                            choices=["adadelta", "adagrad", "adam", "ftrl",
+                                     "momentum", "rmsprop", "sgd"],
+                            default="momentum")
+  train_parser.add_argument("--log_every_n_iter",
+                            help="Number of steps to log",
+                            type=int,
+                            default=10)
+  train_parser.add_argument("--save_summary_steps",
+                            help="Number of steps to save summary.",
+                            type=int,
+                            default=10)
+  train_parser.add_argument("--save_checkpoints_steps",
+                            help="Number of steps to save checkpoints",
+                            type=int,
+                            default=100)
+  train_parser.add_argument("--keep_checkpoint_max",
+                            help="Maximum number of checkpoints to save.",
+                            type=int,
+                            default=1)
+  train_parser.add_argument("--summary_names",
+                            help="A string of comma seperated names for summary",
+                            type=str,
+                            default="loss,accuracy,learning_rate")
+  train_parser.add_argument("--pretrained_model",
+                            help="Path to pretrained network for transfer learning.",
+                            type=str,
+                            default="")
+  train_parser.add_argument("--skip_pretrained_var",
+                            help="Variables to skip in restoring from \
+                                  pretrained model (for transfer learning).",
+                            type=str,
+                            default="")
+  train_parser.add_argument("--trainable_vars",
+                            help="List of trainable Variables. \
+                                 If None all variables in TRAINABLE_VARIABLES \
+                                 will be trained, subjected to the ones \
+                                 blacklisted by skip_trainable_vars.",
+                            type=str,
+                            default="")
+  train_parser.add_argument("--skip_l2_loss_vars",
+                            help="List of blacklisted trainable Variables for L2 \
+                                 regularization.",
+                            type=str,
+                            default="BatchNorm,preact,postnorm")
+  train_parser.add_argument("--callbacks",
+                            help="List of callbacks in training.",
+                            type=str,
+                            default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
+
+  eval_parser = subparsers.add_parser("eval_args", help="Eval help")
+  eval_parser.add_argument("--dataset_meta", type=str,
+                           help="Path to dataset's meta file",
+                           default="")  
+  eval_parser.add_argument("--log_every_n_iter",
+                           help="Number of steps to log",
+                           type=int,
+                           default=10)
+  eval_parser.add_argument("--skip_l2_loss_vars",
+                            help="List of blacklisted trainable Variables for L2 \
+                                 regularization.",
+                            type=str,
+                            default="BatchNorm,preact,postnorm")  
+  eval_parser.add_argument("--callbacks",
+                           help="List of callbacks in evaluation.",
+                           type=str,
+                           default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
+
+  infer_parser = subparsers.add_parser("infer_args", help="Infer help")
+  infer_parser.add_argument("--test_samples",
+                            help="A string of comma seperated testing data. "
+                            "Must be provided for infer mode.",
+                            type=str,
+                            default=None)
+  infer_parser.add_argument("--callbacks",
+                            help="List of callbacks in inference.",
+                            type=str,
+                            default="infer_basic,infer_display_image_classification")
+
+
+  tune_parser = subparsers.add_parser("tune_args", help="Tune help")
+  tune_parser.add_argument("--tune_config_path",
+                           help="Config file for hyper-parameter tunning",
+                           type=str,
+                           default="")
+  tune_parser.add_argument("--train_dataset_meta", type=str,
+                           help="Path to dataset's training meta file",
+                           default=None)  
+  tune_parser.add_argument("--eval_dataset_meta", type=str,
+                           help="Path to dataset's evaluation meta file",
+                           default=None)
+  tune_parser.add_argument("--learning_rate",
+                           help="Initial learning rate in training.",
+                           type=float,
+                           default=0.5)
+  tune_parser.add_argument("--piecewise_boundaries",
+                           help="Epochs to decay learning rate",
+                           default="2")
+  tune_parser.add_argument("--piecewise_lr_decay",
+                           help="Decay ratio for learning rate",
+                           default="1.0,0.1")
+  tune_parser.add_argument("--optimizer",
+                           help="Name of optimizer",
+                           choices=["adadelta", "adagrad", "adam", "ftrl",
+                                    "momentum", "rmsprop", "sgd"],
+                           default="momentum")
+  tune_parser.add_argument("--log_every_n_iter",
+                           help="Number of steps to log",
+                           type=int,
+                           default=10)
+  tune_parser.add_argument("--save_summary_steps",
+                           help="Number of steps to save summary.",
+                           type=int,
+                           default=10)
+  tune_parser.add_argument("--save_checkpoints_steps",
+                           help="Number of steps to save checkpoints",
+                           type=int,
+                           default=100)
+  tune_parser.add_argument("--keep_checkpoint_max",
+                           help="Maximum number of checkpoints to save.",
+                           type=int,
+                           default=1)
+  tune_parser.add_argument("--summary_names",
+                           help="A string of comma seperated names for summary",
+                           type=str,
+                           default="loss,accuracy,learning_rate")
+  tune_parser.add_argument("--pretrained_model",
+                           help="Path to pretrained network for transfer learning.",
+                           type=str,
+                           default="")
+  tune_parser.add_argument("--skip_pretrained_var",
+                           help="Variables to skip in restoring from \
+                                 pretrained model (for transfer learning).",
+                           type=str,
+                           default="")
+  tune_parser.add_argument("--trainable_vars",
+                           help="List of trainable Variables. \
+                                If None all variables in TRAINABLE_VARIABLES \
+                                 will be trained, subjected to the ones \
+                                 blacklisted by skip_trainable_vars.",
+                           type=str,
+                           default="")
+  tune_parser.add_argument("--skip_l2_loss_vars",
+                           help="List of blacklisted trainable Variables for L2 \
+                                regularization.",
+                           type=str,
+                           default="BatchNorm,preact,postnorm")
+  tune_parser.add_argument("--train_callbacks",
+                           help="List of callbacks in training.",
+                           type=str,
+                           default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
+  tune_parser.add_argument("--eval_callbacks",
+                           help="List of callbacks in evaluation.",
+                           type=str,
+                           default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")  
   return parser
 
 
@@ -112,58 +226,75 @@ def yaml_parse(config_path):
 
 def prepare(config):
 
-  config.dataset_meta = ("" if not config.dataset_meta else
-    os.path.expanduser(config.dataset_meta))
+  if hasattr(config, "dataset_meta"):
+    config.dataset_meta = ("" if not config.dataset_meta else
+      os.path.expanduser(config.dataset_meta))
 
-  config.model_dir = ("" if not config.model_dir else
-    os.path.expanduser(config.model_dir))
+  if hasattr(config, "train_dataset_meta"):
+    config.train_dataset_meta = ("" if not config.train_dataset_meta else
+      os.path.expanduser(config.train_dataset_meta))
 
-  config.summary_names = (
-    [] if not config.summary_names else
-    config.summary_names.split(","))
+  if hasattr(config, "eval_dataset_meta"):
+    config.eval_dataset_meta = ("" if not config.eval_dataset_meta else
+      os.path.expanduser(config.eval_dataset_meta))
 
-  config.skip_pretrained_var = (
-    [] if not config.skip_pretrained_var else
-    config.skip_pretrained_var.split(","))
+  if hasattr(config, "model_dir"):
+    config.model_dir = ("" if not config.model_dir else
+      os.path.expanduser(config.model_dir))
 
-  config.skip_trainable_vars = (
-    [] if not config.skip_trainable_vars else
-    config.skip_trainable_vars.split(","))
+  if hasattr(config, "summary_names"):
+    config.summary_names = (
+      [] if not config.summary_names else
+      config.summary_names.split(","))
 
-  config.trainable_vars = (
-    [] if not config.trainable_vars else
-    config.trainable_vars.split(","))
+  if hasattr(config, "skip_pretrained_var"):
+    config.skip_pretrained_var = (
+      [] if not config.skip_pretrained_var else
+      config.skip_pretrained_var.split(","))
 
-  config.skip_l2_loss_vars = (
-    [] if not config.skip_l2_loss_vars else
-    config.skip_l2_loss_vars.split(","))
+  if hasattr(config, "trainable_vars"):
+    config.trainable_vars = (
+      [] if not config.trainable_vars else
+      config.trainable_vars.split(","))
 
-  config.augmenter = (
-    None if not config.augmenter else config.augmenter)
+  if hasattr(config, "skip_l2_loss_vars"):
+    config.skip_l2_loss_vars = (
+      [] if not config.skip_l2_loss_vars else
+      config.skip_l2_loss_vars.split(","))
 
-  config.piecewise_boundaries = (
-    [] if not config.piecewise_boundaries else
-    list(map(float, config.piecewise_boundaries.split(","))))
+  if hasattr(config, "augmenter"):
+    config.augmenter = (
+      None if not config.augmenter else config.augmenter)
 
-  config.piecewise_lr_decay = (
-    [] if not config.piecewise_lr_decay else
-    list(map(float, config.piecewise_lr_decay.split(","))))
+  if hasattr(config, "piecewise_boundaries"):
+    config.piecewise_boundaries = (
+      [] if not config.piecewise_boundaries else
+      list(map(float, config.piecewise_boundaries.split(","))))
 
-  config.test_samples = (
-    [] if not config.test_samples else
-    [os.path.expanduser(x) for x in config.test_samples.split(",")])
+  if hasattr(config, "piecewise_lr_decay"):
+    config.piecewise_lr_decay = (
+      [] if not config.piecewise_lr_decay else
+      list(map(float, config.piecewise_lr_decay.split(","))))
 
-  config.train_callbacks = (
-    [] if not config.train_callbacks else
-    config.train_callbacks.split(","))
+  if hasattr(config, "test_samples"):
+    config.test_samples = (
+      [] if not config.test_samples else
+      [os.path.expanduser(x) for x in config.test_samples.split(",")])
 
-  config.eval_callbacks = (
-    [] if not config.eval_callbacks else
-    config.eval_callbacks.split(","))
+  if hasattr(config, "callbacks"):
+    config.callbacks = (
+      [] if not config.callbacks else
+      config.callbacks.split(","))
 
-  config.infer_callbacks = (
-    [] if not config.infer_callbacks else
-    config.infer_callbacks.split(","))
+  if hasattr(config, "train_callbacks"):
+    config.train_callbacks = (
+      [] if not config.train_callbacks else
+      config.train_callbacks.split(","))
+
+  if hasattr(config, "eval_callbacks"):
+    config.eval_callbacks = (
+      [] if not config.eval_callbacks else
+      config.eval_callbacks.split(","))
 
   return config
 
@@ -180,38 +311,56 @@ def default_config(config):
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
     gpu_count=config.gpu_count,    
-    summary_names=config.summary_names)
+    summary_names=(None if not hasattr(config, "summary_names")
+                   else config.summary_names))
 
   callback_config = CallbackConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
     gpu_count=config.gpu_count,    
     model_dir=config.model_dir,
-    log_every_n_iter=config.log_every_n_iter,
-    save_summary_steps=config.save_summary_steps,
-    pretrained_model=config.pretrained_model,
-    skip_pretrained_var=config.skip_pretrained_var,
-    save_checkpoints_steps=config.save_checkpoints_steps,
-    keep_checkpoint_max=config.keep_checkpoint_max)
+    log_every_n_iter=(None if not hasattr(config, "log_every_n_iter")
+                      else config.log_every_n_iter),
+    save_summary_steps=(None if not hasattr(config, "save_summary_steps")
+                        else config.save_summary_steps),
+    pretrained_model=(None if not hasattr(config, "pretrained_model")
+                      else config.pretrained_model),
+    skip_pretrained_var=(None if not hasattr(config, "skip_pretrained_var")
+                         else config.skip_pretrained_var),
+    save_checkpoints_steps=(None if not hasattr(config, "save_checkpoints_steps")
+                            else config.save_checkpoints_steps),
+    keep_checkpoint_max=(None if not hasattr(config, "keep_checkpoint_max")
+                         else config.keep_checkpoint_max))
 
   inputter_config = InputterConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
     gpu_count=config.gpu_count,    
     epochs=config.epochs,
-    dataset_meta=config.dataset_meta,
-    test_samples=config.test_samples)
+    dataset_meta=(None if not hasattr(config, "dataset_meta")
+                  else config.dataset_meta),
+    train_dataset_meta=(None if not hasattr(config, "train_dataset_meta")
+                        else config.train_dataset_meta),
+    eval_dataset_meta=(None if not hasattr(config, "eval_dataset_meta")
+                       else config.eval_dataset_meta),                      
+    test_samples= (None if not hasattr(config, "test_samples")
+                   else config.test_samples))
 
   modeler_config = ModelerConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
     gpu_count=config.gpu_count,    
-    optimizer=config.optimizer,
-    learning_rate=config.learning_rate,
-    trainable_vars=config.trainable_vars,
-    skip_trainable_vars=config.skip_trainable_vars,
-    piecewise_boundaries=config.piecewise_boundaries,
-    piecewise_lr_decay=config.piecewise_lr_decay,
-    skip_l2_loss_vars=config.skip_l2_loss_vars)
+    optimizer=(None if not hasattr(config, "optimizer")
+               else config.optimizer),
+    learning_rate=(None if not hasattr(config, "learning_rate")
+                   else config.learning_rate),
+    trainable_vars=(None if not hasattr(config, "trainable_vars")
+                    else config.trainable_vars),
+    piecewise_boundaries=(None if not hasattr(config, "piecewise_boundaries")
+                          else config.piecewise_boundaries),
+    piecewise_lr_decay=(None if not hasattr(config, "piecewise_lr_decay")
+                        else config.piecewise_lr_decay),
+    skip_l2_loss_vars=(None if not hasattr(config, "skip_l2_loss_vars")
+                       else config.skip_l2_loss_vars))
 
   return runner_config, callback_config, inputter_config, modeler_config

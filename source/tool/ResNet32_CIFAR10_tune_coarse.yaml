@@ -1,10 +1,8 @@
 num_trials: 20
-train_meta: "~/demo/data/cifar10/train.csv"
-eval_meta: "~/demo/data/cifar10/eval.csv"
 fixedparams:
-  epochs: 10
+  epochs: 2
   piecewise_lr_decay: "1.0,0.1"
-  piecewise_boundaries: "5"
+  piecewise_boundaries: "1"
 hyperparams:
   generate:
     learning_rate: "-3.0,1.0"

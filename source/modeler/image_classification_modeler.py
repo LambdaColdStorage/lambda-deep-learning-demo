@@ -18,7 +18,8 @@ class ImageClassificationModeler(Modeler):
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
-    self.learning_rate = self.create_learning_rate_fn(self.global_step)
+    if self.config.mode == "train":
+      self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, input):
     is_training = (self.config.mode == "train")

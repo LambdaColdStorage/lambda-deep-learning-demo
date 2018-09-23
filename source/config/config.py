@@ -59,6 +59,8 @@ class InputterConfig(Config):
                gpu_count=1,    
                epochs=1,
                dataset_meta=None,
+               train_dataset_meta=None,
+               eval_dataset_meta=None,
                test_samples=None,
                augmenter_speed_mode=False,
                shuffle_buffer_size=256):
@@ -68,6 +70,8 @@ class InputterConfig(Config):
 
     self.epochs = epochs
     self.dataset_meta = dataset_meta
+    self.train_dataset_meta = train_dataset_meta
+    self.eval_dataset_meta = eval_dataset_meta
     self.test_samples = test_samples
     self.augmenter_speed_mode = augmenter_speed_mode
     self.shuffle_buffer_size = shuffle_buffer_size
@@ -81,7 +85,6 @@ class ModelerConfig(Config):
                optimizer="momentum",
                learning_rate=0.1,
                trainable_vars=None,
-               skip_trainable_vars=None,
                piecewise_boundaries=None,
                piecewise_lr_decay=None,
                skip_l2_loss_vars=None,
@@ -93,7 +96,6 @@ class ModelerConfig(Config):
     self.optimizer = optimizer
     self.learning_rate = learning_rate
     self.trainable_vars = trainable_vars
-    self.skip_trainable_vars = skip_trainable_vars
     self.piecewise_boundaries = piecewise_boundaries
     self.piecewise_lr_decay = piecewise_lr_decay
     self.skip_l2_loss_vars = skip_l2_loss_vars

@@ -47,13 +47,6 @@ class Modeler(object):
                                 for x in
                                 self.config.trainable_vars)]
 
-    # Remove the blacklisted trainable variables
-    if self.config.skip_trainable_vars:
-      self.train_vars = [v for v in self.train_vars
-                         if not any(x in v.name
-                                    for x in
-                                    self.config.skip_trainable_vars)]
-
   def create_optimizer(self, learning_rate):
     # Setup optimizer
     if self.config.optimizer == "adadelta":
