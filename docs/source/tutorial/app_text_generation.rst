@@ -13,6 +13,7 @@ Text Generation
 Train from scratch
 
 ::
+
   python demo/text_generation.py \
   --mode=train \
   --model_dir=~/demo/model/char_rnn_shakespeare \
@@ -29,6 +30,7 @@ Train from scratch
 Evaluation
 
 ::
+
   python demo/text_generation.py \
   --mode=eval \
   --model_dir=~/demo/model/char_rnn_shakespeare \
@@ -41,6 +43,7 @@ Evaluation
 Infer
 
 ::
+
   python demo/text_generation.py \
   --mode=infer \
   --model_dir=~/demo/model/char_rnn_shakespeare \
@@ -54,6 +57,7 @@ Infer
 Hyper-Parameter Tuning
 
 ::
+
   python demo/text_generation.py \
   --mode=tune \
   --model_dir=~/demo/model/char_rnn_shakespeare \

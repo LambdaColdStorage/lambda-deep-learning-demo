@@ -48,6 +48,7 @@ Evaluation
 Inference
 
 ::
+
   python demo/style_transfer.py \
   --mode=infer \
   --model_dir=~/demo/model/fns_gothic \
@@ -62,6 +63,7 @@ Inference
 Hyper-Parameter Tuning
 
 ::
+
   python demo/style_transfer.py \
   --mode=tune \
   --model_dir=~/demo/model/fns_gothic \
