@@ -6,30 +6,6 @@ Licensed under
 
 """
 FCN
-
-Train:
-python demo/image_segmentation.py --mode=train \
---network=fcn \
---gpu_count=1 --batch_size_per_gpu=16 --epochs=200 \
---learning_rate=0.01 \
---piecewise_boundaries=50 \
---piecewise_lr_decay=1.0,0.1 \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
---dataset_meta=~/demo/data/camvid/train.csv \
---model_dir=~/demo/model/image_segmentation_camvid
-
-Evaluation:
-python demo/image_segmentation.py --mode=eval \
---gpu_count=1 --batch_size_per_gpu=16 --epochs=1 \
---dataset_meta=~/demo/data/camvid/val.csv \
---model_dir=~/demo/model/image_segmentation_camvid
-
-Infer:
-python demo/image_segmentation.py --mode=infer \
---batch_size_per_gpu=1 --epochs=1 --gpu_count=1 \
---model_dir=~/demo/model/image_segmentation_camvid \
---test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
-
 Tune:
 python demo/image_segmentation.py --mode=tune \
 --batch_size_per_gpu=16 \
@@ -40,31 +16,6 @@ python demo/image_segmentation.py --mode=tune \
 
 """
 UNET
-
-Train:
-python demo/image_segmentation.py --mode=train \
---network=unet \
---gpu_count=1 --batch_size_per_gpu=16 --epochs=200 \
---learning_rate=0.001 \
---piecewise_boundaries=50 \
---piecewise_lr_decay=1.0,0.1 \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
---dataset_meta=~/demo/data/camvid/train.csv \
---model_dir=~/demo/model/image_segmentation_camvid
-
-Evaluation:
-python demo/image_segmentation.py --mode=eval \
---network=unet \
---gpu_count=1 --batch_size_per_gpu=16 --epochs=1 \
---dataset_meta=~/demo/data/camvid/val.csv \
---model_dir=~/demo/model/image_segmentation_camvid
-
-Infer:
-python demo/image_segmentation.py --mode=infer \
---network=unet \
---batch_size_per_gpu=1 --epochs=1 --gpu_count=1 \
---model_dir=~/demo/model/image_segmentation_camvid \
---test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
 
 Tune:
 python demo/image_segmentation.py --mode=tune \
@@ -95,14 +46,6 @@ def main():
 
   parser = config_parser.default_parser()
 
-  parser.add_argument("--augmenter",
-                      type=str,
-                      help="Name of the augmenter",
-                      default="fcn_augmenter")
-  parser.add_argument("--network", choices=["fcn", "unet"],
-                      type=str,
-                      help="Choose a network architecture",
-                      default="fcn")
   parser.add_argument("--num_classes",
                       help="Number of classes.",
                       type=int,
@@ -138,21 +81,6 @@ def main():
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
                       default="channels_first")
-  parser.add_argument("--dataset_url",
-                      help="URL for downloading data",
-                      default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz")
-  parser.add_argument("--train_callbacks",
-                      help="List of callbacks in training.",
-                      type=str,
-                      default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
-  parser.add_argument("--eval_callbacks",
-                      help="List of callbacks in evaluation.",
-                      type=str,
-                      default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
-  parser.add_argument("--infer_callbacks",
-                      help="List of callbacks in inference.",
-                      type=str,
-                      default="infer_basic,infer_display_image_segmentation")
 
   config = parser.parse_args()
 
@@ -160,11 +88,23 @@ def main():
 
   # Download data if necessary
   if config.mode != "infer":
-    if not os.path.exists(config.dataset_meta):
-      downloader.download_and_extract(config.dataset_meta,
-                                      config.dataset_url, False)
+    if hasattr(config, "dataset_meta"):
+      if not os.path.exists(config.dataset_meta):
+        downloader.download_and_extract(config.dataset_meta,
+                                        config.dataset_url,
+                                        False)
+      else:
+        print("Found " + config.dataset_meta + ".")
+    elif hasattr(config, "train_dataset_meta"):
+      if not os.path.exists(config.train_dataset_meta):
+        print(config.train_dataset_meta)
+        downloader.download_and_extract(config.train_dataset_meta,
+                                        config.dataset_url,
+                                        False)
+      else:
+        print("Found " + config.train_dataset_meta + ".")
     else:
-      print("Found " + config.dataset_meta + ".")
+      assert False, "A meta data must be provided."
 
   # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
@@ -218,7 +158,6 @@ def main():
     Modeler: Creates functions for network, loss, optimization and evaluation.
              It owns a network and a list of callbacks as inputs.
     """
-
     augmenter = (None if not config.augmenter else
                  importlib.import_module(
                   "source.augmenter." + config.augmenter))
@@ -226,27 +165,23 @@ def main():
     net = getattr(importlib.import_module(
       "source.network." + config.network), "net")
 
-    if config.mode == "train":
-      callback_names = config.train_callbacks
-    elif config.mode == "eval":
-      callback_names = config.eval_callbacks
-    elif config.mode == "infer":
-      callback_names = config.infer_callbacks
-
     callbacks = []
-    for name in callback_names:
+    for name in config.callbacks:
       callback = importlib.import_module(
         "source.callback." + name).build(callback_config)
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter.image_segmentation_csv_inputter").build(inputter_config, augmenter)
+      "source.inputter.image_segmentation_csv_inputter").build(
+      inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler.image_segmentation_modeler").build(modeler_config, net)
+      "source.modeler.image_segmentation_modeler").build(
+      modeler_config, net)
 
     runner = importlib.import_module(
-      "source.runner.parameter_server_runner").build(runner_config, inputter, modeler, callbacks)
+      "source.runner.parameter_server_runner").build(
+      runner_config, inputter, modeler, callbacks)
 
     # Run application
     runner.run()

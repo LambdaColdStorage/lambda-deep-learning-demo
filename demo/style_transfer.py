@@ -2,38 +2,6 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
-Train:
-python demo/style_transfer.py --mode=train \
---gpu_count=1 --batch_size_per_gpu=4 --epochs=10 \
---piecewise_boundaries=5 \
---piecewise_lr_decay=1.0,0.1 \
---optimizer=rmsprop \
---learning_rate=0.01 \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz \
---dataset_meta=~/demo/data/mscoco_fns/train2014.csv \
---model_dir=~/demo/model/style_transfer_mscoco_fns \
---summary_names=loss,learning_rate \
---skip_trainable_vars=vgg_19
-
-Eval:
-python demo/style_transfer.py --mode=eval \
---gpu_count=1 --batch_size_per_gpu=4 --epochs=1 \
---dataset_meta=~/demo/data/mscoco_fns/eval2014.csv \
---model_dir=~/demo/model/style_transfer_mscoco_fns
-
-Infer:
-python demo/style_transfer.py --mode=infer \
---batch_size_per_gpu=1 --epochs=1 --gpu_count=1 \
---model_dir=~/demo/model/style_transfer_mscoco_fns \
---test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg
-
-Tune:
-python demo/style_transfer.py --mode=tune \
---gpu_count=1 --batch_size_per_gpu=4 \
---dataset_meta=~/demo/data/mscoco_fns/train2014.csv \
---model_dir=~/demo/model/style_transfer_mscoco_fns \
---summary_names=loss,learning_rate \
---skip_trainable_vars=vgg_19
 """
 import sys
 import os
@@ -54,15 +22,6 @@ def main():
     StyleTransferModelerConfig
   
   parser = config_parser.default_parser()
-
-  parser.add_argument("--augmenter",
-                      type=str,
-                      help="Name of the augmenter",
-                      default="fns_augmenter")
-  parser.add_argument("--network", choices=["fns"],
-                      type=str,
-                      help="Choose a network architecture",
-                      default="fns")
   parser.add_argument("--style_weight",
                       help="Weight for style loss",
                       default=100)
@@ -102,32 +61,15 @@ def main():
                         "demo/model/vgg_19_2016_08_28/vgg_19.ckpt"))
   parser.add_argument("--style_image_path",
                       help="Path to style image",
-                      default=os.path.join(os.environ['HOME'],
-                                           "demo/data/mscoco_fns/gothic.jpg"))
-
+                      default=os.path.join(
+                        os.environ['HOME'], "demo/data/mscoco_fns/gothic.jpg"))
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
                       choices=["channels_first", "channels_last"],
                       default="channels_last")
-  parser.add_argument("--dataset_url",
-                      help="URL for downloading data",
-                      default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz")
   parser.add_argument("--feature_net_url",
                       help="URL for downloading pre-trained feature_net",
                       default="http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz")
-  parser.add_argument("--train_callbacks",
-                      help="List of callbacks in training.",
-                      type=str,
-                      default="train_basic,train_loss,train_speed,train_summary")
-  parser.add_argument("--eval_callbacks",
-                      help="List of callbacks in evaluation.",
-                      type=str,
-                      default="eval_basic,eval_loss,eval_speed,eval_summary")
-  parser.add_argument("--infer_callbacks",
-                      help="List of callbacks in inference.",
-                      type=str,
-                      default="infer_basic,infer_display_style_transfer")  
-
 
   config = parser.parse_args()
 
@@ -135,19 +77,25 @@ def main():
 
   # Download data if necessary
   if config.mode != "infer":
-    if not os.path.exists(config.dataset_meta):
-      downloader.download_and_extract(config.dataset_meta,
-                                      config.dataset_url, False)
+    if hasattr(config, "dataset_meta"):
+      if not os.path.exists(config.dataset_meta):
+        downloader.download_and_extract(config.dataset_meta,
+                                        config.dataset_url,
+                                        False)
+      else:
+        print("Found " + config.dataset_meta + ".")
+    elif hasattr(config, "train_dataset_meta"):
+      if not os.path.exists(config.train_dataset_meta):
+        print(config.train_dataset_meta)
+        downloader.download_and_extract(config.train_dataset_meta,
+                                        config.dataset_url,
+                                        False)
+      else:
+        print("Found " + config.train_dataset_meta + ".")
     else:
-      print("Found " + config.dataset_meta + ".")
+      assert False, "A meta data must be provided."
 
-    if not os.path.exists(config.feature_net_path):
-      downloader.download_and_extract(config.feature_net_path,
-                                      config.feature_net_url, True)
-    else:
-      print("Found " + config.feature_net_path + '.')
-
-  # Generate config
+  # Generate config  
   runner_config, callback_config, inputter_config, modeler_config = \
     config_parser.default_config(config)
 
@@ -206,15 +154,8 @@ def main():
     net = getattr(importlib.import_module(
       "source.network." + config.network), "net")
 
-    if config.mode == "train":
-      callback_names = config.train_callbacks
-    elif config.mode == "eval":
-      callback_names = config.eval_callbacks
-    elif config.mode == "infer":
-      callback_names = config.infer_callbacks
-
     callbacks = []
-    for name in callback_names:
+    for name in config.callbacks:
       callback = importlib.import_module(
         "source.callback." + name).build(callback_config)
       callbacks.append(callback)

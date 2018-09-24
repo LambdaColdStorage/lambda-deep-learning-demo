@@ -18,13 +18,17 @@ def default_parser():
   parser.add_argument("--dataset_url",
                       help="URL for downloading data",
                       default="")
-  parser.add_argument("--network", choices=["resnet32", "resnet50", "inception_v4", "nasnet_A_large"],
+  parser.add_argument("--network", choices=["resnet32", "resnet50", "inception_v4", "nasnet_A_large",
+                                            "fcn", "unet",
+                                            "fns",
+                                            "char_rnn"],
                       type=str,
                       help="Choose a network architecture",
                       default=None)
   parser.add_argument("--augmenter",
-                      choices=["cifar_augmenter", "fcn_augmenter", "fns_augmenter",
-                               "inception_augmenter", "vgg_augmenter"],
+                      choices=["cifar_augmenter", "inception_augmenter", "vgg_augmenter",
+                               "fcn_augmenter", "unet_augmenter",
+                               "fns_augmenter"],
                       type=str,
                       help="Name of the augmenter",
                       default=None)
@@ -94,8 +98,7 @@ def default_parser():
   train_parser.add_argument("--trainable_vars",
                             help="List of trainable Variables. \
                                  If None all variables in TRAINABLE_VARIABLES \
-                                 will be trained, subjected to the ones \
-                                 blacklisted by skip_trainable_vars.",
+                                 will be trained.",
                             type=str,
                             default="")
   train_parser.add_argument("--skip_l2_loss_vars",
@@ -127,6 +130,9 @@ def default_parser():
                            default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
 
   infer_parser = subparsers.add_parser("infer_args", help="Infer help")
+  infer_parser.add_argument("--dataset_meta", type=str,
+                            help="Path to dataset's meta file",
+                            default="")  
   infer_parser.add_argument("--test_samples",
                             help="A string of comma seperated testing data. "
                             "Must be provided for infer mode.",
@@ -135,7 +141,7 @@ def default_parser():
   infer_parser.add_argument("--callbacks",
                             help="List of callbacks in inference.",
                             type=str,
-                            default="infer_basic,infer_display_image_classification")
+                            default=None)
 
 
   tune_parser = subparsers.add_parser("tune_args", help="Tune help")
@@ -196,8 +202,7 @@ def default_parser():
   tune_parser.add_argument("--trainable_vars",
                            help="List of trainable Variables. \
                                 If None all variables in TRAINABLE_VARIABLES \
-                                 will be trained, subjected to the ones \
-                                 blacklisted by skip_trainable_vars.",
+                                 will be trained, subjected to the ones.",
                            type=str,
                            default="")
   tune_parser.add_argument("--skip_l2_loss_vars",

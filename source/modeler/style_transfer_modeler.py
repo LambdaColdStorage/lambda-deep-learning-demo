@@ -80,7 +80,8 @@ class StyleTransferModeler(Modeler):
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
-    self.learning_rate = self.create_learning_rate_fn(self.global_step)
+    if self.config.mode == "train":
+      self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
     if self.config.mode == "train" or self.config.mode == "eval":
       self.style_features_target = {}

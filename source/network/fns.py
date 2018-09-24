@@ -74,47 +74,52 @@ def residual_layer(inputs, para, name, data_format):
 
 
 def net(inputs, data_format):
-  outputs = (tf.transpose(inputs, [0, 3, 1, 2])
-             if data_format == 'channels_first'
-             else inputs)
-  outputs = tf.nn.relu(instance_norm_layer(
-                       conv_layer(outputs, para_conv[0],
-                                  name="encode_1", data_format=data_format),
-                       data_format))
-  outputs = tf.nn.relu(instance_norm_layer(
-                       conv_layer(outputs, para_conv[1],
-                                  name="encode_2", data_format=data_format),
-                       data_format))
-  outputs = tf.nn.relu(instance_norm_layer(
-                       conv_layer(outputs, para_conv[2],
-                                  name="encode_3", data_format=data_format),
-                       data_format))
-  outputs = residual_layer(outputs, para_res,
-                           name="resisdual_1", data_format=data_format)
-  outputs = residual_layer(outputs, para_res,
-                           name="resisdual_2", data_format=data_format)
-  outputs = residual_layer(outputs, para_res,
-                           name="resisdual_3", data_format=data_format)
-  outputs = residual_layer(outputs, para_res,
-                           name="resisdual_4", data_format=data_format)
-  outputs = residual_layer(outputs, para_res,
-                           name="resisdual_5", data_format=data_format)
-  outputs = tf.nn.relu(instance_norm_layer(
-                       deconv_layer(outputs, para_deconv[0],
-                                    name="decode_1", data_format=data_format),
-                       data_format=data_format))
-  outputs = tf.nn.relu(instance_norm_layer(
-                       deconv_layer(outputs, para_deconv[1],
-                                    name="decode_2", data_format=data_format),
-                       data_format=data_format))
-  outputs = instance_norm_layer(conv_layer(
-                                outputs, para_deconv[2],
-                                name="decode_3", data_format=data_format),
-                                data_format=data_format)
-  outputs = tf.nn.tanh(outputs) * 127.5 + 255. / 2
 
-  outputs = (tf.transpose(outputs, [0, 2, 3, 1])
-             if data_format == 'channels_first'
-             else outputs)
+  with tf.variable_scope(name_or_scope='FNS',
+                         values=[inputs],
+                         reuse=tf.AUTO_REUSE):
 
-  return outputs
+    outputs = (tf.transpose(inputs, [0, 3, 1, 2])
+               if data_format == 'channels_first'
+               else inputs)
+    outputs = tf.nn.relu(instance_norm_layer(
+                         conv_layer(outputs, para_conv[0],
+                                    name="encode_1", data_format=data_format),
+                         data_format))
+    outputs = tf.nn.relu(instance_norm_layer(
+                         conv_layer(outputs, para_conv[1],
+                                    name="encode_2", data_format=data_format),
+                         data_format))
+    outputs = tf.nn.relu(instance_norm_layer(
+                         conv_layer(outputs, para_conv[2],
+                                    name="encode_3", data_format=data_format),
+                         data_format))
+    outputs = residual_layer(outputs, para_res,
+                             name="resisdual_1", data_format=data_format)
+    outputs = residual_layer(outputs, para_res,
+                             name="resisdual_2", data_format=data_format)
+    outputs = residual_layer(outputs, para_res,
+                             name="resisdual_3", data_format=data_format)
+    outputs = residual_layer(outputs, para_res,
+                             name="resisdual_4", data_format=data_format)
+    outputs = residual_layer(outputs, para_res,
+                             name="resisdual_5", data_format=data_format)
+    outputs = tf.nn.relu(instance_norm_layer(
+                         deconv_layer(outputs, para_deconv[0],
+                                      name="decode_1", data_format=data_format),
+                         data_format=data_format))
+    outputs = tf.nn.relu(instance_norm_layer(
+                         deconv_layer(outputs, para_deconv[1],
+                                      name="decode_2", data_format=data_format),
+                         data_format=data_format))
+    outputs = instance_norm_layer(conv_layer(
+                                  outputs, para_deconv[2],
+                                  name="decode_3", data_format=data_format),
+                                  data_format=data_format)
+    outputs = tf.nn.tanh(outputs) * 127.5 + 255. / 2
+
+    outputs = (tf.transpose(outputs, [0, 2, 3, 1])
+               if data_format == 'channels_first'
+               else outputs)
+
+    return outputs

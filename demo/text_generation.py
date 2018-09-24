@@ -2,34 +2,6 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
-
-Train:
-python demo/text_generation.py --mode=train \
---gpu_count=1 --batch_size_per_gpu=128 --epochs=20 \
---learning_rate=0.002 --optimizer=adam \
---piecewise_boundaries=10 \
---piecewise_lr_decay=1.0,0.1 \
---dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
---dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
---model_dir=~/demo/model/text_gen_shakespeare
-
-Eval:
-python demo/text_generation.py --mode=eval \
---gpu_count=1 --batch_size_per_gpu=128 --epochs=1 \
---dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
---model_dir=~/demo/model/text_gen_shakespeare
-
-Infer:
-python demo/text_generation.py --mode=infer \
---gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
---dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
---model_dir=~/demo/model/text_gen_shakespeare
-
-Tune:
-python demo/text_generation.py --mode=tune \
---gpu_count=1 \
---dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
---model_dir=~/demo/model/text_gen_shakespeare
 """
 import sys
 import os
@@ -50,29 +22,26 @@ def main():
     TextGenerationModelerConfig
   parser = config_parser.default_parser()
 
-  parser.add_argument("--augmenter",
-                      type=str,
-                      help="Name of the augmenter",
-                      default=None)
-  parser.add_argument("--network", choices=["char_rnn"],
-                      type=str,
-                      help="Choose a network architecture",
-                      default="char_rnn")
-  parser.add_argument("--dataset_url",
-                      help="URL for downloading data",
-                      default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz")
-  parser.add_argument("--train_callbacks",
-                      help="List of callbacks in training.",
-                      type=str,
-                      default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
-  parser.add_argument("--eval_callbacks",
-                      help="List of callbacks in evaluation.",
-                      type=str,
-                      default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
-  parser.add_argument("--infer_callbacks",
-                      help="List of callbacks in inference.",
-                      type=str,
-                      default="infer_basic,infer_display_text_generation")
+
+  # parser.add_argument("--network", choices=["char_rnn"],
+  #                     type=str,
+  #                     help="Choose a network architecture",
+  #                     default="char_rnn")
+  # parser.add_argument("--dataset_url",
+  #                     help="URL for downloading data",
+  #                     default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz")
+  # parser.add_argument("--train_callbacks",
+  #                     help="List of callbacks in training.",
+  #                     type=str,
+  #                     default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
+  # parser.add_argument("--eval_callbacks",
+  #                     help="List of callbacks in evaluation.",
+  #                     type=str,
+  #                     default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
+  # parser.add_argument("--infer_callbacks",
+  #                     help="List of callbacks in inference.",
+  #                     type=str,
+  #                     default="infer_basic,infer_display_text_generation")
 
   config = parser.parse_args()
 
@@ -80,11 +49,23 @@ def main():
 
   # Download data if necessary
   if config.mode != "infer":
-    if not os.path.exists(config.dataset_meta):
-      downloader.download_and_extract(config.dataset_meta,
-                                      config.dataset_url, False)
+    if hasattr(config, "dataset_meta"):
+      if not os.path.exists(config.dataset_meta):
+        downloader.download_and_extract(config.dataset_meta,
+                                        config.dataset_url,
+                                        False)
+      else:
+        print("Found " + config.dataset_meta + ".")
+    elif hasattr(config, "train_dataset_meta"):
+      if not os.path.exists(config.train_dataset_meta):
+        print(config.train_dataset_meta)
+        downloader.download_and_extract(config.train_dataset_meta,
+                                        config.dataset_url,
+                                        False)
+      else:
+        print("Found " + config.train_dataset_meta + ".")
     else:
-      print("Found " + config.dataset_meta + ".")
+      assert False, "A meta data must be provided."
 
   # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
@@ -127,15 +108,8 @@ def main():
     net = getattr(importlib.import_module(
       "source.network." + config.network), "net")
 
-    if config.mode == "train":
-      callback_names = config.train_callbacks
-    elif config.mode == "eval":
-      callback_names = config.eval_callbacks
-    elif config.mode == "infer":
-      callback_names = config.infer_callbacks
-
     callbacks = []
-    for name in callback_names:
+    for name in config.callbacks:
       callback = importlib.import_module(
         "source.callback." + name).build(callback_config)
       callbacks.append(callback)
