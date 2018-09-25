@@ -11,6 +11,7 @@ import importlib
 Beginner's demo with Resnet32
 """
 
+
 def main():
 
   sys.path.append('.')

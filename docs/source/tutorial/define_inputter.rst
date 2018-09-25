@@ -47,7 +47,7 @@ The :code:`input_fn` of an image classification inputter looks like this:
     
     # Shuffle the dataset for training
     if self.config.mode == "train":
-      dataset = dataset.shuffle(self.config.shuffle_buffer_size)
+      dataset = dataset.shuffle(self.get_num_samples())
 
     # Repeat the dataset for multiple epochs
     dataset = dataset.repeat(self.config.epochs)

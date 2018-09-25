@@ -62,8 +62,7 @@ class InputterConfig(Config):
                train_dataset_meta=None,
                eval_dataset_meta=None,
                test_samples=None,
-               augmenter_speed_mode=False,
-               shuffle_buffer_size=256):
+               augmenter_speed_mode=False):
 
     super(InputterConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
@@ -74,7 +73,6 @@ class InputterConfig(Config):
     self.eval_dataset_meta = eval_dataset_meta
     self.test_samples = test_samples
     self.augmenter_speed_mode = augmenter_speed_mode
-    self.shuffle_buffer_size = shuffle_buffer_size
 
 
 class ModelerConfig(Config):

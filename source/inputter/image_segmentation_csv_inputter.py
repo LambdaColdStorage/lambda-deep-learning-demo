@@ -94,7 +94,7 @@ class ImageSegmentationCSVInputter(Inputter):
     dataset = tf.data.Dataset.from_tensor_slices(samples)
 
     if self.config.mode == "train":
-      dataset = dataset.shuffle(self.config.shuffle_buffer_size)
+      dataset = dataset.shuffle(self.get_num_samples())
 
     dataset = dataset.repeat(self.config.epochs)
 

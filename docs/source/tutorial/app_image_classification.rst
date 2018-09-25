@@ -2,8 +2,6 @@ Image Classification
 ========================================
 
 
-**ResNet32 on CIFAR10**
-
 * :ref:`resnet32train`
 * :ref:`resnet32eval`
 * :ref:`resnet32infer`
@@ -12,8 +10,8 @@ Image Classification
 
 .. _resnet32train:
 
-Train from scratch
------------------------
+**Train ResNet32 from scratch on CIFAR10**
+----------------------------------------------
 
 ::
 
@@ -32,7 +30,7 @@ Train from scratch
 
 .. _resnet32eval:
 
-Evaluation
+**Evaluation**
 -----------------------
 
 ::
@@ -48,7 +46,7 @@ Evaluation
 
 .. _resnet32infer:
 
-Inference
+**Inference**
 -----------------------
 
 ::
@@ -65,7 +63,7 @@ Inference
 
 .. _resnet32tune:
 
-Hyper-Parameter Tuning
+**Hyper-Parameter Tuning**
 -----------------------
 
 ::
@@ -79,7 +77,7 @@ Hyper-Parameter Tuning
   tune_args \
   --train_dataset_meta=~/demo/data/cifar10/train.csv \
   --eval_dataset_meta=~/demo/data/cifar10/eval.csv \
-  --tune_config=source/tool/ResNet32_CIFAR10_tune_coarse.yaml
+  --tune_config=source/tool/resnet32_cifar10_tune_coarse.yaml
 
   python demo/image_classification.py \
   --mode=tune \
@@ -90,11 +88,11 @@ Hyper-Parameter Tuning
   tune_args \
   --train_dataset_meta=~/demo/data/cifar10/train.csv \
   --eval_dataset_meta=~/demo/data/cifar10/eval.csv \
-  --tune_config=source/tool/ResNet32_CIFAR10_tune_fine.yaml
+  --tune_config=source/tool/resnet32_cifar10_tune_fine.yaml
 
 .. _resnet32pretrain:
 
-Evaluate Pre-trained model
+**Evaluate Pre-trained model**
 ------------------------------
 
 ::
