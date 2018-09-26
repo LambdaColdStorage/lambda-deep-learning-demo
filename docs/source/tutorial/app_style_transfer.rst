@@ -19,7 +19,7 @@ Train from scratch
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz \
   --network=fns \
   --augmenter=fns_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=4 --epochs=10 \
+  --batch_size_per_gpu=4 --epochs=10 \
   train_args \
   --learning_rate=0.01 --optimizer=rmsprop \
   --piecewise_boundaries=5 \
@@ -39,7 +39,7 @@ Evaluation
   --model_dir=~/demo/model/fns_gothic \
   --network=fns \
   --augmenter=fns_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=4 --epochs=1 \
+  --batch_size_per_gpu=4 --epochs=1 \
   eval_args \
   --callbacks=eval_basic,eval_loss,eval_speed,eval_summary \
   --dataset_meta=~/demo/data/mscoco_fns/eval2014.csv
@@ -69,7 +69,7 @@ Hyper-Parameter Tuning
   --model_dir=~/demo/model/fns_gothic \
   --network=fns \
   --augmenter=fns_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=4 \
+  --batch_size_per_gpu=4 \
   tune_args \
   --train_dataset_meta=~/demo/data/mscoco_fns/train2014.csv \
   --eval_dataset_meta=~/demo/data/mscoco_fns/eval2014.csv \

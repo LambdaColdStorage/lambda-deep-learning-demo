@@ -19,7 +19,7 @@ Train from scratch
   --model_dir=~/demo/model/char_rnn_shakespeare \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=char_rnn \
-  --gpu_count=1 --batch_size_per_gpu=128 --epochs=20 \
+  --batch_size_per_gpu=128 --epochs=20 \
   train_args \
   --learning_rate=0.002 --optimizer=adam \
   --piecewise_boundaries=10 \
@@ -35,7 +35,7 @@ Evaluation
   --mode=eval \
   --model_dir=~/demo/model/char_rnn_shakespeare \
   --network=char_rnn \
-  --gpu_count=1 --batch_size_per_gpu=128 --epochs=1 \
+  --batch_size_per_gpu=128 --epochs=1 \
   eval_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
   
@@ -62,7 +62,7 @@ Hyper-Parameter Tuning
   --mode=tune \
   --model_dir=~/demo/model/char_rnn_shakespeare \
   --network=char_rnn \
-  --gpu_count=1 --batch_size_per_gpu=128 \
+  --batch_size_per_gpu=128 \
   tune_args \
   --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \

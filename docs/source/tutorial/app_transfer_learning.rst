@@ -27,7 +27,7 @@ Train with weights restored from pre-trained model
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=resnet50 \
   --augmenter=vgg_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=10 \
+  --batch_size_per_gpu=16 --epochs=10 \
   --num_classes=120 --image_width=224 --image_height=224 \
   train_args \
   --learning_rate=0.1 --optimizer=momentum \
@@ -48,7 +48,7 @@ Hyper-Parameter Tuning
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=resnet50 \
   --augmenter=vgg_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 \
+  --batch_size_per_gpu=16 \
   --num_classes=120 --image_width=224 --image_height=224 \
   tune_args \
   --train_dataset_meta=~/demo/data/StanfordDogs120/train.csv \
@@ -67,7 +67,7 @@ Evaluation
   --model_dir=~/demo/model/resnet50_StanfordDogs120 \
   --network=resnet50 \
   --augmenter=vgg_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=1 \
+  --batch_size_per_gpu=16 --epochs=1 \
   --num_classes=120 --image_width=224 --image_height=224 \
   eval_args \
   --dataset_meta=~/demo/data/StanfordDogs120/eval.csv
@@ -94,7 +94,7 @@ Train with weights restored from pre-trained model
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=inception_v4 \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=4 \
+  --batch_size_per_gpu=16 --epochs=4 \
   --num_classes=120 --image_width=299 --image_height=299 \
   train_args \
   --learning_rate=0.1 --optimizer=momentum \
@@ -115,7 +115,7 @@ Hyper-Parameter Tuning
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=inception_v4 \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 \
+  --batch_size_per_gpu=16 \
   --num_classes=120 --image_width=299 --image_height=299 \
   tune_args \
   --train_dataset_meta=~/demo/data/StanfordDogs120/train.csv \
@@ -134,7 +134,7 @@ Evaluation
   --model_dir=~/demo/model/inceptionv4_StanfordDogs120 \
   --network=inception_v4 \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=1 \
+  --batch_size_per_gpu=16 --epochs=1 \
   --num_classes=120 --image_width=299 --image_height=299 \
   eval_args \
   --dataset_meta=~/demo/data/StanfordDogs120/eval.csv
@@ -160,7 +160,7 @@ Train with weights restored from pre-trained model
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=4 \
+  --batch_size_per_gpu=16 --epochs=4 \
   --num_classes=120 --image_width=331 --image_height=331 \
   train_args \
   --learning_rate=0.1 --optimizer=momentum \
@@ -181,7 +181,7 @@ Hyper-Parameter Tuning
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 \
+  --batch_size_per_gpu=16 \
   --num_classes=120 --image_width=331 --image_height=331 \
   tune_args \
   --train_dataset_meta=~/demo/data/StanfordDogs120/train.csv \
@@ -200,7 +200,7 @@ Evaluation
   --model_dir=~/demo/model/nasnet_A_large_StanfordDogs120 \
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=1 \
+  --batch_size_per_gpu=16 --epochs=1 \
   --num_classes=120 --image_width=331 --image_height=331 \
   eval_args \
   --dataset_meta=~/demo/data/StanfordDogs120/eval.csv
