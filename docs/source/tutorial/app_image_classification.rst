@@ -21,11 +21,11 @@ Image Classification
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=128 --epochs=100 \
+  --batch_size_per_gpu=256 --epochs=100 \
   train_args \
   --learning_rate=0.5 --optimizer=momentum \
-  --piecewise_boundaries=75 \
-  --piecewise_lr_decay=1.0,0.1 \
+  --piecewise_boundaries=50,75,90 \
+  --piecewise_lr_decay=1.0,0.1,0.01,0.001 \
   --dataset_meta=~/demo/data/cifar10/train.csv
 
 .. _resnet32eval:
@@ -40,7 +40,7 @@ Image Classification
   --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=128 --epochs=1 \
+  --batch_size_per_gpu=128 --epochs=1 \
   eval_args \
   --dataset_meta=~/demo/data/cifar10/eval.csv
 
@@ -73,7 +73,7 @@ Image Classification
   --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=128 \
+  --batch_size_per_gpu=128 \
   tune_args \
   --train_dataset_meta=~/demo/data/cifar10/train.csv \
   --eval_dataset_meta=~/demo/data/cifar10/eval.csv \
@@ -84,7 +84,7 @@ Image Classification
   --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=128 \
+  --batch_size_per_gpu=128 \
   tune_args \
   --train_dataset_meta=~/demo/data/cifar10/train.csv \
   --eval_dataset_meta=~/demo/data/cifar10/eval.csv \
@@ -99,11 +99,13 @@ Image Classification
 
   curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10-resnet32-20180824.tar.gz | tar xvz -C ~/demo/model
 
+::
+
   python demo/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/cifar10-resnet32-20180824 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=128 --epochs=1 \
+  --batch_size_per_gpu=128 --epochs=1 \
   eval_args \
   --dataset_meta=~/demo/data/cifar10/eval.csv

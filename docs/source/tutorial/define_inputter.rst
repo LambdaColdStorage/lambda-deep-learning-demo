@@ -29,8 +29,8 @@ The inputter is the data pipeline. This example defines the data pipeline of fee
   inputter_name = "source.inputter.image_classification_csv_inputter"
   inputter = importlib.import_module(inputter_name).build(inputter_config, augmenter)
 
-* :code:`cifar_augmenter` random image cropping, flipping, brightness and contrast distortions. 
-* :code:`inputter_config` sets arguments for the inputter. For example, whether it is used for training for evaluation, batch_size, the data path ... etc.
+* :code:`cifar_augmenter` does random image cropping, flipping, brightness and contrast distortions. 
+* :code:`inputter_config` sets arguments for the inputter. For example, whether it is used for training or evaluation, batch_size, the data path ... etc.
 * :code:`inputter` is the data pipeline instance. It has an important :code:`input_fn` member function that produces a data generator.
 
 The :code:`input_fn` of an image classification inputter looks like this:
