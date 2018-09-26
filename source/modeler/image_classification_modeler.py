@@ -44,10 +44,7 @@ class ImageClassificationModeler(Modeler):
 
     loss_l2 = self.l2_regularization()
 
-    # loss = tf.identity(loss_cross_entropy + loss_l2, "total_loss")
-
-    loss = tf.identity(loss_cross_entropy, "total_loss")
-
+    loss = tf.identity(loss_cross_entropy + loss_l2, "total_loss")
     return loss
 
   def model_fn(self, x):

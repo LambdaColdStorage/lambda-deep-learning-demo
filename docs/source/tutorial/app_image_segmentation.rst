@@ -138,6 +138,7 @@ Inference
 Hyper-Parameter Tuning
 
 ::
+
   python demo/image_segmentation.py \
   --mode=tune \
   --model_dir=~/demo/model/unet_camvid \
@@ -148,6 +149,8 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
   --tune_config=source/tool/unet_camvid_tune_coarse.yaml
+
+::
 
   python demo/image_segmentation.py \
   --mode=tune \

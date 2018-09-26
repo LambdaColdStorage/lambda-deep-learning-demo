@@ -78,10 +78,10 @@ class Modeler(object):
     return optimizer
 
   def l2_regularization(self):
+
     l2_var_list = [v for v in self.train_vars
                    if not any(x in v.name for
                               x in self.config.skip_l2_loss_vars)]
-
     loss_l2 = self.config.l2_weight_decay * tf.add_n(
       [tf.nn.l2_loss(v) for v in l2_var_list])
     return loss_l2
@@ -113,7 +113,6 @@ class Modeler(object):
       tf.cast(global_step, tf.int32), boundaries, values)
 
     tf.identity(learning_rate, name="learning_rate")
-    # tf.summary.scalar("learning_rate", learning_rate)
 
     return learning_rate
 

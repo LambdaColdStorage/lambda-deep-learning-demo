@@ -5,7 +5,6 @@ Licensed under
 """
 import sys
 import os
-import argparse
 import importlib
 
 
@@ -18,9 +17,8 @@ def main():
   from source.tool import config_parser
 
   from source.config.style_transfer_config import \
-    StyleTransferCallbackConfig, StyleTransferInputterConfig, \
-    StyleTransferModelerConfig
-  
+      StyleTransferInputterConfig, StyleTransferModelerConfig
+
   parser = config_parser.default_parser()
   parser.add_argument("--style_weight",
                       help="Weight for style loss",
@@ -95,28 +93,28 @@ def main():
     else:
       assert False, "A meta data must be provided."
 
-  # Generate config  
+  # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
-    config_parser.default_config(config)
+      config_parser.default_config(config)
 
   inputter_config = StyleTransferInputterConfig(
     inputter_config,
     image_height=config.image_height,
     image_width=config.image_width,
     image_depth=config.image_depth,
-    resize_side_min = config.resize_side_min,
-    resize_side_max = config.resize_side_max)
+    resize_side_min=config.resize_side_min,
+    resize_side_max=config.resize_side_max)
 
   modeler_config = StyleTransferModelerConfig(
     modeler_config,
-    data_format = config.data_format,
+    data_format=config.data_format,
     image_depth=config.image_depth,
-    style_weight = config.style_weight,
-    content_weight = config.content_weight,
-    tv_weight = config.tv_weight,
-    feature_net = config.feature_net,
-    feature_net_path = config.feature_net_path,
-    style_image_path = config.style_image_path)
+    style_weight=config.style_weight,
+    content_weight=config.content_weight,
+    tv_weight=config.tv_weight,
+    feature_net=config.feature_net,
+    feature_net_path=config.feature_net_path,
+    style_image_path=config.style_image_path)
 
   if config.mode == "tune":
 
@@ -161,16 +159,20 @@ def main():
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter.style_transfer_csv_inputter").build(inputter_config, augmenter)
+      "source.inputter.style_transfer_csv_inputter").build(
+      inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler.style_transfer_modeler").build(modeler_config, net)
+      "source.modeler.style_transfer_modeler").build(
+      modeler_config, net)
 
     runner = importlib.import_module(
-      "source.runner.parameter_server_runner").build(runner_config, inputter, modeler, callbacks)
+      "source.runner.parameter_server_runner").build(
+      runner_config, inputter, modeler, callbacks)
 
     # Run application
     runner.run()
+
 
 if __name__ == "__main__":
   main()

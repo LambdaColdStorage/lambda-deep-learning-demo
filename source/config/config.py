@@ -1,8 +1,8 @@
 class Config(object):
   def __init__(self,
-               mode="train",
-               batch_size_per_gpu=10,
-               gpu_count=1):
+               mode,
+               batch_size_per_gpu,
+               gpu_count):
 
       self.mode = mode
       self.batch_size_per_gpu = batch_size_per_gpu
@@ -17,10 +17,10 @@ class Config(object):
 
 class RunnerConfig(Config):
   def __init__(self,
-               mode="train",
-               batch_size_per_gpu=10,
-               gpu_count=1,
-               summary_names=None):
+               mode,
+               batch_size_per_gpu,
+               gpu_count,
+               summary_names):
     super(RunnerConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
 
@@ -29,16 +29,16 @@ class RunnerConfig(Config):
 
 class CallbackConfig(Config):
   def __init__(self,
-               mode="train",
-               batch_size_per_gpu=10,
-               gpu_count=1,
-               model_dir=None,
-               log_every_n_iter=10,
-               save_summary_steps=100,
-               pretrained_model=None,
-               skip_pretrained_var=None,
-               save_checkpoints_steps=None,
-               keep_checkpoint_max=5):
+               mode,
+               batch_size_per_gpu,
+               gpu_count,
+               model_dir,
+               log_every_n_iter,
+               save_summary_steps,
+               pretrained_model,
+               skip_pretrained_var,
+               save_checkpoints_steps,
+               keep_checkpoint_max):
 
     super(CallbackConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
@@ -54,15 +54,15 @@ class CallbackConfig(Config):
 
 class InputterConfig(Config):
   def __init__(self,
-               mode="train",
-               batch_size_per_gpu=10,
-               gpu_count=1,    
-               epochs=1,
-               dataset_meta=None,
-               train_dataset_meta=None,
-               eval_dataset_meta=None,
-               test_samples=None,
-               augmenter_speed_mode=False):
+               mode,
+               batch_size_per_gpu,
+               gpu_count,
+               epochs,
+               dataset_meta,
+               train_dataset_meta,
+               eval_dataset_meta,
+               test_samples,
+               augmenter_speed_mode):
 
     super(InputterConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
@@ -77,16 +77,16 @@ class InputterConfig(Config):
 
 class ModelerConfig(Config):
   def __init__(self,
-               mode="train",
-               batch_size_per_gpu=10,
-               gpu_count=1,    
-               optimizer="momentum",
-               learning_rate=0.1,
-               trainable_vars=None,
-               piecewise_boundaries=None,
-               piecewise_lr_decay=None,
-               skip_l2_loss_vars=None,
-               l2_weight_decay=0.0002):
+               mode,
+               batch_size_per_gpu,
+               gpu_count,
+               optimizer,
+               learning_rate,
+               trainable_vars,
+               piecewise_boundaries,
+               piecewise_lr_decay,
+               skip_l2_loss_vars,
+               l2_weight_decay):
 
     super(ModelerConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)

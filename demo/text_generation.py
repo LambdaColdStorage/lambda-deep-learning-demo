@@ -5,7 +5,6 @@ Licensed under
 """
 import sys
 import os
-import argparse
 import importlib
 
 
@@ -17,31 +16,7 @@ def main():
   from source.tool import tuner
   from source.tool import config_parser
 
-  from source.config.text_generation_config import \
-    TextGenerationCallbackConfig, TextGenerationInputterConfig, \
-    TextGenerationModelerConfig
   parser = config_parser.default_parser()
-
-
-  # parser.add_argument("--network", choices=["char_rnn"],
-  #                     type=str,
-  #                     help="Choose a network architecture",
-  #                     default="char_rnn")
-  # parser.add_argument("--dataset_url",
-  #                     help="URL for downloading data",
-  #                     default="https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz")
-  # parser.add_argument("--train_callbacks",
-  #                     help="List of callbacks in training.",
-  #                     type=str,
-  #                     default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
-  # parser.add_argument("--eval_callbacks",
-  #                     help="List of callbacks in evaluation.",
-  #                     type=str,
-  #                     default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
-  # parser.add_argument("--infer_callbacks",
-  #                     help="List of callbacks in inference.",
-  #                     type=str,
-  #                     default="infer_basic,infer_display_text_generation")
 
   config = parser.parse_args()
 
@@ -69,7 +44,7 @@ def main():
 
   # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
-    config_parser.default_config(config)
+      config_parser.default_config(config)
 
   if config.mode == "tune":
 

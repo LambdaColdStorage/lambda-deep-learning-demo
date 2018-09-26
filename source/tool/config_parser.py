@@ -14,7 +14,7 @@ def default_parser():
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
                       type=str,
-                      default="")  
+                      default=None)
   parser.add_argument("--dataset_url",
                       help="URL for downloading data",
                       default="")
@@ -50,7 +50,7 @@ def default_parser():
   train_parser = subparsers.add_parser("train_args", help="Train help")
   train_parser.add_argument("--dataset_meta", type=str,
                             help="Path to dataset's meta file",
-                            default="")
+                            default=None)
   train_parser.add_argument("--learning_rate",
                             help="Initial learning rate in training.",
                             type=float,
@@ -89,23 +89,27 @@ def default_parser():
   train_parser.add_argument("--pretrained_model",
                             help="Path to pretrained network for transfer learning.",
                             type=str,
-                            default="")
+                            default=None)
   train_parser.add_argument("--skip_pretrained_var",
                             help="Variables to skip in restoring from \
                                   pretrained model (for transfer learning).",
                             type=str,
-                            default="")
+                            default=None)
   train_parser.add_argument("--trainable_vars",
                             help="List of trainable Variables. \
                                  If None all variables in TRAINABLE_VARIABLES \
                                  will be trained.",
                             type=str,
-                            default="")
+                            default=None)
   train_parser.add_argument("--skip_l2_loss_vars",
                             help="List of blacklisted trainable Variables for L2 \
                                  regularization.",
                             type=str,
-                            default="BatchNorm,preact,postnorm")
+                            default="BatchNorm,preact,postnorm,gamma,beta")
+  train_parser.add_argument("--l2_weight_decay",
+                            help="Weight for l2 loss",
+                            type=float,
+                            default=0.0002)
   train_parser.add_argument("--callbacks",
                             help="List of callbacks in training.",
                             type=str,
@@ -114,16 +118,20 @@ def default_parser():
   eval_parser = subparsers.add_parser("eval_args", help="Eval help")
   eval_parser.add_argument("--dataset_meta", type=str,
                            help="Path to dataset's meta file",
-                           default="")  
+                           default="")
   eval_parser.add_argument("--log_every_n_iter",
                            help="Number of steps to log",
                            type=int,
                            default=10)
   eval_parser.add_argument("--skip_l2_loss_vars",
-                            help="List of blacklisted trainable Variables for L2 \
+                           help="List of blacklisted trainable Variables for L2 \
                                  regularization.",
-                            type=str,
-                            default="BatchNorm,preact,postnorm")  
+                           type=str,
+                           default="BatchNorm,preact,postnorm,gamma,beta")
+  eval_parser.add_argument("--l2_weight_decay",
+                           help="Weight for l2 loss",
+                           type=float,
+                           default=0.0002)
   eval_parser.add_argument("--callbacks",
                            help="List of callbacks in evaluation.",
                            type=str,
@@ -147,10 +155,10 @@ def default_parser():
   tune_parser.add_argument("--tune_config_path",
                            help="Config file for hyper-parameter tunning",
                            type=str,
-                           default="")
+                           default=None)
   tune_parser.add_argument("--train_dataset_meta", type=str,
                            help="Path to dataset's training meta file",
-                           default=None)  
+                           default=None)
   tune_parser.add_argument("--eval_dataset_meta", type=str,
                            help="Path to dataset's evaluation meta file",
                            default=None)
@@ -192,23 +200,27 @@ def default_parser():
   tune_parser.add_argument("--pretrained_model",
                            help="Path to pretrained network for transfer learning.",
                            type=str,
-                           default="")
+                           default=None)
   tune_parser.add_argument("--skip_pretrained_var",
                            help="Variables to skip in restoring from \
                                  pretrained model (for transfer learning).",
                            type=str,
-                           default="")
+                           default=None)
   tune_parser.add_argument("--trainable_vars",
                            help="List of trainable Variables. \
                                 If None all variables in TRAINABLE_VARIABLES \
                                  will be trained, subjected to the ones.",
                            type=str,
-                           default="")
+                           default=None)
   tune_parser.add_argument("--skip_l2_loss_vars",
                            help="List of blacklisted trainable Variables for L2 \
                                 regularization.",
                            type=str,
-                           default="BatchNorm,preact,postnorm")
+                           default="BatchNorm,preact,postnorm,gamma,beta")
+  tune_parser.add_argument("--l2_weight_decay",
+                           help="Weight for l2 loss",
+                           type=float,
+                           default=0.0002)
   tune_parser.add_argument("--train_callbacks",
                            help="List of callbacks in training.",
                            type=str,
@@ -232,19 +244,19 @@ def prepare(config):
 
   if hasattr(config, "dataset_meta"):
     config.dataset_meta = ("" if not config.dataset_meta else
-      os.path.expanduser(config.dataset_meta))
+                           os.path.expanduser(config.dataset_meta))
 
   if hasattr(config, "train_dataset_meta"):
     config.train_dataset_meta = ("" if not config.train_dataset_meta else
-      os.path.expanduser(config.train_dataset_meta))
+                                 os.path.expanduser(config.train_dataset_meta))
 
   if hasattr(config, "eval_dataset_meta"):
     config.eval_dataset_meta = ("" if not config.eval_dataset_meta else
-      os.path.expanduser(config.eval_dataset_meta))
+                                os.path.expanduser(config.eval_dataset_meta))
 
   if hasattr(config, "model_dir"):
     config.model_dir = ("" if not config.model_dir else
-      os.path.expanduser(config.model_dir))
+                        os.path.expanduser(config.model_dir))
 
   if hasattr(config, "summary_names"):
     config.summary_names = (
@@ -308,20 +320,21 @@ def default_config(config):
   import sys
   sys.path.append('.')
 
-  from source.config.config import RunnerConfig, CallbackConfig, InputterConfig, ModelerConfig
+  from source.config.config import (RunnerConfig, CallbackConfig,
+                                    InputterConfig, ModelerConfig)
 
   # Create configs
   runner_config = RunnerConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
-    gpu_count=config.gpu_count,    
+    gpu_count=config.gpu_count,
     summary_names=(None if not hasattr(config, "summary_names")
                    else config.summary_names))
 
   callback_config = CallbackConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
-    gpu_count=config.gpu_count,    
+    gpu_count=config.gpu_count,
     model_dir=config.model_dir,
     log_every_n_iter=(None if not hasattr(config, "log_every_n_iter")
                       else config.log_every_n_iter),
@@ -339,21 +352,23 @@ def default_config(config):
   inputter_config = InputterConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
-    gpu_count=config.gpu_count,    
+    gpu_count=config.gpu_count,
     epochs=config.epochs,
     dataset_meta=(None if not hasattr(config, "dataset_meta")
                   else config.dataset_meta),
     train_dataset_meta=(None if not hasattr(config, "train_dataset_meta")
                         else config.train_dataset_meta),
     eval_dataset_meta=(None if not hasattr(config, "eval_dataset_meta")
-                       else config.eval_dataset_meta),                      
-    test_samples= (None if not hasattr(config, "test_samples")
-                   else config.test_samples))
+                       else config.eval_dataset_meta),
+    test_samples=(None if not hasattr(config, "test_samples")
+                  else config.test_samples),
+    augmenter_speed_mode=(None if not hasattr(config, "augmenter_speed_mode")
+                          else config.augmenter_speed_mode))
 
   modeler_config = ModelerConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
-    gpu_count=config.gpu_count,    
+    gpu_count=config.gpu_count,
     optimizer=(None if not hasattr(config, "optimizer")
                else config.optimizer),
     learning_rate=(None if not hasattr(config, "learning_rate")
@@ -365,6 +380,8 @@ def default_config(config):
     piecewise_lr_decay=(None if not hasattr(config, "piecewise_lr_decay")
                         else config.piecewise_lr_decay),
     skip_l2_loss_vars=(None if not hasattr(config, "skip_l2_loss_vars")
-                       else config.skip_l2_loss_vars))
+                       else config.skip_l2_loss_vars),
+    l2_weight_decay=(None if not hasattr(config, "l2_weight_decay")
+                     else config.l2_weight_decay))
 
   return runner_config, callback_config, inputter_config, modeler_config

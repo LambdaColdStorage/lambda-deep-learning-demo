@@ -17,7 +17,7 @@ Image Classification
 
   python demo/image_classification.py \
   --mode=train \
-  --model_dir=~/demo/model/image_classification_cifar10 \
+  --model_dir=~/demo/model/resnet32_cifar10 \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
@@ -37,7 +37,7 @@ Image Classification
 
   python demo/image_classification.py \
   --mode=eval \
-  --model_dir=~/demo/model/image_classification_cifar10 \
+  --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --gpu_count=1 --batch_size_per_gpu=128 --epochs=1 \
@@ -53,7 +53,7 @@ Image Classification
 
   python demo/image_classification.py \
   --mode=infer \
-  --model_dir=~/demo/model/image_classification_cifar10 \
+  --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
@@ -70,7 +70,7 @@ Image Classification
 
   python demo/image_classification.py \
   --mode=tune \
-  --model_dir=~/demo/model/image_classification_cifar10 \
+  --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --gpu_count=1 --batch_size_per_gpu=128 \
@@ -81,7 +81,7 @@ Image Classification
 
   python demo/image_classification.py \
   --mode=tune \
-  --model_dir=~/demo/model/image_classification_cifar10 \
+  --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --gpu_count=1 --batch_size_per_gpu=128 \

@@ -3,32 +3,8 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 """
-
-"""
-FCN
-Tune:
-python demo/image_segmentation.py --mode=tune \
---batch_size_per_gpu=16 \
---dataset_meta=~/demo/data/camvid/train.csv \
---model_dir=~/demo/model/image_segmentation_camvid \
---gpu_count=1
-"""
-
-"""
-UNET
-
-Tune:
-python demo/image_segmentation.py --mode=tune \
---network=unet \
---batch_size_per_gpu=16 \
---dataset_meta=~/demo/data/camvid/train.csv \
---model_dir=~/demo/model/image_segmentation_camvid \
---gpu_count=1
-"""
-
 import sys
 import os
-import argparse
 import importlib
 
 
@@ -41,8 +17,8 @@ def main():
   from source.tool import config_parser
 
   from source.config.image_segmentation_config import \
-    ImageSegmentationCallbackConfig, ImageSegmentationInputterConfig, \
-    ImageSegmentationModelerConfig
+      ImageSegmentationCallbackConfig, ImageSegmentationInputterConfig, \
+      ImageSegmentationModelerConfig
 
   parser = config_parser.default_parser()
 
@@ -61,7 +37,7 @@ def main():
   parser.add_argument("--image_depth",
                       help="Number of color channels.",
                       type=int,
-                      default=3)  
+                      default=3)
   parser.add_argument("--output_height",
                       help="Output height.",
                       type=int,
@@ -108,7 +84,7 @@ def main():
 
   # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
-    config_parser.default_config(config)
+      config_parser.default_config(config)
 
   callback_config = ImageSegmentationCallbackConfig(
     callback_config,
@@ -122,7 +98,7 @@ def main():
     output_height=config.output_height,
     output_width=config.output_width,
     resize_side_min=config.resize_side_min,
-    resize_side_max=config.resize_side_max,                 
+    resize_side_max=config.resize_side_max,
     num_classes=config.num_classes)
 
   modeler_config = ImageSegmentationModelerConfig(

@@ -1,6 +1,4 @@
 num_trials: 10
-train_meta: "~/demo/data/cifar10/train.csv"
-eval_meta: "~/demo/data/cifar10/eval.csv"
 fixedparams:
   epochs: 100
   piecewise_lr_decay: "1.0,0.1"

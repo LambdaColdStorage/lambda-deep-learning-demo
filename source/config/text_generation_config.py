@@ -1,5 +1,6 @@
 from config import Config
 
+
 class TextGenerationCallbackConfig(Config):
   def __init__(self,
                default_callback_config):
@@ -12,6 +13,7 @@ class TextGenerationInputterConfig(Config):
                default_inputter_config):
 
     self.copy_props(default_inputter_config)
+
 
 class TextGenerationModelerConfig(Config):
   def __init__(self,
