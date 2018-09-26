@@ -2,6 +2,13 @@ import yaml
 import os
 import argparse
 
+from tensorflow.python.client import device_lib
+
+
+def get_gpu_count():
+    local_device_protos = device_lib.list_local_devices()
+    return len([x.name for x in local_device_protos if x.device_type == 'GPU'])
+
 
 def default_parser():
   parser = argparse.ArgumentParser(
@@ -39,7 +46,7 @@ def default_parser():
   parser.add_argument("--gpu_count",
                       help="Number of GPUs.",
                       type=int,
-                      default=1)
+                      default=get_gpu_count())
   parser.add_argument("--epochs",
                       help="Number of epochs.",
                       type=int,

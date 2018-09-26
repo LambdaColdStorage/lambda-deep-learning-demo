@@ -94,7 +94,7 @@ class ImageClassificationCSVInputter(Inputter):
 
     dataset = dataset.map(
       lambda image, label: self.parse_fn(image, label),
-      num_parallel_calls=4)
+      num_parallel_calls=12)
 
     dataset = dataset.apply(
         tf.contrib.data.batch_and_drop_remainder(batch_size))

@@ -27,15 +27,15 @@ Train with weights restored from pre-trained model
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=resnet50 \
   --augmenter=vgg_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=50 \
+  --gpu_count=4 --batch_size_per_gpu=16 --epochs=10 \
   --num_classes=120 --image_width=224 --image_height=224 \
   train_args \
-  --learning_rate=0.01 --optimizer=momentum \
-  --piecewise_boundaries=25 \
+  --learning_rate=0.1 --optimizer=momentum \
+  --piecewise_boundaries=5 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
   --pretrained_model=~/demo/model/resnet_v2_50_2017_04_14/resnet_v2_50.ckpt \
-  --skip_pretrained_var=resnet_v2_50/logits,global_step \
+  --skip_pretrained_var=resnet_v2_50/logits,global_step,power \
   --trainable_vars=resnet_v2_50/logits
 
 Hyper-Parameter Tuning
@@ -94,11 +94,11 @@ Train with weights restored from pre-trained model
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=inception_v4 \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=50 \
+  --gpu_count=4 --batch_size_per_gpu=16 --epochs=4 \
   --num_classes=120 --image_width=299 --image_height=299 \
   train_args \
-  --learning_rate=0.01 --optimizer=momentum \
-  --piecewise_boundaries=25 \
+  --learning_rate=0.1 --optimizer=momentum \
+  --piecewise_boundaries=2 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
   --pretrained_model=~/demo/model/inception_v4_2016_09_09/inception_v4.ckpt \
@@ -160,11 +160,11 @@ Train with weights restored from pre-trained model
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
-  --gpu_count=4 --batch_size_per_gpu=16 --epochs=50 \
+  --gpu_count=4 --batch_size_per_gpu=16 --epochs=4 \
   --num_classes=120 --image_width=331 --image_height=331 \
   train_args \
-  --learning_rate=0.01 --optimizer=momentum \
-  --piecewise_boundaries=25 \
+  --learning_rate=0.1 --optimizer=momentum \
+  --piecewise_boundaries=2 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/StanfordDogs120/train.csv \
   --pretrained_model=~/demo/model/nasnet-a_large_04_10_2017/model.ckpt \
