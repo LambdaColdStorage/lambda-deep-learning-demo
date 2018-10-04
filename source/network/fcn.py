@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-BASE_FILTER = 16
+BASE_FILTER = 32
 
 
 def net(inputs, num_classes,

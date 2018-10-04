@@ -1,6 +1,7 @@
 import tensorflow as tf
 
-BASE_FILTER = 16
+BASE_FILTER = 32
+
 
 def merge(encode, decode, depth, data_format):
   encode_shape = tf.shape(encode)
@@ -21,6 +22,7 @@ def merge(encode, decode, depth, data_format):
     output = tf.concat([encode, decode_crop], 3)
 
   return output
+
 
 def net(inputs, num_classes, is_training=True,
         data_format="channels_first"):

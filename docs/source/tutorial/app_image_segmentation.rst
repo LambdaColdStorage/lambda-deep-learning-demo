@@ -21,10 +21,10 @@ Train from scratch
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=fcn \
   --augmenter=fcn_augmenter \
-  --batch_size_per_gpu=16 --epochs=200 \
+  --batch_size_per_gpu=16 --epochs=200 --gpu_count=1 \
   train_args \
-  --learning_rate=0.01 --optimizer=momentum \
-  --piecewise_boundaries=50 \
+  --learning_rate=0.00129 --optimizer=adam \
+  --piecewise_boundaries=100 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/camvid/train.csv
 
@@ -65,7 +65,7 @@ Hyper-Parameter Tuning
   --model_dir=~/demo/model/fcn_camvid \
   --network=fcn \
   --augmenter=fcn_augmenter \
-  --batch_size_per_gpu=16 \
+  --batch_size_per_gpu=16  --gpu_count=1 \
   tune_args \
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
@@ -78,7 +78,7 @@ Hyper-Parameter Tuning
   --model_dir=~/demo/model/fcn_camvid \
   --network=fcn \
   --augmenter=fcn_augmenter \
-  --batch_size_per_gpu=16 \
+  --batch_size_per_gpu=16  --gpu_count=1 \
   tune_args \
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
@@ -99,10 +99,10 @@ Train from scratch
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=unet \
   --augmenter=unet_augmenter \
-  --batch_size_per_gpu=16 --epochs=200 \
+  --batch_size_per_gpu=16 --epochs=200 --gpu_count=1 \
   train_args \
-  --learning_rate=0.001 --optimizer=momentum \
-  --piecewise_boundaries=50 \
+  --learning_rate=0.00129 --optimizer=adam \
+  --piecewise_boundaries=100 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/camvid/train.csv
 
@@ -144,7 +144,7 @@ Hyper-Parameter Tuning
   --model_dir=~/demo/model/unet_camvid \
   --network=unet \
   --augmenter=unet_augmenter \
-  --batch_size_per_gpu=16 \
+  --gpu_count=1 --batch_size_per_gpu=16 \
   tune_args \
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
@@ -157,7 +157,7 @@ Hyper-Parameter Tuning
   --model_dir=~/demo/model/unet_camvid \
   --network=unet \
   --augmenter=unet_augmenter \
-  --batch_size_per_gpu=16 \
+  --gpu_count=1 --batch_size_per_gpu=16 \
   tune_args \
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
