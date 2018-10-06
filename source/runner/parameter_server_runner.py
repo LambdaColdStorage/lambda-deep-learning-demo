@@ -121,6 +121,5 @@ class ParameterServerRunner(Runner):
       self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
 
 
-
 def build(config, inputter, modeler, callbacks):
   return ParameterServerRunner(config, inputter, modeler, callbacks)

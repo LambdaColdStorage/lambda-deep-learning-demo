@@ -28,14 +28,16 @@ def default_parser():
   parser.add_argument("--network", choices=["resnet32", "resnet50", "inception_v4", "nasnet_A_large",
                                             "fcn", "unet",
                                             "fns",
-                                            "char_rnn"],
+                                            "char_rnn",
+                                            "rpn"],
                       type=str,
                       help="Choose a network architecture",
                       default=None)
   parser.add_argument("--augmenter",
                       choices=["cifar_augmenter", "inception_augmenter", "vgg_augmenter",
                                "fcn_augmenter", "unet_augmenter",
-                               "fns_augmenter"],
+                               "fns_augmenter",
+                               "rpn_augmenter"],
                       type=str,
                       help="Name of the augmenter",
                       default=None)

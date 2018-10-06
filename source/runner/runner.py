@@ -169,6 +169,17 @@ class Runner(object):
 
       self.after_run()
 
+  def dev(self):
+    batch = self.inputter.input_fn()
+
+    with tf.Session(config=self.session_config) as self.sess:
+      for i in range(4):
+        data = self.sess.run(batch)
+
+        img = data[0]
+        boxes = data[2]
+        self.inputter.draw_annotation(img, boxes)
+
 
 def build(config, inputter, modeler, callbacks):
   return Runner(config, inputter, modeler, callbacks)
