@@ -177,8 +177,11 @@ class Runner(object):
         data = self.sess.run(batch)
 
         img = data[0]
+        classes = data[1]
         boxes = data[2]
-        self.inputter.draw_annotation(img, boxes)
+        is_crowd = data[3]
+
+        self.inputter.draw_annotation(img, classes, boxes, is_crowd)
 
 
 def build(config, inputter, modeler, callbacks):

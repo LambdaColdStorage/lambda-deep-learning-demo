@@ -76,6 +76,9 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     super(ObjectDetectionMSCOCOInputter, self).__init__(config, augmenter)
 
     self.num_samples = -1
+    self.category_id_to_class_id = None
+    self.class_id_to_category_id = None
+    self.cat_names = None
 
   def get_num_samples(self):
     return self.num_samples
@@ -92,13 +95,13 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       coco = COCO(annotation_file)
 
       cat_ids = coco.getCatIds()
-      cat_names = [c["name"] for c in coco.loadCats(cat_ids)]
+      self.cat_names = [c["name"] for c in coco.loadCats(cat_ids)]
 
       # background has class id of 0
-      category_id_to_class_id = {
+      self.category_id_to_class_id = {
         v: i + 1 for i, v in enumerate(cat_ids)}
-      class_id_to_category_id = {
-        v: k for k, v in category_id_to_class_id.items()}
+      self.class_id_to_category_id = {
+        v: k for k, v in self.category_id_to_class_id.items()}
 
       img_ids = coco.getImgIds()
       img_ids.sort()
@@ -111,7 +114,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           JSON_TO_IMAGE[name_meta],
           img["file_name"])
 
-        parse_gt(coco, category_id_to_class_id, img)
+        parse_gt(coco, self.category_id_to_class_id, img)
 
       samples.extend(imgs) 
 
@@ -162,7 +165,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     iterator = dataset.make_one_shot_iterator()
     return iterator.get_next()
 
-  def draw_boxes(self, im, boxes, labels=None, color=None):
+  def draw_boxes(self, im, labels, boxes, is_crowd):
       """
       Args:
           im (np.ndarray): a BGR image in range [0,255]. It will not be modified.
@@ -174,7 +177,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           np.ndarray: a new image.
       """
       FONT = cv2.FONT_HERSHEY_SIMPLEX
-      FONT_SCALE = 0.4
+      FONT_SCALE = 0.7
       if isinstance(boxes, list):
           arr = np.zeros((len(boxes), 4), dtype='int32')
           for idx, b in enumerate(boxes):
@@ -187,7 +190,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           assert len(labels) == len(boxes), "{} != {}".format(len(labels), len(boxes))
 
       im = im.copy()
-      COLOR = (218, 218, 218) if color is None else color
+      # COLOR = (218, 218, 218) if color is None else color
+      COLOR = (255, 255, 55)
 
       areas = (boxes[:, 2] - boxes[:, 0] + 1) * (boxes[:, 3] - boxes[:, 1] + 1)
       sorted_inds = np.argsort(-areas)    # draw large ones first
@@ -195,13 +199,24 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           box = boxes[i, :]
 
           best_color = COLOR
+
+          if labels is not None:
+              label = self.cat_names[labels[i] - 1]
+              # find the best placement for the text
+              ((linew, lineh), _) = cv2.getTextSize(label, FONT, FONT_SCALE, 1)
+              top_left = [box[0] + 1, box[1] - 1.3 * lineh]
+              if top_left[1] < 0:     # out of image
+                  top_left[1] = box[3] - 1.3 * lineh
+              cv2.putText(im, label, (int(top_left[0]), int(top_left[1] + lineh)),
+                          FONT, FONT_SCALE, color=best_color, lineType=cv2.LINE_AA)
+
           cv2.rectangle(im, (box[0], box[1]), (box[2], box[3]),
-                        color=best_color, thickness=4)
+                        color=best_color, thickness=2)
       return im
 
-  def draw_annotation(self, img, boxes):
+  def draw_annotation(self, img, labels, boxes, is_crowd):
       """Will not modify img"""
-      img = self.draw_boxes(img, boxes)
+      img = self.draw_boxes(img, labels, boxes, is_crowd)
       plt.imshow(img)
       plt.show()
 
