@@ -10,7 +10,9 @@ class ObjectDetectionCallbackConfig(Config):
 class ObjectDetectionInputterConfig(Config):
   def __init__(self,
                default_inputter_config,
-               dataset_dir=""):
+               dataset_dir="",
+               num_classes=81,
+               resolution=512):
 
     default_inputter_config.dataset_meta = (
       None if not default_inputter_config.dataset_meta
@@ -23,6 +25,8 @@ class ObjectDetectionInputterConfig(Config):
 
     self.copy_props(default_inputter_config)
     self.dataset_dir = dataset_dir
+    self.num_classes = num_classes
+    self.resolution = resolution
 
 
 class ObjectDetectionModelerConfig(Config):

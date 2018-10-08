@@ -12,9 +12,11 @@ from modeler import Modeler
 class ObjectDetectionModeler(Modeler):
   def __init__(self, args, net):
     super(ObjectDetectionModeler, self).__init__(args, net)
+    
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
+    self.anchors = inputter.get_anchors()
 
   def create_nonreplicated_fn(self):
     pass
@@ -29,7 +31,14 @@ class ObjectDetectionModeler(Modeler):
     pass
 
   def model_fn(self, x):
-    pass
+    images = x[0]
+    classes = x[1]
+    boxes = x[2]
+    is_crowd = x[3]
+
+    # create training target
+
+    return images
 
 def build(args, network):
   return ObjectDetectionModeler(args, network)

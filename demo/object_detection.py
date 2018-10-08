@@ -7,8 +7,10 @@ python demo/object_detection.py \
 --mode=train \
 --model_dir=~/demo/model/rpn_mscoco \
 --network=rpn \
---batch_size_per_gpu=4 --epochs=1 \
---dataset_dir=/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco \
+--augmenter=rpn_augmenter \
+--batch_size_per_gpu=1 --epochs=1 \
+--dataset_dir=/mnt/data/data/mscoco \
+--num_classes=81 --resolution=512 \
 train_args \
 --learning_rate=0.5 --optimizer=momentum \
 --piecewise_boundaries=50,75,90 \
@@ -38,10 +40,14 @@ def main():
                       help="Number of classes.",
                       type=int,
                       default=81)
+  parser.add_argument("--resolution",
+                      help="Image resolution used for detectoin.",
+                      type=int,
+                      default=512) 
   parser.add_argument("--dataset_dir",
                       help="Path to dataset.",
                       type=str,
-                      default="/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco")
+                      default="/mnt/data/data/mscoco")
 
   config = parser.parse_args()
 
@@ -53,7 +59,9 @@ def main():
 
   inputter_config = ObjectDetectionInputterConfig(
     inputter_config,
-    dataset_dir=config.dataset_dir)
+    dataset_dir=config.dataset_dir,
+    num_classes=config.num_classes,
+    resolution=config.resolution)
 
   modeler_config = ObjectDetectionModelerConfig(
     modeler_config)

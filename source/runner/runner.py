@@ -170,18 +170,24 @@ class Runner(object):
       self.after_run()
 
   def dev(self):
-    batch = self.inputter.input_fn()
+    print(self.modeler.anchors)
+    # nonreplicated_fns = [self.inputter.create_nonreplicated_fn]
 
-    with tf.Session(config=self.session_config) as self.sess:
-      for i in range(4):
-        data = self.sess.run(batch)
+    # for fn in nonreplicated_fns:
+    #   fn()
 
-        img = data[0]
-        classes = data[1]
-        boxes = data[2]
-        is_crowd = data[3]
+    # print(self.inputter.anchors)
 
-        self.inputter.draw_annotation(img, classes, boxes, is_crowd)
+    # batch = self.inputter.input_fn()
+
+    # outputs = self.modeler.model_fn(batch)
+
+    # with tf.Session(config=self.session_config) as self.sess:
+    #   for i in range(4):
+    #     data = self.sess.run(batch)
+
+    #     for image, label, box, is_crowd in zip(data[0], data[1], data[2], data[3]):
+    #       self.inputter.draw_annotation(image, label, box, is_crowd)
 
 
 def build(config, inputter, modeler, callbacks):
