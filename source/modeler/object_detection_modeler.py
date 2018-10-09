@@ -17,6 +17,7 @@ class ObjectDetectionModeler(Modeler):
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
     self.anchors = inputter.get_anchors()
+    self.anchors_map = inputter.get_anchors_map()
 
   def create_nonreplicated_fn(self):
     pass

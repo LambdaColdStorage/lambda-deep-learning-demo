@@ -170,7 +170,8 @@ class Runner(object):
       self.after_run()
 
   def dev(self):
-    print(self.modeler.anchors)
+    print(self.modeler.anchors.shape)
+    print(self.modeler.anchors_map.shape)
     # nonreplicated_fns = [self.inputter.create_nonreplicated_fn]
 
     # for fn in nonreplicated_fns:

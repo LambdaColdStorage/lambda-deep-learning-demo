@@ -40,14 +40,20 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.anchors_stride = 16
     self.anchors_sizes = (32, 64, 128, 256, 512)
     self.anchors_aspect_ratios = (0.5, 1.0, 2.0)
+    self.anchors_map = None
 
   def get_num_samples(self):
     return self.num_samples
 
   def get_anchors(self):
-    if not self.anchors:
+    if self.anchors is None:
       self.generate_anchors()
     return self.anchors
+
+  def get_anchors_map(self):
+    if self.anchors_map is None:
+      self.generate_anchors_map()
+    return self.anchors_map
 
   def get_samples_fn(self):
 
@@ -201,6 +207,28 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     )
     self.anchors = anchors
 
+  def generate_anchors_map(self):
+    if self.anchors is None:
+      self.generate_anchors()
+    num_anchors = self.anchors.shape[0]
+
+    map_resolution = int(np.ceil(
+      self.anchors_stride * np.ceil(self.config.resolution / float(self.anchors_stride)) / float(self.anchors_stride)))
+    shifts = np.arange(0, map_resolution) * self.anchors_stride
+
+    shift_x, shift_y = np.meshgrid(shifts, shifts)
+    shift_x = shift_x.ravel()
+    shift_y = shift_y.ravel()
+    shifts = np.vstack((shift_x, shift_y, shift_x, shift_y)).transpose()
+
+    A = self.anchors.shape[0]
+    K = shifts.shape[0]
+    self.anchors_map = (
+        self.anchors.reshape((1, A, 4)) +
+        shifts.reshape((1, K, 4)).transpose((1, 0, 2))
+    )
+    self.anchors_map = self.anchors_map.reshape((K * A, 4))
+
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
                   self.config.gpu_count)
@@ -227,7 +255,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           speed_mode=False)
 
     return (image, classes, boxes, is_crowd)
-
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
