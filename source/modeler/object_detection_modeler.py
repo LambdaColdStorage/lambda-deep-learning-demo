@@ -38,6 +38,7 @@ class ObjectDetectionModeler(Modeler):
     is_crowd = x[3]
 
     # create training target
+    print(images)
 
     return images
 

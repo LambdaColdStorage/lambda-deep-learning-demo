@@ -170,8 +170,8 @@ class Runner(object):
       self.after_run()
 
   def dev(self):
-    print(self.modeler.anchors.shape)
-    print(self.modeler.anchors_map.shape)
+    # print(self.modeler.anchors.shape)
+    # print(self.modeler.anchors_map.shape)
     # nonreplicated_fns = [self.inputter.create_nonreplicated_fn]
 
     # for fn in nonreplicated_fns:
@@ -179,9 +179,9 @@ class Runner(object):
 
     # print(self.inputter.anchors)
 
-    # batch = self.inputter.input_fn()
+    batch = self.inputter.input_fn()
 
-    # outputs = self.modeler.model_fn(batch)
+    outputs = self.modeler.model_fn(batch)
 
     # with tf.Session(config=self.session_config) as self.sess:
     #   for i in range(4):
