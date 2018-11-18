@@ -16,6 +16,7 @@ import tensorflow as tf
 
 from inputter import Inputter
 from pycocotools.coco import COCO
+from pycocotools.mask import iou
 
 
 JSON_TO_IMAGE = {
@@ -25,6 +26,19 @@ JSON_TO_IMAGE = {
     "minival2014": "val2014",
     "test2014": "test2014"
 }
+
+
+def np_iou(A, B):
+  def to_xywh(box):
+    box = box.copy()
+    box[:, 2] -= box[:, 0]
+    box[:, 3] -= box[:, 1]
+    return box
+
+  ret = iou(
+    to_xywh(A), to_xywh(B),
+    np.zeros((len(B),), dtype=np.bool))
+  return ret
 
 
 class ObjectDetectionMSCOCOInputter(Inputter):
@@ -41,6 +55,11 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.anchors_sizes = (32, 64, 128, 256, 512)
     self.anchors_aspect_ratios = (0.5, 1.0, 2.0)
     self.anchors_map = None
+
+    self.TRAIN_SAMPLES_PER_IMAGE = 256
+    self.TRAIN_FG_IOU = 0.7
+    self.TRAIN_BG_IOU = 0.3
+    self.TRAIN_FG_RATIO = 0.5
 
   def get_num_samples(self):
     return self.num_samples
@@ -98,17 +117,15 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
 
     for sample in samples:
-      if 'class' in sample:
-        sample['class'] = sample['class'].tolist()
-      if 'boxes' in sample:
-        sample['boxes'] = sample['boxes'].tolist()
-      if 'is_crowd' in sample:
-        sample['is_crowd'] = sample['is_crowd'].tolist()
+      # remove crowd objects
+      mask = sample['is_crowd'] == 0
+      sample["class"] = sample["class"][mask]
+      sample["boxes"] = sample["boxes"][mask, :]
+      sample["is_crowd"] = sample["is_crowd"][mask]
 
       yield (sample["file_name"],
              sample["class"],
-             sample["boxes"],
-             sample["is_crowd"])
+             sample["boxes"])
 
   def parse_gt(self, coco, category_id_to_class_id, img):
     ann_ids = coco.getAnnIds(imgIds=img["id"], iscrowd=None)
@@ -191,7 +208,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       """Enumerate a set of anchors for each scale wrt an anchor."""
       w, h, x_ctr, y_ctr = self._whctrs(anchor)     
       ws = w * scales
-      hs = h * scales
+      hs = h * scales 
       anchors = self._mkanchors(ws, hs, x_ctr, y_ctr)
       return anchors
 
@@ -235,7 +252,62 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     max_step = (self.get_num_samples() * self.config.epochs // batch_size)
     tf.constant(max_step, name="max_step")
 
-  def parse_fn(self, file_name, classes, boxes, is_crowd):
+  def compute_gt(self, classes, boxes):
+    # Input:
+    # classes: num_obj 
+    # boxes: num_obj x 4
+    # Output:
+    # gt_labels: num_anchors
+    # gt_bboxes: num_anchors x 4
+    # gt_mask: num_anchors 
+
+    # Check there is at least one object in the image
+    assert len(boxes) > 0
+
+    # Compute IoU between anchors and boxes
+    ret_iou = np_iou(self.anchors_map, boxes)
+
+    # Create mask:
+    # foreground = 1
+    # background = -1
+    # neutral = 0
+
+    # Forward selection
+    max_idx = np.argmax(ret_iou, axis=1)
+    max_iou = ret_iou[np.arange(ret_iou.shape[0]), max_idx]    
+    gt_labels = classes[max_idx]
+    gt_bboxes = boxes[max_idx, :]    
+    gt_mask = np.zeros(ret_iou.shape[0], dtype=np.int32)
+    fg_idx = np.where(max_iou > self.TRAIN_FG_IOU)[0]
+    bg_idx = np.where(max_iou < self.TRAIN_BG_IOU)[0]
+    gt_mask[fg_idx] = 1
+    gt_mask[bg_idx] = -1
+
+    # Reverse selection
+    # Make sure every gt object is matched to at least one anchor
+    max_idx_reverse = np.argmax(ret_iou, axis=0)
+    max_iou_reverse = ret_iou[max_idx_reverse, np.arange(ret_iou.shape[1])]
+    gt_labels[max_idx_reverse] = classes
+    gt_bboxes[max_idx_reverse] = boxes
+    gt_mask[max_idx_reverse] = 1
+
+    # Balance & Sub-sample fg and bg objects
+    fg_ids = np.where(gt_mask == 1)[0]
+    fg_extra = (len(fg_ids) -
+                (self.TRAIN_SAMPLES_PER_IMAGE * self.TRAIN_FG_RATIO))
+    if fg_extra > 0:
+      random_fg_ids = np.random.choice(fg_ids, fg_extra, replace=False)
+      gt_mask[random_fg_ids] = 0
+
+    bg_ids = np.where(gt_mask == -1)[0]
+    bg_extra = len(bg_ids) - (self.TRAIN_SAMPLES_PER_IMAGE - sum(gt_mask == 1))
+    if bg_extra > 0:
+      random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
+      gt_mask[random_bg_ids] = 0
+
+    return gt_labels, gt_bboxes, gt_mask
+
+  def parse_fn(self, file_name, classes, boxes):
     """Parse a single input sample
     """
     image = tf.read_file(file_name)
@@ -244,17 +316,20 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     if self.augmenter:
       is_training = (self.config.mode == "train")
-      image, classes, boxes, is_crowd = \
+      image, classes, boxes = \
         self.augmenter.augment(
           image,
           classes,
           boxes,
-          is_crowd,
           self.config.resolution,
           is_training=is_training,
           speed_mode=False)
 
-    return (image, classes, boxes, is_crowd)
+    gt_labels, gt_bboxes, gt_mask = tf.py_func(self.compute_gt,
+                                      [classes, boxes],
+                                      (tf.int64, tf.float32, tf.int32))
+
+    return (image, classes, boxes, gt_labels, gt_bboxes, gt_mask)
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
@@ -264,17 +339,16 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       generator=lambda: self.get_samples_fn(),
       output_types=(tf.string,
                     tf.int64,
-                    tf.float32,
-                    tf.int64))
+                    tf.float32))
 
     dataset = dataset.map(
-      lambda file_name, classes, boxes, is_crowd: self.parse_fn(file_name, classes, boxes, is_crowd),
-      num_parallel_calls=12)
+      lambda file_name, classes, boxes: self.parse_fn(file_name, classes, boxes),
+      num_parallel_calls=1)
 
     dataset = dataset.apply(
         tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.prefetch(2)
+    dataset = dataset.prefetch(1)
 
     iterator = dataset.make_one_shot_iterator()
     return iterator.get_next()

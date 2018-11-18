@@ -58,7 +58,6 @@ def aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
 def preprocess_for_train(image,
                          classes,
                          boxes,
-                         is_crowd,
                          resolution,
                          speed_mode=False):
   if speed_mode:
@@ -79,13 +78,12 @@ def preprocess_for_train(image,
       resolution)
     boxes = tf.scalar_mul(scale, boxes) + [translation[1], translation[0], translation[1], translation[0]]
 
-  return image, classes, boxes, is_crowd
+  return image, classes, boxes
 
 
 def preprocess_for_eval(image,
                         classes,
                         boxes,
-                        is_crowd,
                         resolution,
                         speed_mode=False):
   if speed_mode:
@@ -93,23 +91,21 @@ def preprocess_for_eval(image,
   else:
     pass
 
-  return image, classes, boxes, is_crowd
+  return image, classes, boxes
 
 
-def augment(image, classes, boxes, is_crowd, resolution,
+def augment(image, classes, boxes, resolution,
             is_training=False, speed_mode=False):
   if is_training:
     return preprocess_for_train(image,
                                 classes,
                                 boxes,
-                                is_crowd,
                                 resolution,
                                 speed_mode=speed_mode)
   else:
     return preprocess_for_eval(image,
                                classes,
                                boxes,
-                               is_crowd,
                                resolution,
                                speed_mode=speed_mode)
 

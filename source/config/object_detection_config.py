@@ -2,9 +2,11 @@ from config import Config
 
 class ObjectDetectionCallbackConfig(Config):
   def __init__(self,
-               default_callback_config):
+               default_callback_config,
+               num_classes=81):
 
     self.copy_props(default_callback_config)
+    self.num_classes = num_classes
 
 
 class ObjectDetectionInputterConfig(Config):
@@ -31,6 +33,8 @@ class ObjectDetectionInputterConfig(Config):
 
 class ObjectDetectionModelerConfig(Config):
   def __init__(self,
-               default_modeler_config):
+               default_modeler_config,
+               num_classes=81):
 
     self.copy_props(default_modeler_config)
+    self.num_classes = num_classes

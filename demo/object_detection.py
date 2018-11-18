@@ -86,6 +86,7 @@ def main():
       "source.network." + config.network), "net")
 
     callbacks = []
+    
     for name in config.callbacks:
       callback = importlib.import_module(
         "source.callback." + name).build(callback_config)
