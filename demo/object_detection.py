@@ -5,9 +5,9 @@ Licensed under
 
 python demo/object_detection.py \
 --mode=train \
---model_dir=~/demo/model/rpn_mscoco \
---network=rpn \
---augmenter=rpn_augmenter \
+--model_dir=~/demo/model/ssd512_mscoco \
+--network=ssd512 \
+--augmenter=ssd_augmenter \
 --batch_size_per_gpu=1 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco \
 --num_classes=81 --resolution=512 \
@@ -100,6 +100,9 @@ def main():
     net = getattr(importlib.import_module(
       "source.network." + config.network), "net")
 
+    loss = getattr(importlib.import_module(
+      "source.network." + config.network), "loss")
+
     callbacks = []
     
     for name in config.callbacks:
@@ -113,7 +116,7 @@ def main():
 
     modeler = importlib.import_module(
       "source.modeler.object_detection_modeler").build(
-      modeler_config, net)
+      modeler_config, net, loss)
 
     runner = importlib.import_module(
       "source.runner.parameter_server_runner").build(

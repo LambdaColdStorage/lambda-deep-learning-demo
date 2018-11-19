@@ -358,7 +358,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     # Encode the shift between gt_bboxes and anchors_map
     gt_bboxes = encode_bbox_target(gt_bboxes, self.anchors_map)
 
-    return (image, classes, boxes, gt_labels, gt_bboxes, gt_mask)
+    return (image, gt_labels, gt_bboxes, gt_mask)
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *

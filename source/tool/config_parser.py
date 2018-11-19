@@ -29,7 +29,7 @@ def default_parser():
                                             "fcn", "unet",
                                             "fns",
                                             "char_rnn",
-                                            "rpn"],
+                                            "ssd512"],
                       type=str,
                       help="Choose a network architecture",
                       default=None)
@@ -37,7 +37,7 @@ def default_parser():
                       choices=["cifar_augmenter", "inception_augmenter", "vgg_augmenter",
                                "fcn_augmenter", "unet_augmenter",
                                "fns_augmenter",
-                               "rpn_augmenter"],
+                               "ssd_augmenter"],
                       type=str,
                       help="Name of the augmenter",
                       default=None)

@@ -181,15 +181,17 @@ class Runner(object):
 
     batch = self.inputter.input_fn()
 
-    # results = self.modeler.model_fn(batch)
+    results = self.modeler.model_fn(batch)
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
       for i in range(2):
-        _batch = self.sess.run(batch)
-        print(_batch[4])
-        # _results = self.sess.run(results)
+        # _batch = self.sess.run(batch)
+        # print(_batch[4])
+        # print(_batch[0].shape)
+        _results = self.sess.run(results)
+        print(_results)
         # print(_results[0].shape)
         # print(_results[1].shape)
         # print(_results[2].shape)
@@ -198,7 +200,8 @@ class Runner(object):
         # print('------------------------------')
         # print(_results[0].shape)
         # print(_results[1].shape)
-        # print(_results)
+        # print(_results[0].shape)
+        # print(_results[1].shape)
         # print('--------------------------------')
 
 
