@@ -26,7 +26,9 @@ class ObjectDetectionModeler(Modeler):
     self.anchors_map = inputter.get_anchors_map()
 
   def create_nonreplicated_fn(self):
-    pass
+    self.global_step = tf.train.get_or_create_global_step()
+    if self.config.mode == "train":
+      self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, inputs):
     # Inputs:
@@ -49,11 +51,9 @@ class ObjectDetectionModeler(Modeler):
     return accuracies
 
   def create_loss_fn(self, inputs, outputs):
+    self.gether_train_vars()
+    
     return self.loss(inputs, outputs) 
-
-  def create_grad_fn(self, loss, clipping=None):
-    grads = tf.zeros([1024, 1024])
-    return grads
 
   def create_detect_fn(feat_classes, feat_bboxes):
     detection_classes = tf.zeros([10, 1])
@@ -65,7 +65,12 @@ class ObjectDetectionModeler(Modeler):
 
     if self.config.mode == "train":
       loss = self.create_loss_fn(inputs, outputs)
-      return loss
+
+      grads = self.create_grad_fn(loss)
+
+      return {"loss": loss,
+              "grads": grads,
+              "learning_rate": self.learning_rate}
 
 def build(args, network, loss):
   return ObjectDetectionModeler(args, network, loss)

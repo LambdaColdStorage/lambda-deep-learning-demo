@@ -86,15 +86,20 @@ def net(inputs, num_classes,
 
   # Shared SSD feature layer
   feat_vgg = inputs[0]
-  feat_ssd = ssd_feature_fn(feat_vgg)
 
-  # Class head
-  feat_classes = class_graph_fn(feat_ssd, num_classes)
+  with tf.variable_scope(name_or_scope='SSD',
+                         values=[inputs],
+                         reuse=tf.AUTO_REUSE):
 
-  # BBox head
-  feat_bboxes = bbox_graph_fn(feat_ssd)
+    feat_ssd = ssd_feature_fn(feat_vgg)
 
-  return feat_classes, feat_bboxes
+    # Class head
+    feat_classes = class_graph_fn(feat_ssd, num_classes)
+
+    # BBox head
+    feat_bboxes = bbox_graph_fn(feat_ssd)
+
+    return feat_classes, feat_bboxes
 
 def loss(inputs, outputs):
   gt_classes = inputs[1]
@@ -110,4 +115,6 @@ def loss(inputs, outputs):
 
   loss_bboxes = create_loss_bboxes_fn(feat_bboxes, gt_bboxes, mask)
 
-  return loss_classes, loss_bboxes 
+  loss = loss_classes + loss_bboxes 
+
+  return loss

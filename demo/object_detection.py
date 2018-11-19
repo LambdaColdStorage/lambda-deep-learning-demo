@@ -15,7 +15,9 @@ train_args \
 --learning_rate=0.5 --optimizer=momentum \
 --piecewise_boundaries=50,75,90 \
 --piecewise_lr_decay=1.0,0.1,0.01,0.001 \
---dataset_meta=valminusminival2014
+--dataset_meta=valminusminival2014 \
+--callbacks=train_basic,train_loss,train_speed,train_summary \
+--trainable_vars=SSD
 """
 import sys
 import os
@@ -123,7 +125,7 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.dev()
+    runner.run()
 
 if __name__ == "__main__":
   main()

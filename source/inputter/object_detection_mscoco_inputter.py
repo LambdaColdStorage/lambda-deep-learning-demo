@@ -81,12 +81,22 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.anchors_aspect_ratios = (0.5, 1.0, 2.0)
     self.anchors_map = None
 
+    self.TRAIN_NUM_SAMPLES = 1000
+
     self.TRAIN_SAMPLES_PER_IMAGE = 256
     self.TRAIN_FG_IOU = 0.7
     self.TRAIN_BG_IOU = 0.3
     self.TRAIN_FG_RATIO = 0.5
 
+
   def get_num_samples(self):
+    # return self.num_samples
+    if self.num_samples < 0:
+      if self.config.mode == "infer":
+        self.num_samples = len(self.test_samples)
+      else:
+        # TODO: find a better way to define num_samples
+        return self.TRAIN_NUM_SAMPLES
     return self.num_samples
 
   def get_anchors(self):
@@ -275,7 +285,9 @@ class ObjectDetectionMSCOCOInputter(Inputter):
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
                   self.config.gpu_count)
+
     max_step = (self.get_num_samples() * self.config.epochs // batch_size)
+
     tf.constant(max_step, name="max_step")
 
   def compute_gt(self, classes, boxes):

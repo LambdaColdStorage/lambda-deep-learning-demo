@@ -172,12 +172,12 @@ class Runner(object):
   def dev(self):
     # print(self.modeler.anchors.shape)
     # print(self.modeler.anchors_map.shape)
-    # nonreplicated_fns = [self.inputter.create_nonreplicated_fn]
 
-    # for fn in nonreplicated_fns:
-    #   fn()
+    nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
+                         self.inputter.create_nonreplicated_fn]
 
-    # print(self.inputter.anchors)
+    for fn in nonreplicated_fns:
+      fn()
 
     batch = self.inputter.input_fn()
 
@@ -191,7 +191,11 @@ class Runner(object):
         # print(_batch[4])
         # print(_batch[0].shape)
         _results = self.sess.run(results)
-        print(_results)
+        # print(type(_results))
+        for r in _results:
+          print(r[0].shape)
+          print(r[1].shape)
+          print('--------------------')
         # print(_results[0].shape)
         # print(_results[1].shape)
         # print(_results[2].shape)
