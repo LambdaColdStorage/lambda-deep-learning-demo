@@ -81,7 +81,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.anchors_aspect_ratios = (0.5, 1.0, 2.0)
     self.anchors_map = None
 
-    self.TRAIN_NUM_SAMPLES = 1000
+    self.TRAIN_NUM_SAMPLES = 10000
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
     self.TRAIN_FG_IOU = 0.7
@@ -320,6 +320,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     bg_idx = np.where(max_iou < self.TRAIN_BG_IOU)[0]
     gt_mask[fg_idx] = 1
     gt_mask[bg_idx] = -1
+    # Set the bg object to class 0
+    gt_labels[bg_idx] = 0
 
     # Reverse selection
     # Make sure every gt object is matched to at least one anchor
@@ -381,6 +383,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       output_types=(tf.string,
                     tf.int64,
                     tf.float32))
+
+    dataset = dataset.repeat(self.config.epochs)
 
     dataset = dataset.map(
       lambda file_name, classes, boxes: self.parse_fn(file_name, classes, boxes),

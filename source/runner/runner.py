@@ -162,7 +162,6 @@ class Runner(object):
 
         self.outputs = self.sess.run(self.run_ops,
                                      feed_dict=self.feed_dict)
-
         self.after_step()
 
         global_step = global_step + 1
@@ -186,16 +185,24 @@ class Runner(object):
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
-      for i in range(2):
+      for i in range(10):
         # _batch = self.sess.run(batch)
-        # print(_batch[4])
+        # x = _batch[3]==-1
+        # print(_batch[1][0])
+        # print(_batch[1].shape)
+        # print(_batch[3].shape)
+        # print(_batch[1][_batch[3]==-1])
+        # print(_batch[2][_batch[3]==1])
         # print(_batch[0].shape)
         _results = self.sess.run(results)
-        # print(type(_results))
-        for r in _results:
-          print(r[0].shape)
-          print(r[1].shape)
-          print('--------------------')
+        print(_results[0].shape)
+        print(_results[1].shape)
+        print(_results[1][_results[0] == 1])
+        # # print(type(_results))
+        # for r in _results:
+        #   print(r[0].shape)
+        #   print(r[1].shape)
+        #   print('--------------------')
         # print(_results[0].shape)
         # print(_results[1].shape)
         # print(_results[2].shape)

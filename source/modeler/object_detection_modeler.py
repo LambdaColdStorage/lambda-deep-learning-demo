@@ -63,6 +63,8 @@ class ObjectDetectionModeler(Modeler):
   def model_fn(self, inputs):
     outputs = self.create_graph_fn(inputs[0])
 
+    # return inputs[3], outputs[1]
+
     if self.config.mode == "train":
       loss = self.create_loss_fn(inputs, outputs)
 

@@ -38,7 +38,10 @@ def class_graph_fn(feat, num_classes):
 def bbox_graph_fn(feat):
   data_format = 'channels_last'
   kernel_init = tf.variance_scaling_initializer()
-  output = tf.layers.conv2d(inputs=feat,
+  output = tf.math.l2_normalize(feat,
+                                axis=-1,
+                                epsilon=1e-12)
+  output = tf.layers.conv2d(inputs=output,
                             filters= 5 * 3 * 4,
                             kernel_size=[3, 3],
                             strides=(1, 1),
@@ -50,35 +53,35 @@ def bbox_graph_fn(feat):
                       [tf.shape(output)[0],
                        -1,
                        4],
-                      name='feat_bboxes')    
+                      name='feat_bboxes')
   return output
 
-def create_loss_classes_fn(feat_classes, gt_classes, mask):
+def create_loss_classes_fn(feat_classes, gt_classes, gt_mask):
+  mask = tf.math.not_equal(gt_mask, 0)
+  mask.set_shape([None])  
   logits = tf.boolean_mask(
-    feat_classes,
-    mask,
-    axis=1)
+    tf.reshape(feat_classes, [-1, tf.shape(feat_classes)[2]]),
+    mask)
   labels = tf.boolean_mask(
-    gt_classes,
-    mask,
-    axis=1)
+    tf.reshape(gt_classes, [-1, 1]),
+    mask)
   loss = tf.losses.sparse_softmax_cross_entropy(
     logits=logits,
     labels=labels)
   return loss
 
-def create_loss_bboxes_fn(feat_bboxes, gt_bboxes, mask):
+def create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask):
+  mask = tf.math.equal(gt_mask, 1)
+  mask.set_shape([None])   
   pred = tf.boolean_mask(
-    feat_bboxes,
-    mask,
-    axis=1)
+    tf.reshape(feat_bboxes, [-1, 4]),
+    mask)
   gt = tf.boolean_mask(
-    gt_bboxes,
-    mask,
-    axis=1)
+    tf.reshape(gt_bboxes, [-1, 4]),
+    mask)
   abs_diff = tf.abs(pred - gt)
   minx = tf.minimum(abs_diff, 1)
-  loss = tf.reduce_sum(0.5 * ((abs_diff - 1) * minx + abs_diff))
+  loss = tf.reduce_mean(0.5 * ((abs_diff - 1) * minx + abs_diff))
   return loss
 
 def net(inputs, num_classes,
@@ -108,13 +111,12 @@ def loss(inputs, outputs):
   feat_classes = outputs[0]
   feat_bboxes = outputs[1]
 
-  mask = tf.math.not_equal(gt_mask, 0)
-  mask.set_shape([None])
+  loss_classes = create_loss_classes_fn(feat_classes, gt_classes, gt_mask)
 
-  loss_classes = create_loss_classes_fn(feat_classes, gt_classes, mask)
-
-  loss_bboxes = create_loss_bboxes_fn(feat_bboxes, gt_bboxes, mask)
+  loss_bboxes = create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask)
 
   loss = loss_classes + loss_bboxes 
+  # loss = loss_classes
+  # loss = loss_bboxes
 
   return loss

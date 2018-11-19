@@ -8,11 +8,11 @@ python demo/object_detection.py \
 --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
---batch_size_per_gpu=1 --epochs=1 \
+--batch_size_per_gpu=1 --epochs=100 \
 --dataset_dir=/mnt/data/data/mscoco \
 --num_classes=81 --resolution=512 \
 train_args \
---learning_rate=0.5 --optimizer=momentum \
+--learning_rate=0.01 --optimizer=momentum \
 --piecewise_boundaries=50,75,90 \
 --piecewise_lr_decay=1.0,0.1,0.01,0.001 \
 --dataset_meta=valminusminival2014 \
