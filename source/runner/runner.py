@@ -182,13 +182,30 @@ class Runner(object):
     batch = self.inputter.input_fn()
 
     # results = self.modeler.model_fn(batch)
-    
+
     with tf.Session(config=self.session_config) as self.sess:
+      self.sess.run(tf.global_variables_initializer())
+
       for i in range(2):
-        data = self.sess.run(batch)
-        for image, label, box, gt_classes, gt_bboxes, gt_mask in zip(data[0], data[1], data[2], data[3], data[4], data[5]):
-          print(sum(gt_mask == 1))
-          print(sum(gt_mask == -1))
+        _batch = self.sess.run(batch)
+        print(_batch[4])
+        # _results = self.sess.run(results)
+        # print(_results[0].shape)
+        # print(_results[1].shape)
+        # print(_results[2].shape)
+        # print(_results[3].shape)
+        # print(_results[4].shape)
+        # print('------------------------------')
+        # print(_results[0].shape)
+        # print(_results[1].shape)
+        # print(_results)
+        # print('--------------------------------')
+
+
+        # data = self.sess.run(batch)
+        # for image, label, box, gt_classes, gt_bboxes, gt_mask in zip(data[0], data[1], data[2], data[3], data[4], data[5]):
+        #   print(sum(gt_mask == 1))
+        #   print(sum(gt_mask == -1))
         # for image, label, box, is_crowd in zip(data[0], data[1], data[2], data[3]):
         #   print(image.shape)
         #   print(label.shape)

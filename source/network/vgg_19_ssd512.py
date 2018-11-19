@@ -2,7 +2,7 @@
 # Licensed under
 # ============================================================================
 
-"""Class of VGG 19 based on Tensorflow slim
+"""VGG 19 backbone for SSD based on Tensorflow slim
 """
 from __future__ import print_function
 
@@ -15,7 +15,7 @@ slim = tf.contrib.slim
 
 def net(inputs, data_format, is_training, init_flag, ckpt_path):
 
-  vgg_net = vgg.vgg_19_conv(inputs, is_training=is_training)
+  vgg_net = vgg.vgg_19_ssd512(inputs, is_training=is_training)
 
   if init_flag:
     tf.logging.set_verbosity(tf.logging.WARN)

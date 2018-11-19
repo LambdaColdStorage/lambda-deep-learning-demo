@@ -41,6 +41,31 @@ def np_iou(A, B):
   return ret
 
 
+def encode_bbox_target(boxes, anchors):
+  """
+  Args:
+      boxes: (..., 4), float32
+      anchors: (..., 4), float32
+  Returns:
+      box_encoded: (..., 4), float32 with the same shape.
+  """
+  anchors_x1y1x2y2 = tf.reshape(anchors, (-1, 2, 2))
+  anchors_x1y1, anchors_x2y2 = tf.split(anchors_x1y1x2y2, 2, axis=1)
+  waha = anchors_x2y2 - anchors_x1y1
+  xaya = (anchors_x2y2 + anchors_x1y1) * 0.5
+
+  boxes_x1y1x2y2 = tf.reshape(boxes, (-1, 2, 2))
+  boxes_x1y1, boxes_x2y2 = tf.split(boxes_x1y1x2y2, 2, axis=1)
+  wbhb = boxes_x2y2 - boxes_x1y1
+  xbyb = (boxes_x2y2 + boxes_x1y1) * 0.5
+
+  # Note that here not all boxes are valid. Some may be zero
+  txty = (xbyb - xaya) / waha
+  twth = tf.log(wbhb / waha)  # may contain -inf for invalid boxes
+  encoded = tf.concat([txty, twth], axis=1)  # (-1x2x2)
+  return tf.reshape(encoded, tf.shape(boxes))
+
+
 class ObjectDetectionMSCOCOInputter(Inputter):
   def __init__(self, config, augmenter):
     super(ObjectDetectionMSCOCOInputter, self).__init__(config, augmenter)
@@ -214,13 +239,13 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
   def generate_anchors(self):
     anchor = np.array(
-      [1, 1, self.anchors_stride, self.anchors_stride], dtype=np.float) - 1
+      [1, 1, self.anchors_stride, self.anchors_stride], dtype=np.float32) - 1
     anchors = self._ratio_enum(
-      anchor, np.array(self.anchors_aspect_ratios, dtype=np.float))
+      anchor, np.array(self.anchors_aspect_ratios, dtype=np.float32))
     anchors = np.vstack(
         [self._scale_enum(
          anchors[i, :],
-         np.array(self.anchors_sizes, dtype=np.float) / self.anchors_stride) for i in range(anchors.shape[0])]
+         np.array(self.anchors_sizes, dtype=np.float32) / self.anchors_stride) for i in range(anchors.shape[0])]
     )
     self.anchors = anchors
 
@@ -245,6 +270,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         shifts.reshape((1, K, 4)).transpose((1, 0, 2))
     )
     self.anchors_map = self.anchors_map.reshape((K * A, 4))
+    self.anchors_map = np.float32(self.anchors_map)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
@@ -328,6 +354,9 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     gt_labels, gt_bboxes, gt_mask = tf.py_func(self.compute_gt,
                                       [classes, boxes],
                                       (tf.int64, tf.float32, tf.int32))
+
+    # Encode the shift between gt_bboxes and anchors_map
+    gt_bboxes = encode_bbox_target(gt_bboxes, self.anchors_map)
 
     return (image, classes, boxes, gt_labels, gt_bboxes, gt_mask)
 

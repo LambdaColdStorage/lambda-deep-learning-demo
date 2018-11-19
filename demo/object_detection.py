@@ -48,7 +48,18 @@ def main():
                       help="Path to dataset.",
                       type=str,
                       default="/mnt/data/data/mscoco")
-
+  parser.add_argument("--feature_net",
+                      help="Name of feature net",
+                      default="vgg_19_ssd512")
+  parser.add_argument("--feature_net_path",
+                      help="Path to pre-trained vgg model.",
+                      default=os.path.join(
+                        os.environ['HOME'],
+                        "demo/model/vgg_19_2016_08_28/vgg_19.ckpt"))
+  parser.add_argument("--data_format",
+                      help="channels_first or channels_last",
+                      choices=["channels_first", "channels_last"],
+                      default="channels_last")  
   config = parser.parse_args()
 
   config = config_parser.prepare(config)
@@ -64,7 +75,11 @@ def main():
     resolution=config.resolution)
 
   modeler_config = ObjectDetectionModelerConfig(
-    modeler_config)
+    modeler_config,
+    num_classes=config.num_classes,
+    data_format=config.data_format,
+    feature_net=config.feature_net,
+    feature_net_path=config.feature_net_path)
 
   if config.mode == "tune":
     pass
