@@ -5,10 +5,98 @@ Licensed under
 
 """
 import importlib
+import numpy as np
 
 import tensorflow as tf
 
 from modeler import Modeler
+
+# TODO: Put decode_bboxes and encode_bbox_target in a seperate file
+def decode_bboxes(box_predictions, anchors):
+  """
+  Args:
+      box_predictions: (..., 4), logits
+      anchors: (..., 4), floatbox. Must have the same shape
+  Returns:
+      box_decoded: (..., 4), float32. With the same shape.
+  """
+  orig_shape = tf.shape(anchors)
+  box_pred_txtytwth = tf.reshape(box_predictions, (-1, 2, 2))
+  box_pred_txty, box_pred_twth = tf.split(box_pred_txtytwth, 2, axis=1)
+  # each is (...)x1x2
+  anchors_x1y1x2y2 = tf.reshape(anchors, (-1, 2, 2))
+  anchors_x1y1, anchors_x2y2 = tf.split(anchors_x1y1x2y2, 2, axis=1)
+
+  waha = anchors_x2y2 - anchors_x1y1
+  xaya = (anchors_x2y2 + anchors_x1y1) * 0.5
+
+  # TODO: change 512 to config.resolution
+  clip = np.log(512 / 16.)
+  wbhb = tf.exp(tf.minimum(box_pred_twth, clip)) * waha
+  xbyb = box_pred_txty * waha + xaya
+  x1y1 = xbyb - wbhb * 0.5
+  x2y2 = xbyb + wbhb * 0.5    # (...)x1x2
+  out = tf.concat([x1y1, x2y2], axis=-2)
+  return tf.reshape(out, orig_shape)
+
+def decode_bboxes_batch(boxes, anchors):
+  # TODO: implement decode function
+  boxes = tf.unstack(boxes)
+  boxes = [decode_bboxes(boxes_per_img, anchors) for boxes_per_img in boxes]
+  boxes = tf.stack(boxes)
+  return boxes
+
+def detect(scores, bboxes, config):
+
+  def nms_bboxes(prob, box):
+    """
+    prob: n probabilities
+    box: nx4 boxes
+    Returns: n boolean, the selection
+    """
+    output_shape = tf.shape(prob)
+
+    # filter by score threshold
+    ids = tf.reshape(tf.where(prob > config.RESULT_SCORE_THRESH), [-1])
+    prob = tf.gather(prob, ids)
+    box = tf.gather(box, ids)
+
+    # NMS within each class
+    mask = tf.image.non_max_suppression(
+        box, prob, config.RESULTS_PER_IM, config.NMS_THRESH)
+
+    ids = tf.to_int32(tf.gather(ids, mask))
+    prob = tf.gather(prob, ids)
+    box = tf.gather(box, ids)
+
+    # sort the result
+    prob, ids = tf.nn.top_k(prob, k=tf.size(prob))
+    box = tf.gather(box, ids)
+    return prob, box
+
+  best_classes = tf.argmax(scores, axis=1)
+  idx = tf.stack(
+    [tf.dtypes.cast(tf.range(tf.shape(scores)[0]), tf.int64), best_classes],
+    axis=1)
+  best_scores = tf.gather_nd(scores, idx)
+
+  topk_scores, topk_indices = nms_bboxes(best_scores, bboxes)
+
+  return topk_scores, topk_indices
+
+def detect_batch(scores, bboxes, config):
+  scores = tf.unstack(scores)
+  bboxes = tf.unstack(bboxes)
+
+  detection_topk_scores, detection_topk_indices = [], []
+
+  for scores_per_image, bboxes_per_image in zip(scores, bboxes):
+    detection_topk_scores_per_image, detection_topk_indices_per_image = detect(
+      scores_per_image, bboxes_per_image, config)
+    detection_topk_scores.append(detection_topk_scores_per_image)
+    detection_topk_indices.append(detection_topk_indices_per_image)
+
+  return detection_topk_scores, detection_topk_indices
 
 
 class ObjectDetectionModeler(Modeler):
@@ -19,6 +107,10 @@ class ObjectDetectionModeler(Modeler):
       importlib.import_module("source.network." + self.config.feature_net),
       "net")
     self.feature_net_init_flag = True
+
+    self.config.RESULT_SCORE_THRESH = 0.05
+    self.config.RESULTS_PER_IM = 100
+    self.config.NMS_THRESH = 0.5
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
@@ -55,24 +147,35 @@ class ObjectDetectionModeler(Modeler):
     
     return self.loss(inputs, outputs) 
 
-  def create_detect_fn(feat_classes, feat_bboxes):
-    detection_classes = tf.zeros([10, 1])
-    detection_bboxes = tf.zeros([10, 4])
-    return 
+  def create_detect_fn(self, outputs):
+    feat_classes = outputs[0]
+    feat_bboxes = outputs[1]
+
+    score_classes = tf.nn.softmax(feat_classes)
+    feat_bboxes = decode_bboxes_batch(feat_bboxes, self.anchors_map)
+
+    detection_topk_scores, detection_topk_indices = detect_batch(score_classes, feat_bboxes, self.config)
+
+    return detection_topk_scores, detection_topk_indices
 
   def model_fn(self, inputs):
     outputs = self.create_graph_fn(inputs[0])
 
-    # return inputs[3], outputs[1]
+    # if self.config.mode == "train":
+    #   loss = self.create_loss_fn(inputs, outputs)
 
-    if self.config.mode == "train":
-      loss = self.create_loss_fn(inputs, outputs)
+    #   grads = self.create_grad_fn(loss)
 
-      grads = self.create_grad_fn(loss)
+    #   return {"loss": loss,
+    #           "grads": grads,
+    #           "learning_rate": self.learning_rate}
+    # elif self.config.mode == "infer":
+    #   detection_classes, detection_bboxes = self.create_detect_fn(outputs)
+    #   return {"classes": detection_classes,
+    #           "bboxes": detection_bboxes} 
 
-      return {"loss": loss,
-              "grads": grads,
-              "learning_rate": self.learning_rate}
+    detection_masks, detection_bboxes = self.create_detect_fn(outputs)
+    return detection_masks, detection_bboxes
 
 def build(args, network, loss):
   return ObjectDetectionModeler(args, network, loss)

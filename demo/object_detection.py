@@ -18,6 +18,21 @@ train_args \
 --dataset_meta=valminusminival2014 \
 --callbacks=train_basic,train_loss,train_speed,train_summary \
 --trainable_vars=SSD
+
+
+python demo/object_detection.py \
+--mode=infer \
+--model_dir=~/demo/model/ssd512_mscoco \
+--network=ssd512 \
+--augmenter=ssd_augmenter \
+--batch_size_per_gpu=1 --epochs=100 \
+--dataset_dir=/mnt/data/data/mscoco \
+--num_classes=81 --resolution=512 \
+infer_args \
+  infer_args \
+  --callbacks=infer_basic \
+  --test_samples=~/demo/data/cifar10/test/appaloosa_s_001975.png
+
 """
 import sys
 import os
@@ -125,7 +140,7 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.run()
+    runner.dev()
 
 if __name__ == "__main__":
   main()

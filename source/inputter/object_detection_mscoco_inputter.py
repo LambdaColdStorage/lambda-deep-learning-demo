@@ -66,6 +66,8 @@ def encode_bbox_target(boxes, anchors):
   return tf.reshape(encoded, tf.shape(boxes))
 
 
+  
+
 class ObjectDetectionMSCOCOInputter(Inputter):
   def __init__(self, config, augmenter):
     super(ObjectDetectionMSCOCOInputter, self).__init__(config, augmenter)

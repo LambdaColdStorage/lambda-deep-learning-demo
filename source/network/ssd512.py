@@ -116,7 +116,5 @@ def loss(inputs, outputs):
   loss_bboxes = create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask)
 
   loss = loss_classes + loss_bboxes 
-  # loss = loss_classes
-  # loss = loss_bboxes
 
   return loss
