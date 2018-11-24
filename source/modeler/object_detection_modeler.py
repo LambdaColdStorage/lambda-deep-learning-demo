@@ -50,9 +50,11 @@ def detect(scores, bboxes, config):
 
   def nms_bboxes(prob, box):
     """
-    prob: n probabilities
-    box: nx4 boxes
-    Returns: n boolean, the selection
+    Args:
+        prob: n probabilities
+        box: nx4 boxes
+    Returns:
+        n boolean, the selection
     """
     output_shape = tf.shape(prob)
 
@@ -80,23 +82,23 @@ def detect(scores, bboxes, config):
     axis=1)
   best_scores = tf.gather_nd(scores, idx)
 
-  topk_scores, topk_indices = nms_bboxes(best_scores, bboxes)
+  topk_scores, topk_bboxes = nms_bboxes(best_scores, bboxes)
 
-  return topk_scores, topk_indices
+  return topk_scores, topk_bboxes
 
 def detect_batch(scores, bboxes, config):
   scores = tf.unstack(scores)
   bboxes = tf.unstack(bboxes)
 
-  detection_topk_scores, detection_topk_indices = [], []
+  detection_topk_scores, detection_topk_bboxes = [], []
 
   for scores_per_image, bboxes_per_image in zip(scores, bboxes):
-    detection_topk_scores_per_image, detection_topk_indices_per_image = detect(
+    detection_topk_scores_per_image, detection_topk_bboxes_per_image = detect(
       scores_per_image, bboxes_per_image, config)
     detection_topk_scores.append(detection_topk_scores_per_image)
-    detection_topk_indices.append(detection_topk_indices_per_image)
+    detection_topk_bboxes.append(detection_topk_bboxes_per_image)
 
-  return detection_topk_scores, detection_topk_indices
+  return detection_topk_scores, detection_topk_bboxes
 
 
 class ObjectDetectionModeler(Modeler):
@@ -109,7 +111,7 @@ class ObjectDetectionModeler(Modeler):
     self.feature_net_init_flag = True
 
     self.config.RESULT_SCORE_THRESH = 0.05
-    self.config.RESULTS_PER_IM = 100
+    self.config.RESULTS_PER_IM = 10
     self.config.NMS_THRESH = 0.5
 
   def get_dataset_info(self, inputter):
@@ -123,11 +125,11 @@ class ObjectDetectionModeler(Modeler):
       self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, inputs):
-    # Inputs:
-    # inputs: batch_size x h x w x 3
-    # Outputs:
-    # feat_classes: batch_size x num_anchors x num_classes
-    # feat_bboxes: batch_size x num_anchors x 4
+    # Args:
+    #     inputs: batch_size x h x w x 3
+    # Returns:
+    #     feat_classes: batch_size x num_anchors x num_classes
+    #     feat_bboxes: batch_size x num_anchors x 4
 
     # Feature net
     inputs, self.feature_net_init_flag = self.feature_net(
@@ -148,34 +150,37 @@ class ObjectDetectionModeler(Modeler):
     return self.loss(inputs, outputs) 
 
   def create_detect_fn(self, outputs):
+    # Args:
+    #     outputs: 
+    # Returns:
+    #     detection_topk_scores: batch_size x (num_detections,), list of arrays
+    #     detection_topk_indices: batch_size x (num_detections, 4), list of arrays
     feat_classes = outputs[0]
     feat_bboxes = outputs[1]
 
     score_classes = tf.nn.softmax(feat_classes)
     feat_bboxes = decode_bboxes_batch(feat_bboxes, self.anchors_map)
 
-    detection_topk_scores, detection_topk_indices = detect_batch(score_classes, feat_bboxes, self.config)
+    detection_topk_scores, detection_topk_bboxes = detect_batch(score_classes, feat_bboxes, self.config)
 
-    return detection_topk_scores, detection_topk_indices
+    return detection_topk_scores, detection_topk_bboxes
 
   def model_fn(self, inputs):
     outputs = self.create_graph_fn(inputs[0])
+    if self.config.mode == "train":
+      loss = self.create_loss_fn(inputs, outputs)
+      grads = self.create_grad_fn(loss)
+      return {"loss": loss,
+              "grads": grads,
+              "learning_rate": self.learning_rate}
+    elif self.config.mode == "infer":
+      detection_scores, detection_bboxes = self.create_detect_fn(outputs)
+      return {"scores": detection_scores,
+              "bboxes": detection_bboxes,
+              "images": inputs[0]} 
 
-    # if self.config.mode == "train":
-    #   loss = self.create_loss_fn(inputs, outputs)
-
-    #   grads = self.create_grad_fn(loss)
-
-    #   return {"loss": loss,
-    #           "grads": grads,
-    #           "learning_rate": self.learning_rate}
-    # elif self.config.mode == "infer":
-    #   detection_classes, detection_bboxes = self.create_detect_fn(outputs)
-    #   return {"classes": detection_classes,
-    #           "bboxes": detection_bboxes} 
-
-    detection_masks, detection_bboxes = self.create_detect_fn(outputs)
-    return detection_masks, detection_bboxes
+    # detection_masks, detection_bboxes = self.create_detect_fn(outputs)
+    # return detection_masks, detection_bboxes
 
 def build(args, network, loss):
   return ObjectDetectionModeler(args, network, loss)

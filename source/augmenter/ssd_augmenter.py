@@ -89,7 +89,20 @@ def preprocess_for_eval(image,
   if speed_mode:
     pass
   else:
-    pass
+    # mean subtraction
+    means = [_R_MEAN, _G_MEAN, _B_MEAN]
+    channels = tf.split(axis=2, num_or_size_splits=3, value=image)
+    for i in range(3):
+      channels[i] -= means[i]
+    image = tf.concat(axis=2, values=channels)
+
+    # transform image and boxes
+    image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
+    image = tf.image.resize_image_with_crop_or_pad(
+      image,
+      resolution,
+      resolution)
+    boxes = tf.scalar_mul(scale, boxes) + [translation[1], translation[0], translation[1], translation[0]]
 
   return image, classes, boxes
 

@@ -19,19 +19,17 @@ train_args \
 --callbacks=train_basic,train_loss,train_speed,train_summary \
 --trainable_vars=SSD
 
-
-python demo/object_detection.py \
+CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --mode=infer \
 --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
---batch_size_per_gpu=1 --epochs=100 \
+--batch_size_per_gpu=1 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco \
 --num_classes=81 --resolution=512 \
 infer_args \
-  infer_args \
-  --callbacks=infer_basic \
-  --test_samples=~/demo/data/cifar10/test/appaloosa_s_001975.png
+--callbacks=infer_basic,infer_display_object_detection \
+--test_samples=/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco/val2014/COCO_val2014_000000000042.jpg,/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco/val2014/COCO_val2014_000000581899.jpg
 
 """
 import sys
@@ -140,7 +138,7 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.dev()
+    runner.run()
 
 if __name__ == "__main__":
   main()

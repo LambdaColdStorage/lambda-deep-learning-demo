@@ -66,8 +66,6 @@ def encode_bbox_target(boxes, anchors):
   return tf.reshape(encoded, tf.shape(boxes))
 
 
-  
-
 class ObjectDetectionMSCOCOInputter(Inputter):
   def __init__(self, config, augmenter):
     super(ObjectDetectionMSCOCOInputter, self).__init__(config, augmenter)
@@ -90,6 +88,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.TRAIN_BG_IOU = 0.3
     self.TRAIN_FG_RATIO = 0.5
 
+    if self.config.mode == "infer":
+      self.test_samples = self.config.test_samples
 
   def get_num_samples(self):
     # return self.num_samples
@@ -112,57 +112,67 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     return self.anchors_map
 
   def get_samples_fn(self):
-
+    # Args:
+    # Returns:
+    #     sample["file_name"]: , string, path to image
+    #     sample["class"]: (...,), int32
+    #     sample["boxes"]: (..., 4), float32
     # Read image
-    samples = []
-    for name_meta in self.config.dataset_meta:
-      annotation_file = os.path.join(
-        self.config.dataset_dir,
-        "annotations",
-        "instances_" + name_meta + ".json")
-      coco = COCO(annotation_file)
-
-      cat_ids = coco.getCatIds()
-      self.cat_names = [c["name"] for c in coco.loadCats(cat_ids)]
-
-      # background has class id of 0
-      self.category_id_to_class_id = {
-        v: i + 1 for i, v in enumerate(cat_ids)}
-      self.class_id_to_category_id = {
-        v: k for k, v in self.category_id_to_class_id.items()}
-
-      img_ids = coco.getImgIds()
-      img_ids.sort()
-      # list of dict, each has keys: height,width,id,file_name
-      imgs = coco.loadImgs(img_ids)
-
-      for img in imgs:
-        img["file_name"] = os.path.join(
+    if self.config.mode == "infer":
+      for file_name in self.test_samples:
+        yield (file_name,
+               np.empty([1], dtype=np.int32),
+               np.empty([1, 4]))
+    else:
+      samples = []
+      for name_meta in self.config.dataset_meta:
+        annotation_file = os.path.join(
           self.config.dataset_dir,
-          JSON_TO_IMAGE[name_meta],
-          img["file_name"])
+          "annotations",
+          "instances_" + name_meta + ".json")
+        coco = COCO(annotation_file)
 
-        self.parse_gt(coco, self.category_id_to_class_id, img)
+        cat_ids = coco.getCatIds()
+        self.cat_names = [c["name"] for c in coco.loadCats(cat_ids)]
 
-      samples.extend(imgs) 
+        # background has class id of 0
+        self.category_id_to_class_id = {
+          v: i + 1 for i, v in enumerate(cat_ids)}
+        self.class_id_to_category_id = {
+          v: k for k, v in self.category_id_to_class_id.items()}
 
-    # Filter out images that has no object.
-    num = len(samples)
+        img_ids = coco.getImgIds()
+        img_ids.sort()
+        # list of dict, each has keys: height,width,id,file_name
+        imgs = coco.loadImgs(img_ids)
 
-    samples = list(filter(
-      lambda sample: len(
-        sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
+        for img in imgs:
+          img["file_name"] = os.path.join(
+            self.config.dataset_dir,
+            JSON_TO_IMAGE[name_meta],
+            img["file_name"])
 
-    for sample in samples:
-      # remove crowd objects
-      mask = sample['is_crowd'] == 0
-      sample["class"] = sample["class"][mask]
-      sample["boxes"] = sample["boxes"][mask, :]
-      sample["is_crowd"] = sample["is_crowd"][mask]
+          self.parse_gt(coco, self.category_id_to_class_id, img)
 
-      yield (sample["file_name"],
-             sample["class"],
-             sample["boxes"])
+        samples.extend(imgs) 
+
+      # Filter out images that has no object.
+      num = len(samples)
+
+      samples = list(filter(
+        lambda sample: len(
+          sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
+
+      for sample in samples:
+        # remove crowd objects
+        mask = sample['is_crowd'] == 0
+        sample["class"] = sample["class"][mask]
+        sample["boxes"] = sample["boxes"][mask, :]
+        sample["is_crowd"] = sample["is_crowd"][mask]
+
+        yield (sample["file_name"],
+               sample["class"],
+               sample["boxes"])
 
   def parse_gt(self, coco, category_id_to_class_id, img):
     ann_ids = coco.getAnnIds(imgIds=img["id"], iscrowd=None)
@@ -367,12 +377,17 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           is_training=is_training,
           speed_mode=False)
 
-    gt_labels, gt_bboxes, gt_mask = tf.py_func(self.compute_gt,
-                                      [classes, boxes],
-                                      (tf.int64, tf.float32, tf.int32))
+    if self.config.mode == "infer":
+      gt_labels = tf.zeros([1], dtype=tf.int64)
+      gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
+      gt_mask = tf.zeros([1], dtype=tf.int32)
+    else:
+      gt_labels, gt_bboxes, gt_mask = tf.py_func(self.compute_gt,
+                                        [classes, boxes],
+                                        (tf.int64, tf.float32, tf.int32))
 
-    # Encode the shift between gt_bboxes and anchors_map
-    gt_bboxes = encode_bbox_target(gt_bboxes, self.anchors_map)
+      # Encode the shift between gt_bboxes and anchors_map
+      gt_bboxes = encode_bbox_target(gt_bboxes, self.anchors_map)
 
     return (image, gt_labels, gt_bboxes, gt_mask)
 
@@ -425,7 +440,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           assert len(labels) == len(boxes), "{} != {}".format(len(labels), len(boxes))
 
       im = im.copy()
-      # COLOR = (218, 218, 218) if color is None else color
       COLOR = (255, 255, 55)
 
       areas = (boxes[:, 2] - boxes[:, 0] + 1) * (boxes[:, 3] - boxes[:, 1] + 1)
