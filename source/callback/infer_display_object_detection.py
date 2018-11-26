@@ -22,22 +22,33 @@ class InferDisplayObjectDetection(Callback):
     self.RGB_MEAN = [123.68, 116.78, 103.94]
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
-    # print(outputs_dict["scores"][0].shape)
-    for s, b, input_image in zip(outputs_dict["scores"],
+
+    for s, l, b, a, input_image in zip(outputs_dict["scores"],
+                         outputs_dict["labels"],
                          outputs_dict["bboxes"],
+                         outputs_dict["anchors"],
                          outputs_dict["images"]):
 
       input_image = input_image + self.RGB_MEAN
       input_image = np.clip(input_image, 0, 255)
       input_image = input_image / 255.0
 
+      print(s)
+      print(l)
+      print(b)
+      print(a)
+
       plt.figure()
       plt.axis('off')
       for box in b:
         cv2.rectangle(input_image, (box[0], box[1]), (box[2], box[3]),
-                      color=(255, 255, 55), thickness=2)
+                      color=(1, 0, 0), thickness=2)
+      for anchor in a:
+        cv2.rectangle(input_image, (anchor[0], anchor[1]), (anchor[2], anchor[3]),
+                      color=(0, 1, 0), thickness=2)        
       plt.imshow(input_image)
       plt.show()
+
 
 def build(config):
   return InferDisplayObjectDetection(config)

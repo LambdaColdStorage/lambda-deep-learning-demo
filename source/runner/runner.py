@@ -6,6 +6,8 @@ Licensed under
 """
 from __future__ import print_function
 import sys
+import cv2
+import numpy as np
 
 import tensorflow as tf
 
@@ -169,9 +171,6 @@ class Runner(object):
       self.after_run()
 
   def dev(self):
-    # print(self.modeler.anchors.shape)
-    # print(self.modeler.anchors_map.shape)
-
     nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
                          self.inputter.create_nonreplicated_fn]
 
@@ -180,32 +179,17 @@ class Runner(object):
 
     batch = self.inputter.input_fn()
 
-    results = self.modeler.model_fn(batch)
-
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
-      for i in range(1):
-        # _batch = self.sess.run(batch)
-        # print(_batch[0].shape)
-        # print(_batch[1].shape)
-        # print(_batch[2].shape)
-        # print(_batch[3].shape)
-
-        _results = self.sess.run(results)
-        print(_results["scores"][0])
-        print(_results["bboxes"][0])
-
-        # data = self.sess.run(batch)
-        # for image, label, box, gt_classes, gt_bboxes, gt_mask in zip(data[0], data[1], data[2], data[3], data[4], data[5]):
-        #   print(sum(gt_mask == 1))
-        #   print(sum(gt_mask == -1))
-        # for image, label, box, is_crowd in zip(data[0], data[1], data[2], data[3]):
-        #   print(image.shape)
-        #   print(label.shape)
-        #   print(box.shape)
-        #   self.inputter.draw_annotation(image, label, box, is_crowd)
-
+      for i in range(32):
+        _batch = self.sess.run(batch)
+        image_name = _batch[0][0]
+        print(image_name)
+        # label = _batch[1][0]
+        # box = _batch[2][0]
+        # image = cv2.imread(image_name)  
+        # self.inputter.draw_annotation(image, label, box)
 
 
 def build(config, inputter, modeler, callbacks):

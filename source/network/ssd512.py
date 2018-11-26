@@ -1,6 +1,5 @@
 import tensorflow as tf
 
-# TODO: make a class
 
 def ssd_feature_fn(feat):
   data_format = 'channels_last'
@@ -16,11 +15,11 @@ def ssd_feature_fn(feat):
                             name='feat_ssd')
   return output
 
-def class_graph_fn(feat, num_classes):
+def class_graph_fn(feat, num_classes, num_anchors):
   data_format = 'channels_last'
   kernel_init = tf.variance_scaling_initializer()
   output = tf.layers.conv2d(inputs=feat,
-                            filters= 5 * 3 * num_classes,
+                            filters= num_anchors * num_classes,
                             kernel_size=[3, 3],
                             strides=(1, 1),
                             padding=('SAME'),
@@ -35,14 +34,14 @@ def class_graph_fn(feat, num_classes):
   return output
 
 
-def bbox_graph_fn(feat):
+def bbox_graph_fn(feat, num_anchors):
   data_format = 'channels_last'
   kernel_init = tf.variance_scaling_initializer()
   output = tf.math.l2_normalize(feat,
                                 axis=-1,
                                 epsilon=1e-12)
   output = tf.layers.conv2d(inputs=output,
-                            filters= 5 * 3 * 4,
+                            filters= num_anchors * 4,
                             kernel_size=[3, 3],
                             strides=(1, 1),
                             padding=('SAME'),
@@ -84,7 +83,7 @@ def create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask):
   loss = tf.reduce_mean(0.5 * ((abs_diff - 1) * minx + abs_diff))
   return loss
 
-def net(inputs, num_classes,
+def net(inputs, num_classes, num_anchors,
         is_training, data_format="channels_last"):
 
   # Shared SSD feature layer
@@ -97,14 +96,14 @@ def net(inputs, num_classes,
     feat_ssd = ssd_feature_fn(feat_vgg)
 
     # Class head
-    feat_classes = class_graph_fn(feat_ssd, num_classes)
+    feat_classes = class_graph_fn(feat_ssd, num_classes, num_anchors)
 
     # BBox head
-    feat_bboxes = bbox_graph_fn(feat_ssd)
+    feat_bboxes = bbox_graph_fn(feat_ssd, num_anchors)
 
     return feat_classes, feat_bboxes
 
-def loss(inputs, outputs):
+def loss(inputs, outputs, class_weights, bboxes_weights):
   gt_classes = inputs[1]
   gt_bboxes = inputs[2]
   gt_mask = inputs[3]
@@ -115,6 +114,6 @@ def loss(inputs, outputs):
 
   loss_bboxes = create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask)
 
-  loss = loss_classes + loss_bboxes 
+  loss = class_weights * loss_classes + bboxes_weights * loss_bboxes 
 
   return loss

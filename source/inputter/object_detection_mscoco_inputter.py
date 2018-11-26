@@ -10,13 +10,13 @@ import json
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 
 import tensorflow as tf
 
 from inputter import Inputter
 from pycocotools.coco import COCO
-from pycocotools.mask import iou
+from source.network.detection import detection_common
 
 
 JSON_TO_IMAGE = {
@@ -26,44 +26,6 @@ JSON_TO_IMAGE = {
     "minival2014": "val2014",
     "test2014": "test2014"
 }
-
-
-def np_iou(A, B):
-  def to_xywh(box):
-    box = box.copy()
-    box[:, 2] -= box[:, 0]
-    box[:, 3] -= box[:, 1]
-    return box
-
-  ret = iou(
-    to_xywh(A), to_xywh(B),
-    np.zeros((len(B),), dtype=np.bool))
-  return ret
-
-
-def encode_bbox_target(boxes, anchors):
-  """
-  Args:
-      boxes: (..., 4), float32
-      anchors: (..., 4), float32
-  Returns:
-      box_encoded: (..., 4), float32 with the same shape.
-  """
-  anchors_x1y1x2y2 = tf.reshape(anchors, (-1, 2, 2))
-  anchors_x1y1, anchors_x2y2 = tf.split(anchors_x1y1x2y2, 2, axis=1)
-  waha = anchors_x2y2 - anchors_x1y1
-  xaya = (anchors_x2y2 + anchors_x1y1) * 0.5
-
-  boxes_x1y1x2y2 = tf.reshape(boxes, (-1, 2, 2))
-  boxes_x1y1, boxes_x2y2 = tf.split(boxes_x1y1x2y2, 2, axis=1)
-  wbhb = boxes_x2y2 - boxes_x1y1
-  xbyb = (boxes_x2y2 + boxes_x1y1) * 0.5
-
-  # Note that here not all boxes are valid. Some may be zero
-  txty = (xbyb - xaya) / waha
-  twth = tf.log(wbhb / waha)  # may contain -inf for invalid boxes
-  encoded = tf.concat([txty, twth], axis=1)  # (-1x2x2)
-  return tf.reshape(encoded, tf.shape(boxes))
 
 
 class ObjectDetectionMSCOCOInputter(Inputter):
@@ -78,18 +40,62 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.anchors = None
     self.anchors_stride = 16
     self.anchors_sizes = (32, 64, 128, 256, 512)
-    self.anchors_aspect_ratios = (0.5, 1.0, 2.0)
+    self.anchors_aspect_ratios = (0.5, 1.0, 2.0)  
     self.anchors_map = None
 
-    self.TRAIN_NUM_SAMPLES = 10000
+    self.TRAIN_NUM_SAMPLES = 32
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
-    self.TRAIN_FG_IOU = 0.7
-    self.TRAIN_BG_IOU = 0.3
+    self.TRAIN_FG_IOU = 0.5
+    self.TRAIN_BG_IOU = 0.5
     self.TRAIN_FG_RATIO = 0.5
 
     if self.config.mode == "infer":
       self.test_samples = self.config.test_samples
+    else:
+      self.parse_coco()
+
+  def parse_coco(self):
+    samples = []
+    for name_meta in self.config.dataset_meta:
+      annotation_file = os.path.join(
+        self.config.dataset_dir,
+        "annotations",
+        "instances_" + name_meta + ".json")
+      coco = COCO(annotation_file)
+
+      cat_ids = coco.getCatIds()
+      self.cat_names = [c["name"] for c in coco.loadCats(cat_ids)]
+
+      # background has class id of 0
+      self.category_id_to_class_id = {
+        v: i + 1 for i, v in enumerate(cat_ids)}
+      self.class_id_to_category_id = {
+        v: k for k, v in self.category_id_to_class_id.items()}
+
+      img_ids = coco.getImgIds()
+      img_ids.sort()
+
+      # list of dict, each has keys: height,width,id,file_name
+      imgs = coco.loadImgs(img_ids)
+
+      for img in imgs:
+        img["file_name"] = os.path.join(
+          self.config.dataset_dir,
+          JSON_TO_IMAGE[name_meta],
+          img["file_name"])
+
+        self.parse_gt(coco, self.category_id_to_class_id, img)
+
+      samples.extend(imgs) 
+
+    # Filter out images that has no object.
+    num = len(samples)
+
+    samples = list(filter(
+      lambda sample: len(
+        sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
+    self.samples = samples   
 
   def get_num_samples(self):
     # return self.num_samples
@@ -124,46 +130,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                np.empty([1], dtype=np.int32),
                np.empty([1, 4]))
     else:
-      samples = []
-      for name_meta in self.config.dataset_meta:
-        annotation_file = os.path.join(
-          self.config.dataset_dir,
-          "annotations",
-          "instances_" + name_meta + ".json")
-        coco = COCO(annotation_file)
-
-        cat_ids = coco.getCatIds()
-        self.cat_names = [c["name"] for c in coco.loadCats(cat_ids)]
-
-        # background has class id of 0
-        self.category_id_to_class_id = {
-          v: i + 1 for i, v in enumerate(cat_ids)}
-        self.class_id_to_category_id = {
-          v: k for k, v in self.category_id_to_class_id.items()}
-
-        img_ids = coco.getImgIds()
-        img_ids.sort()
-        # list of dict, each has keys: height,width,id,file_name
-        imgs = coco.loadImgs(img_ids)
-
-        for img in imgs:
-          img["file_name"] = os.path.join(
-            self.config.dataset_dir,
-            JSON_TO_IMAGE[name_meta],
-            img["file_name"])
-
-          self.parse_gt(coco, self.category_id_to_class_id, img)
-
-        samples.extend(imgs) 
-
-      # Filter out images that has no object.
-      num = len(samples)
-
-      samples = list(filter(
-        lambda sample: len(
-          sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
-
-      for sample in samples:
+      for sample in self.samples[0:self.TRAIN_NUM_SAMPLES]:
         # remove crowd objects
         mask = sample['is_crowd'] == 0
         sample["class"] = sample["class"][mask]
@@ -304,18 +271,18 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
   def compute_gt(self, classes, boxes):
     # Input:
-    # classes: num_obj 
-    # boxes: num_obj x 4
+    #     classes: num_obj 
+    #     boxes: num_obj x 4
     # Output:
-    # gt_labels: num_anchors
-    # gt_bboxes: num_anchors x 4
-    # gt_mask: num_anchors 
+    #     gt_labels: num_anchors
+    #     gt_bboxes: num_anchors x 4
+    #     gt_mask: num_anchors 
 
     # Check there is at least one object in the image
     assert len(boxes) > 0
 
     # Compute IoU between anchors and boxes
-    ret_iou = np_iou(self.anchors_map, boxes)
+    ret_iou = detection_common.np_iou(self.anchors_map, boxes)
 
     # Create mask:
     # foreground = 1
@@ -346,7 +313,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     # Balance & Sub-sample fg and bg objects
     fg_ids = np.where(gt_mask == 1)[0]
     fg_extra = (len(fg_ids) -
-                (self.TRAIN_SAMPLES_PER_IMAGE * self.TRAIN_FG_RATIO))
+                int(math.floor(self.TRAIN_SAMPLES_PER_IMAGE * self.TRAIN_FG_RATIO)))
     if fg_extra > 0:
       random_fg_ids = np.random.choice(fg_ids, fg_extra, replace=False)
       gt_mask[random_fg_ids] = 0
@@ -356,7 +323,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     if bg_extra > 0:
       random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
       gt_mask[random_bg_ids] = 0
-
+    
     return gt_labels, gt_bboxes, gt_mask
 
   def parse_fn(self, file_name, classes, boxes):
@@ -387,7 +354,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                                         (tf.int64, tf.float32, tf.int32))
 
       # Encode the shift between gt_bboxes and anchors_map
-      gt_bboxes = encode_bbox_target(gt_bboxes, self.anchors_map)
+      gt_bboxes = detection_common.encode_bbox_target(gt_bboxes, self.anchors_map)
 
     return (image, gt_labels, gt_bboxes, gt_mask)
 
@@ -401,21 +368,24 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                     tf.int64,
                     tf.float32))
 
+    if self.config.mode == "train":
+      dataset = dataset.shuffle(self.get_num_samples())
+
     dataset = dataset.repeat(self.config.epochs)
 
     dataset = dataset.map(
       lambda file_name, classes, boxes: self.parse_fn(file_name, classes, boxes),
-      num_parallel_calls=1)
+      num_parallel_calls=12)
 
     dataset = dataset.apply(
         tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.prefetch(1)
+    dataset = dataset.prefetch(2)
 
     iterator = dataset.make_one_shot_iterator()
     return iterator.get_next()
 
-  def draw_boxes(self, im, labels, boxes, is_crowd):
+  def draw_boxes(self, im, labels, boxes):
       """
       Args:
           im (np.ndarray): a BGR image in range [0,255]. It will not be modified.
@@ -463,10 +433,10 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                         color=best_color, thickness=2)
       return im
 
-  def draw_annotation(self, img, labels, boxes, is_crowd):
+  def draw_annotation(self, img, labels, boxes):
       """Will not modify img"""
       img = img / 255.0
-      img = self.draw_boxes(img, labels, boxes, is_crowd)
+      img = self.draw_boxes(img, labels, boxes)
       plt.imshow(img)
       plt.show()
 

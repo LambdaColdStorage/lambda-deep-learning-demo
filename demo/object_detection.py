@@ -3,7 +3,7 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 
-python demo/object_detection.py \
+CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --mode=train \
 --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
@@ -29,7 +29,7 @@ CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --num_classes=81 --resolution=512 \
 infer_args \
 --callbacks=infer_basic,infer_display_object_detection \
---test_samples=/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco/val2014/COCO_val2014_000000000042.jpg,/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco/val2014/COCO_val2014_000000581899.jpg
+--test_samples=/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco/val2014/COCO_val2014_000000000042.jpg
 
 """
 import sys
