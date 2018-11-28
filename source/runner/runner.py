@@ -176,20 +176,23 @@ class Runner(object):
 
     for fn in nonreplicated_fns:
       fn()
+    #print(self.inputter.anchors[0])
+    #print(self.inputter.anchors[0].shape)
+    #print(self.inputter.anchors[1])
+    #print(self.inputter.anchors[1].shape)
+    # batch = self.inputter.input_fn()
 
-    batch = self.inputter.input_fn()
+    # with tf.Session(config=self.session_config) as self.sess:
+    #   self.sess.run(tf.global_variables_initializer())
 
-    with tf.Session(config=self.session_config) as self.sess:
-      self.sess.run(tf.global_variables_initializer())
-
-      for i in range(32):
-        _batch = self.sess.run(batch)
-        image_name = _batch[0][0]
-        print(image_name)
-        # label = _batch[1][0]
-        # box = _batch[2][0]
-        # image = cv2.imread(image_name)  
-        # self.inputter.draw_annotation(image, label, box)
+    #   for i in range(32):
+    #     _batch = self.sess.run(batch)
+    #     image_name = _batch[0][0]
+    #     print(image_name)
+    #     # label = _batch[1][0]
+    #     # box = _batch[2][0]
+    #     # image = cv2.imread(image_name)  
+    #     # self.inputter.draw_annotation(image, label, box)
 
 
 def build(config, inputter, modeler, callbacks):

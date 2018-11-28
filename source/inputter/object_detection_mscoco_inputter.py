@@ -38,9 +38,10 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.cat_names = None
     
     self.anchors = None
-    self.anchors_stride = 16
-    self.anchors_sizes = (32, 64, 128, 256, 512)
-    self.anchors_aspect_ratios = (0.5, 1.0, 2.0)  
+    self.anchors_stride = [16, 32]
+    self.anchors_sizes = [(32,), (64,)]
+    self.anchors_aspect_ratios = [(1.0,),
+                                  (1.0,)]      
     self.anchors_map = None
 
     self.TRAIN_NUM_SAMPLES = 32
@@ -98,7 +99,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.samples = samples   
 
   def get_num_samples(self):
-    # return self.num_samples
     if self.num_samples < 0:
       if self.config.mode == "infer":
         self.num_samples = len(self.test_samples)
@@ -109,13 +109,25 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
   def get_anchors(self):
     if self.anchors is None:
-      self.generate_anchors()
-    return self.anchors
 
-  def get_anchors_map(self):
-    if self.anchors_map is None:
-      self.generate_anchors_map()
-    return self.anchors_map
+      self.anchors = []
+      for stride, ratio, size in zip(self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
+       self.anchors.append(
+         detection_common.generate_anchors(
+         stride,
+         ratio,
+         size))  
+
+      self.anchors_map = []
+      for stride, anchors in zip(self.anchors_stride, self.anchors):
+        self.anchors_map.append(
+          detection_common.generate_anchors_map(anchors, stride, self.config.resolution))
+
+      self.anchors = np.vstack(self.anchors)
+      self.anchors_map = np.vstack(self.anchors_map)
+
+    return self.anchors, self.anchors_map
+
 
   def get_samples_fn(self):
     # Args:
@@ -184,82 +196,41 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     img['class'] = cls # n, always >0
     img['is_crowd'] = is_crowd # n,
 
-  def _whctrs(self, anchor):
-      """Return width, height, x center, and y center for an anchor (window)."""
-      w = anchor[2] - anchor[0] + 1
-      h = anchor[3] - anchor[1] + 1
-      x_ctr = anchor[0] + 0.5 * (w - 1)
-      y_ctr = anchor[1] + 0.5 * (h - 1)
-      return w, h, x_ctr, y_ctr
 
-  def _mkanchors(self, ws, hs, x_ctr, y_ctr):
-      """Given a vector of widths (ws) and heights (hs) around a center
-      (x_ctr, y_ctr), output a set of anchors (windows).
-      """
-      ws = ws[:, np.newaxis]
-      hs = hs[:, np.newaxis]
-      anchors = np.hstack(
-          (
-              x_ctr - 0.5 * (ws - 1),
-              y_ctr - 0.5 * (hs - 1),
-              x_ctr + 0.5 * (ws - 1),
-              y_ctr + 0.5 * (hs - 1)
-          )
-      )
-      return anchors
+  # def generate_anchors(self):
+  #   anchor = np.array(
+  #     [1, 1, self.anchors_stride, self.anchors_stride], dtype=np.float32) - 1
+  #   anchors = self._ratio_enum(
+  #     anchor, np.array(self.anchors_aspect_ratios, dtype=np.float32))
+  #   anchors = np.vstack(
+  #       [self._scale_enum(
+  #        anchors[i, :],
+  #        np.array(self.anchors_sizes, dtype=np.float32) / self.anchors_stride) for i in range(anchors.shape[0])]
+  #   )
+  #   self.anchors = anchors
 
-  def _ratio_enum(self, anchor, ratios):
-      """Enumerate a set of anchors for each aspect ratio wrt an anchor."""
-      w, h, x_ctr, y_ctr = self._whctrs(anchor)
-      size = w * h
-      size_ratios = size / ratios
-      ws = np.round(np.sqrt(size_ratios))
-      hs = np.round(ws * ratios)
-      anchors = self._mkanchors(ws, hs, x_ctr, y_ctr)
-      return anchors
+  # def generate_anchors_map(self):
+  #   if self.anchors is None:
+  #     self.anchors = detection_common.generate_anchors()
+  #   num_anchors = self.anchors.shape[0]
 
-  def _scale_enum(self, anchor, scales):
-      """Enumerate a set of anchors for each scale wrt an anchor."""
-      w, h, x_ctr, y_ctr = self._whctrs(anchor)     
-      ws = w * scales
-      hs = h * scales 
-      anchors = self._mkanchors(ws, hs, x_ctr, y_ctr)
-      return anchors
+  #   map_resolution = int(np.ceil(
+  #     self.anchors_stride * np.ceil(self.config.resolution / float(self.anchors_stride)) / float(self.anchors_stride)))
+  #   shifts = np.arange(0, map_resolution) * self.anchors_stride
 
-  def generate_anchors(self):
-    anchor = np.array(
-      [1, 1, self.anchors_stride, self.anchors_stride], dtype=np.float32) - 1
-    anchors = self._ratio_enum(
-      anchor, np.array(self.anchors_aspect_ratios, dtype=np.float32))
-    anchors = np.vstack(
-        [self._scale_enum(
-         anchors[i, :],
-         np.array(self.anchors_sizes, dtype=np.float32) / self.anchors_stride) for i in range(anchors.shape[0])]
-    )
-    self.anchors = anchors
+  #   shift_x, shift_y = np.meshgrid(shifts, shifts)
+  #   shift_x = shift_x.ravel()
+  #   shift_y = shift_y.ravel()
+  #   shifts = np.vstack((shift_x, shift_y, shift_x, shift_y)).transpose()
 
-  def generate_anchors_map(self):
-    if self.anchors is None:
-      self.generate_anchors()
-    num_anchors = self.anchors.shape[0]
-
-    map_resolution = int(np.ceil(
-      self.anchors_stride * np.ceil(self.config.resolution / float(self.anchors_stride)) / float(self.anchors_stride)))
-    shifts = np.arange(0, map_resolution) * self.anchors_stride
-
-    shift_x, shift_y = np.meshgrid(shifts, shifts)
-    shift_x = shift_x.ravel()
-    shift_y = shift_y.ravel()
-    shifts = np.vstack((shift_x, shift_y, shift_x, shift_y)).transpose()
-
-    A = self.anchors.shape[0]
-    K = shifts.shape[0]
-    self.anchors_map = (
-        self.anchors.reshape((1, A, 4)) +
-        shifts.reshape((1, K, 4)).transpose((1, 0, 2))
-    )
-    self.anchors_map = self.anchors_map.reshape((K * A, 4))
-    self.anchors_map = np.float32(self.anchors_map)
+  #   A = self.anchors.shape[0]
+  #   K = shifts.shape[0]
+  #   self.anchors_map = (
+  #       self.anchors.reshape((1, A, 4)) +
+  #       shifts.reshape((1, K, 4)).transpose((1, 0, 2))
+  #   )
+  #   self.anchors_map = self.anchors_map.reshape((K * A, 4))
+  #   self.anchors_map = np.float32(self.anchors_map)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
