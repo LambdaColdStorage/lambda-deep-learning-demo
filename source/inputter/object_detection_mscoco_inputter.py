@@ -38,10 +38,21 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.cat_names = None
     
     self.anchors = None
-    self.anchors_stride = [16, 32]
-    self.anchors_sizes = [(32,), (64,)]
-    self.anchors_aspect_ratios = [(1.0,),
-                                  (1.0,)]      
+    self.anchors_stride = [8, 16, 32, 64, 128, 256, 512]
+    self.anchors_sizes = [(20.48, 51.2),
+                          (51.2, 133.12),
+                          (133.12, 215.04),
+                          (215.04, 296.96),
+                          (296.96, 378.88),
+                          (378.88, 460.8),
+                          (460.8, 542.72)]
+    self.anchors_aspect_ratios = [((1.0, 2.0, 0.5), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
+                                  ((1.0, 2.0, 0.5), (1.0,)),
+                                  ((1.0, 2.0, 0.5), (1.0,))]
     self.anchors_map = None
 
     self.TRAIN_NUM_SAMPLES = 32
@@ -116,12 +127,14 @@ class ObjectDetectionMSCOCOInputter(Inputter):
          detection_common.generate_anchors(
          stride,
          ratio,
-         size))  
+         size))
+      print(self.anchors)
 
       self.anchors_map = []
       for stride, anchors in zip(self.anchors_stride, self.anchors):
         self.anchors_map.append(
           detection_common.generate_anchors_map(anchors, stride, self.config.resolution))
+      print(self.anchors_map)
 
       self.anchors = np.vstack(self.anchors)
       self.anchors_map = np.vstack(self.anchors_map)
@@ -195,42 +208,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     img['boxes'] = boxes # nx4
     img['class'] = cls # n, always >0
     img['is_crowd'] = is_crowd # n,
-
-
-  # def generate_anchors(self):
-  #   anchor = np.array(
-  #     [1, 1, self.anchors_stride, self.anchors_stride], dtype=np.float32) - 1
-  #   anchors = self._ratio_enum(
-  #     anchor, np.array(self.anchors_aspect_ratios, dtype=np.float32))
-  #   anchors = np.vstack(
-  #       [self._scale_enum(
-  #        anchors[i, :],
-  #        np.array(self.anchors_sizes, dtype=np.float32) / self.anchors_stride) for i in range(anchors.shape[0])]
-  #   )
-  #   self.anchors = anchors
-
-  # def generate_anchors_map(self):
-  #   if self.anchors is None:
-  #     self.anchors = detection_common.generate_anchors()
-  #   num_anchors = self.anchors.shape[0]
-
-  #   map_resolution = int(np.ceil(
-  #     self.anchors_stride * np.ceil(self.config.resolution / float(self.anchors_stride)) / float(self.anchors_stride)))
-  #   shifts = np.arange(0, map_resolution) * self.anchors_stride
-
-  #   shift_x, shift_y = np.meshgrid(shifts, shifts)
-  #   shift_x = shift_x.ravel()
-  #   shift_y = shift_y.ravel()
-  #   shifts = np.vstack((shift_x, shift_y, shift_x, shift_y)).transpose()
-
-  #   A = self.anchors.shape[0]
-  #   K = shifts.shape[0]
-  #   self.anchors_map = (
-  #       self.anchors.reshape((1, A, 4)) +
-  #       shifts.reshape((1, K, 4)).transpose((1, 0, 2))
-  #   )
-  #   self.anchors_map = self.anchors_map.reshape((K * A, 4))
-  #   self.anchors_map = np.float32(self.anchors_map)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *

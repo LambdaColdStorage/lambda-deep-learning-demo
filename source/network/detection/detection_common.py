@@ -9,7 +9,6 @@ def _mkanchors(ws, hs, x_ctr, y_ctr):
     """Given a vector of widths (ws) and heights (hs) around a center
     (x_ctr, y_ctr), output a set of anchors (windows).
     """
-    
     ws = ws[:, np.newaxis]
     hs = hs[:, np.newaxis]
     anchors = np.hstack(
@@ -22,15 +21,23 @@ def _mkanchors(ws, hs, x_ctr, y_ctr):
     )
     return anchors
 
+def _scale(anchor, scale):
+    """scale an anchor."""
+    w, h, x_ctr, y_ctr = _whctrs(anchor)
 
-def _scale_enum(anchor, scales):
-    """Enumerate a set of anchors for each scale wrt an anchor."""
-    w, h, x_ctr, y_ctr = _whctrs(anchor)     
-    ws = w * scales
-    hs = h * scales 
-    anchors = _mkanchors(ws, hs, x_ctr, y_ctr)
+    ws = w * scale
+    hs = h * scale 
+
+    anchors = np.hstack(
+        (
+            x_ctr - 0.5 * (ws - 1),
+            y_ctr - 0.5 * (hs - 1),
+            x_ctr + 0.5 * (ws - 1),
+            y_ctr + 0.5 * (hs - 1)
+        )
+    )
+
     return anchors
-
 
 def _whctrs(anchor):
     """Return width, height, x center, and y center for an anchor (window)."""
@@ -54,14 +61,18 @@ def _ratio_enum(anchor, ratios):
 def generate_anchors(anchors_stride, anchors_aspect_ratios, anchors_sizes):
   anchor = np.array(
     [1, 1, anchors_stride, anchors_stride], dtype=np.float32) - 1
-  anchors = _ratio_enum(
-    anchor, np.array(anchors_aspect_ratios, dtype=np.float32))
-  anchors = np.vstack(
-      [_scale_enum(
-       anchors[i, :],
-       np.array(anchors_sizes, dtype=np.float32) / anchors_stride) for i in range(anchors.shape[0])]
-  )
-  return anchors
+  all_anchors = []
+  for size, ratio in zip(anchors_sizes, anchors_aspect_ratios):
+    anchors = _ratio_enum(
+      anchor, np.array(ratio, dtype=np.float32))
+    anchors = np.vstack(
+        [_scale(
+         anchors[i, :],
+         np.array(size, dtype=np.float32) / anchors_stride) for i in range(anchors.shape[0])]
+    )
+    all_anchors.append(anchors)
+  all_anchors = np.vstack(all_anchors)
+  return all_anchors
 
 
 def generate_anchors_map(anchors, anchors_stride, resolution):
