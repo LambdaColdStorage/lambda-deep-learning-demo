@@ -15,11 +15,11 @@ slim = tf.contrib.slim
 
 def net(inputs, data_format, is_training, init_flag, ckpt_path):
 
-  vgg_net = vgg.vgg_19_ssd512(inputs, is_training=is_training)
+  (net, end_points) = vgg.vgg_16_ssd512(inputs, is_training=is_training)
 
   if init_flag:
     tf.logging.set_verbosity(tf.logging.WARN)
-    restore_var_list = ["vgg_19"]
+    restore_var_list = ["vgg_16"]
     variables_to_restore = {v.name.split(':')[0]: v
                             for v in tf.get_collection(
                                 tf.GraphKeys.TRAINABLE_VARIABLES)}
@@ -34,4 +34,4 @@ def net(inputs, data_format, is_training, init_flag, ckpt_path):
     print("Weights restored.")
     tf.logging.set_verbosity(tf.logging.INFO)
 
-  return vgg_net, init_flag
+  return end_points, init_flag

@@ -37,6 +37,7 @@ import os
 import argparse
 import importlib
 
+
 def main():
 
   sys.path.append('.')
@@ -65,12 +66,12 @@ def main():
                       default="/mnt/data/data/mscoco")
   parser.add_argument("--feature_net",
                       help="Name of feature net",
-                      default="vgg_19_ssd512")
+                      default="vgg_16_ssd512")
   parser.add_argument("--feature_net_path",
                       help="Path to pre-trained vgg model.",
                       default=os.path.join(
                         os.environ['HOME'],
-                        "demo/model/vgg_19_2016_08_28/vgg_19.ckpt"))
+                        "demo/model/vgg_16_2016_08_28/vgg_16.ckpt"))
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
                       choices=["channels_first", "channels_last"],
@@ -119,7 +120,7 @@ def main():
       "source.network." + config.network), "loss")
 
     callbacks = []
-    
+
     for name in config.callbacks:
       callback = importlib.import_module(
         "source.callback." + name).build(callback_config)
@@ -138,7 +139,8 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.dev()
+    runner.run()
+
 
 if __name__ == "__main__":
   main()

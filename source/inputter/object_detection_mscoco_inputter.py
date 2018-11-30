@@ -36,7 +36,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.category_id_to_class_id = None
     self.class_id_to_category_id = None
     self.cat_names = None
-    
+
     self.anchors = None
     self.anchors_stride = [8, 16, 32, 64, 128, 256, 512]
     self.anchors_sizes = [(20.48, 51.2),
@@ -46,6 +46,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                           (296.96, 378.88),
                           (378.88, 460.8),
                           (460.8, 542.72)]
+    self.num_anchors = []
     self.anchors_aspect_ratios = [((1.0, 2.0, 0.5), (1.0,)),
                                   ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
                                   ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
@@ -99,7 +100,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
         self.parse_gt(coco, self.category_id_to_class_id, img)
 
-      samples.extend(imgs) 
+      samples.extend(imgs)
 
     # Filter out images that has no object.
     num = len(samples)
@@ -107,7 +108,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     samples = list(filter(
       lambda sample: len(
         sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
-    self.samples = samples   
+    self.samples = samples
 
   def get_num_samples(self):
     if self.num_samples < 0:
@@ -123,24 +124,19 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
       self.anchors = []
       for stride, ratio, size in zip(self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
-       self.anchors.append(
-         detection_common.generate_anchors(
-         stride,
-         ratio,
-         size))
-      print(self.anchors)
+       anchors_per_layer = detection_common.generate_anchors(stride, ratio, size)
+       self.anchors.append(anchors_per_layer)
+       self.num_anchors.append(len(anchors_per_layer))
 
       self.anchors_map = []
       for stride, anchors in zip(self.anchors_stride, self.anchors):
         self.anchors_map.append(
           detection_common.generate_anchors_map(anchors, stride, self.config.resolution))
-      print(self.anchors_map)
 
       self.anchors = np.vstack(self.anchors)
       self.anchors_map = np.vstack(self.anchors_map)
 
-    return self.anchors, self.anchors_map
-
+    return self.anchors, self.anchors_map, self.num_anchors
 
   def get_samples_fn(self):
     # Args:

@@ -35,7 +35,7 @@ class ObjectDetectionModelerConfig(Config):
   def __init__(self,
                default_modeler_config,
                data_format="channels_first",
-               feature_net="vgg_19_ssd512",
+               feature_net="vgg_16_ssd512",
                feature_net_path=None,
                num_classes=81):
 

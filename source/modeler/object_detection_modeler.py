@@ -29,9 +29,16 @@ class ObjectDetectionModeler(Modeler):
     self.config.RESULTS_PER_IM = 10
     self.config.NMS_THRESH = 0.5
 
+    self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/conv5/conv5_3"
+    self.config.FEATURE_LAYERS = ("vgg_16/conv4/conv4_3",
+                                  "ssd_conv7", "ssd_conv8_2",
+                                  "ssd_conv9_2", "ssd_conv10_2",
+                                  "ssd_conv11_2", "ssd_conv12_2")
+    self.config.FEATURE_MAP_SIZE = (64, 32, 16, 8, 4, 2, 1)
+
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
-    self.anchors, self.anchors_map = inputter.get_anchors()
+    self.anchors, self.anchors_map, self.num_anchors = inputter.get_anchors()
     # self.anchors = inputter.get_anchors()
     # self.anchors_map = inputter.get_anchors_map()
 
@@ -54,7 +61,10 @@ class ObjectDetectionModeler(Modeler):
       ckpt_path=self.config.feature_net_path)
 
     is_training = (self.config.mode == "train")
-    return self.net(inputs, self.config.num_classes, self.anchors.shape[0],
+    return self.net(inputs,
+                    self.config.BACKBONE_OUTPUT_LAYER,
+                    self.config.FEATURE_LAYERS,
+                    self.config.num_classes, self.num_anchors,
                     is_training=is_training, data_format=self.config.data_format)
 
   def create_eval_metrics_fn(self, predictions, labels):
@@ -90,6 +100,7 @@ class ObjectDetectionModeler(Modeler):
     # return gt_image, gt_label, gt_boxes, gt_mask
 
     outputs = self.create_graph_fn(inputs[0])
+
     if self.config.mode == "train":
       loss = self.create_loss_fn(inputs, outputs)
       grads = self.create_grad_fn(loss)

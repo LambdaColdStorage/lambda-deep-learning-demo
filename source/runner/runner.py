@@ -178,12 +178,35 @@ class Runner(object):
       fn()
 
     batch = self.inputter.input_fn()
+    # results = self.modeler.model_fn(batch)
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
-      for i in range(2):
+      for i in range(32):
         _batch = self.sess.run(batch)
+        print(_batch[0])
+        # print(_batch[0].shape)
+        # print(_batch[1].shape)
+        # print(_batch[2].shape)
+        # print(_batch[3].shape)
+        # _results = self.sess.run(results)
+        # print(results[0].shape)
+        # print(results[1].shape)
+        # for r in _results[1]:
+        #   print(r.shape)
+        # for key, value in _results.items():
+        #   print(key)
+        #   print(value.shape)
+        # print(_results[0])
+        # for classes, bboxes in zip(_results[0], _results[1]):
+        #   print(classes.shape)
+        #   print(bboxes.shape)
+
+        # print(_results["vgg_16/conv5/conv5_4"].shape)
+        # print(len(_results))
+        # print(type(_results[0]))
+        # print(type(_results[1]))
         # print(_batch)
         # image_name = _batch[0][0]
     #     print(image_name)
