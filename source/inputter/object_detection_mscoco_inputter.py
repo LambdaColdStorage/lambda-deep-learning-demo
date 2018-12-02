@@ -56,7 +56,9 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                                   ((1.0, 2.0, 0.5), (1.0,))]
     self.anchors_map = None
 
-    self.TRAIN_NUM_SAMPLES = 32
+    # Has to be more than num_gpu * batch_size_per_gpu
+    # Otherwise no valid batch will be produced
+    self.TRAIN_NUM_SAMPLES = 1024
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
     self.TRAIN_FG_IOU = 0.5
@@ -239,6 +241,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     gt_labels = classes[max_idx]
     gt_bboxes = boxes[max_idx, :]    
     gt_mask = np.zeros(ret_iou.shape[0], dtype=np.int32)
+
+
     fg_idx = np.where(max_iou > self.TRAIN_FG_IOU)[0]
     bg_idx = np.where(max_iou < self.TRAIN_BG_IOU)[0]
     gt_mask[fg_idx] = 1
@@ -263,7 +267,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       gt_mask[random_fg_ids] = 0
 
     bg_ids = np.where(gt_mask == -1)[0]
-    bg_extra = len(bg_ids) - (self.TRAIN_SAMPLES_PER_IMAGE - sum(gt_mask == 1))
+    bg_extra = len(bg_ids) - (self.TRAIN_SAMPLES_PER_IMAGE - np.sum(gt_mask == 1))
     if bg_extra > 0:
       random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
       gt_mask[random_bg_ids] = 0
@@ -301,6 +305,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       gt_bboxes = detection_common.encode_bbox_target(gt_bboxes, self.anchors_map)
 
     return (image, gt_labels, gt_bboxes, gt_mask)
+
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *

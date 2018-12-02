@@ -23,7 +23,7 @@ class ObjectDetectionModeler(Modeler):
     self.feature_net_init_flag = True
 
     self.config.CLASS_WEIGHTS = 1.0
-    self.config.BBOXES_WEIGHTS = 100.0
+    self.config.BBOXES_WEIGHTS = 50.0
 
     self.config.RESULT_SCORE_THRESH = 0.8
     self.config.RESULTS_PER_IM = 10
@@ -102,9 +102,12 @@ class ObjectDetectionModeler(Modeler):
     outputs = self.create_graph_fn(inputs[0])
 
     if self.config.mode == "train":
-      loss = self.create_loss_fn(inputs, outputs)
+      class_losses, bboxes_losses = self.create_loss_fn(inputs, outputs)
+      loss = class_losses + bboxes_losses
       grads = self.create_grad_fn(loss)
       return {"loss": loss,
+              "class_losses": class_losses,
+              "bboxes_losses": bboxes_losses,
               "grads": grads,
               "learning_rate": self.learning_rate,
               "gt_bboxes": inputs[2]}

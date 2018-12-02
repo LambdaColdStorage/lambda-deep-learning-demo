@@ -175,9 +175,9 @@ def create_loss_classes_fn(feat_classes, gt_classes, gt_mask):
   labels = tf.boolean_mask(
     tf.reshape(gt_classes, [-1, 1]),
     mask)
-  loss = tf.losses.sparse_softmax_cross_entropy(
+  loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(
     logits=logits,
-    labels=labels)
+    labels=labels))
   return loss
 
 
@@ -228,10 +228,14 @@ def loss(inputs, outputs, class_weights, bboxes_weights):
   feat_classes = outputs[0]
   feat_bboxes = outputs[1]
 
-  loss_classes = create_loss_classes_fn(feat_classes, gt_classes, gt_mask)
+  loss_classes = class_weights * create_loss_classes_fn(feat_classes, gt_classes, gt_mask)
 
-  loss_bboxes = create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask)
+  loss_bboxes = bboxes_weights * create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask)
 
-  loss = class_weights * loss_classes + bboxes_weights * loss_bboxes
+  return loss_classes, loss_bboxes
 
-  return loss
+  # loss = loss_classes + loss_bboxes
+
+  # loss = bboxes_weights * loss_bboxes
+  #loss = class_weights * loss_classes
+  #return loss

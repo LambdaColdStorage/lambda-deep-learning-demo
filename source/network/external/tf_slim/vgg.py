@@ -362,7 +362,7 @@ def vgg_16_ssd512(inputs,
            global_pool=False):
   """SSD512 backbone based on VGG 16
   """
-  with tf.variable_scope(scope, 'vgg_16', [inputs]) as sc:
+  with tf.variable_scope(scope, 'vgg_16', [inputs], reuse=tf.AUTO_REUSE) as sc:
     end_points_collection = sc.original_name_scope + '_end_points'
     # Collect outputs for conv2d, fully_connected and max_pool2d.
     with slim.arg_scope([slim.conv2d, slim.fully_connected, slim.max_pool2d],

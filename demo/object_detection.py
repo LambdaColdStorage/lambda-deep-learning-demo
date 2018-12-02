@@ -3,21 +3,17 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 
-CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
+python demo/object_detection.py \
 --mode=train \
 --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
---batch_size_per_gpu=1 --epochs=100 \
---dataset_dir=/mnt/data/data/mscoco \
---num_classes=81 --resolution=512 \
-train_args \
---learning_rate=0.01 --optimizer=momentum \
---piecewise_boundaries=50,75,90 \
---piecewise_lr_decay=1.0,0.1,0.01,0.001 \
---dataset_meta=valminusminival2014 \
---callbacks=train_basic,train_loss,train_speed,train_summary \
---trainable_vars=SSD
+--batch_size_per_gpu=16 --epochs=1000 \
+--dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
+train_args --learning_rate=0.001 --optimizer=momentum \
+--piecewise_boundaries=500,750,900 --piecewise_lr_decay=1.0,0.1,0.01,0.001 \
+--dataset_meta=valminusminival2014 --callbacks=train_basic,train_loss,train_speed,train_summary \
+--trainable_vars=SSD --summary_names=loss,learning_rate,class_losses,bboxes_losses
 
 CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --mode=infer \
