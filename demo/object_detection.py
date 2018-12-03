@@ -21,6 +21,7 @@ python demo/object_detection.py \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
 --batch_size_per_gpu=2 --epochs=1 \
+--dataset_dir=/mnt/data/data/mscoco \
 eval_args --dataset_meta=valminusminival2014 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
 

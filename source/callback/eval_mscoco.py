@@ -4,11 +4,16 @@ Licensed under
 ==========================================================================
 
 """
-import pickle
+import os
 
 import tensorflow as tf
+from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
 
 from callback import Callback
+
+DATASET_DIR = "/mnt/data/data/mscoco"
+DATASET_META = "valminusminival2014"
 
 
 class EvalMSCOCO(Callback):
@@ -21,30 +26,37 @@ class EvalMSCOCO(Callback):
     self.graph = tf.get_default_graph()
 
   def after_run(self, sess):
-    pickle.dump(
-      (self.detection, self.image_ids), open("detection_results.p", "wb"))
+    print("Detection Finished ...")
+
+    annotation_file = os.path.join(
+      DATASET_DIR,
+      "annotations",
+      "instances_" + DATASET_META + ".json")
+    coco = COCO(annotation_file)
+    coco_results = coco.loadRes(self.detection)
+    cocoEval = COCOeval(coco, coco_results, "bbox")
+    cocoEval.params.imgIds = self.image_ids
+    cocoEval.evaluate()
+    cocoEval.accumulate()
+    cocoEval.summarize()
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
 
     num_images = len(outputs_dict["image_id"])
-    # print('--------------------------------------------------')
-    # print(len(outputs_dict["image_id"]))
-    # print('--------------------------------------------------')
-    # print(len(outputs_dict["labels"]))
-    # print('--------------------------------------------------')
-    # print(len(outputs_dict["bboxes"]))
-    # print('--------------------------------------------------')
-    # print(len(outputs_dict["scores"]))
     for i in range(num_images):
-      result = {
-        "image_id": outputs_dict["image_id"][i],
-        "category_id": outputs_dict["labels"][i],
-        "bbox": outputs_dict["bboxes"][i],
-        "score": outputs_dict["scores"][i]
-      }
+      num_detections = len(outputs_dict["labels"][i])
 
-      self.detection.append(result)
-      self.image_ids.append(outputs_dict["image_id"][i])
+      # COCO evaluation is based on per detection
+      for d in range(num_detections):
+        result = {
+          "image_id": outputs_dict["image_id"][i],
+          "category_id": outputs_dict["labels"][i][d],
+          "bbox": outputs_dict["bboxes"][i][d],
+          "score": outputs_dict["scores"][i][d]
+        }
+
+        self.detection.append(result)
+        self.image_ids.append(outputs_dict["image_id"][i])
 
 
 def build(config):
