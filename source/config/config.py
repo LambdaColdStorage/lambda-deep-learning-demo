@@ -20,11 +20,13 @@ class RunnerConfig(Config):
                mode,
                batch_size_per_gpu,
                gpu_count,
-               summary_names):
+               summary_names,
+               reduce_ops):
     super(RunnerConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
 
     self.summary_names = summary_names
+    self.reduce_ops = reduce_ops
 
 
 class CallbackConfig(Config):

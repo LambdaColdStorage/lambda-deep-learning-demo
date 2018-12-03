@@ -92,13 +92,14 @@ class ObjectDetectionModeler(Modeler):
     return detection_topk_scores, detection_topk_labels, detection_topk_bboxes,detection_topk_anchors
 
   def model_fn(self, inputs):
-    # gt_image = inputs[0]
-    # gt_label = inputs[1]
-    # gt_boxes = decode_bboxes(inputs[2][0], self.anchors_map)
-    # gt_mask = inputs[3][0]
+    # image_id = inputs[0]
+    # gt_image = inputs[1]
+    # gt_label = inputs[2]
+    # gt_boxes = decode_bboxes(inputs[3][0], self.anchors_map)
+    # gt_mask = inputs[4][0]
     # return gt_image, gt_label, gt_boxes, gt_mask
 
-    outputs = self.create_graph_fn(inputs[0])
+    outputs = self.create_graph_fn(inputs[1])
 
     if self.config.mode == "train":
       class_losses, bboxes_losses = self.create_loss_fn(inputs, outputs)
@@ -111,11 +112,9 @@ class ObjectDetectionModeler(Modeler):
               "learning_rate": self.learning_rate,
               "gt_bboxes": inputs[2]}
     elif self.config.mode == "infer":
-
       feat_classes = outputs[0]
       feat_bboxes = outputs[1]
-
-      detection_scores, detection_labels, detection_bboxes,detection_anchors = self.create_detect_fn(feat_classes, feat_bboxes)
+      detection_scores, detection_labels, detection_bboxes, detection_anchors = self.create_detect_fn(feat_classes, feat_bboxes)
 
       return {"scores": detection_scores,
               "labels": detection_labels,
@@ -124,7 +123,17 @@ class ObjectDetectionModeler(Modeler):
               "gt_bboxes": inputs[2],
               "gt_labels": inputs[1],
               "images": inputs[0],
-              "predict_scores": feat_classes} 
+              "predict_scores": feat_classes}
+    elif self.config.mode == "eval":
+      feat_classes = outputs[0]
+      feat_bboxes = outputs[1]
+      detection_scores, detection_labels, detection_bboxes, detection_anchors = self.create_detect_fn(feat_classes, feat_bboxes)
+
+      # make image_id a list so it conforms with detection results (also in form of list)
+      return {"image_id": tf.unstack(inputs[0], self.config.batch_size_per_gpu),
+              "scores": detection_scores,
+              "labels": detection_labels,
+              "bboxes": detection_bboxes}
 
 
 def build(args, network, loss):

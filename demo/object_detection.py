@@ -15,6 +15,16 @@ train_args --learning_rate=0.001 --optimizer=momentum \
 --dataset_meta=valminusminival2014 --callbacks=train_basic,train_loss,train_speed,train_summary \
 --trainable_vars=SSD --summary_names=loss,learning_rate,class_losses,bboxes_losses
 
+python demo/object_detection.py \
+--mode=eval \
+--model_dir=~/demo/model/ssd512_mscoco \
+--network=ssd512 \
+--augmenter=ssd_augmenter \
+--batch_size_per_gpu=2 --epochs=1 \
+eval_args --dataset_meta=valminusminival2014 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
+
+
+
 CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --mode=infer \
 --model_dir=~/demo/model/ssd512_mscoco \
@@ -70,7 +80,7 @@ def main():
   parser.add_argument("--data_format",
                       help="channels_first or channels_last",
                       choices=["channels_first", "channels_last"],
-                      default="channels_last")  
+                      default="channels_last")
   config = parser.parse_args()
 
   config = config_parser.prepare(config)

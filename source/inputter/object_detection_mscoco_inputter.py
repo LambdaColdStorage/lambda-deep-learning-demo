@@ -29,7 +29,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
   def __init__(self, config, augmenter):
     super(ObjectDetectionMSCOCOInputter, self).__init__(config, augmenter)
 
-    self.num_samples = -1
     self.category_id_to_class_id = None
     self.class_id_to_category_id = None
     self.cat_names = None
@@ -56,6 +55,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
     self.TRAIN_NUM_SAMPLES = 1024
+    self.EVAL_NUM_SAMPLES = 16
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
     self.TRAIN_FG_IOU = 0.5
@@ -66,6 +66,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       self.test_samples = self.config.test_samples
     else:
       self.parse_coco()
+
+    self.num_samples = self.get_num_samples()
 
   def parse_coco(self):
     samples = []
@@ -97,23 +99,28 @@ class ObjectDetectionMSCOCOInputter(Inputter):
           JSON_TO_IMAGE[name_meta],
           img["file_name"])
 
-        self.parse_gt(coco, self.category_id_to_class_id, img)
+      if self.config.mode == "train":
+        for img in imgs:
+          self.parse_gt(coco, self.category_id_to_class_id, img)
 
       samples.extend(imgs)
 
     # Filter out images that has no object.
-    samples = list(filter(
-      lambda sample: len(
-        sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
+    if self.config.mode == "train":
+      samples = list(filter(
+        lambda sample: len(
+          sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
+
     self.samples = samples
 
   def get_num_samples(self):
-    if self.num_samples < 0:
+    if not hasattr(self, 'num_samples'):
       if self.config.mode == "infer":
         self.num_samples = len(self.test_samples)
-      else:
-        # TODO: find a better way to define num_samples
-        return self.TRAIN_NUM_SAMPLES
+      elif self.config.mode == "eval":
+        self.num_samples = self.EVAL_NUM_SAMPLES
+      elif self.config.mode == "train":
+        self.num_samples = self.TRAIN_NUM_SAMPLES
     return self.num_samples
 
   def get_anchors(self):
@@ -140,24 +147,33 @@ class ObjectDetectionMSCOCOInputter(Inputter):
   def get_samples_fn(self):
     # Args:
     # Returns:
+    #     sample["id"]: int64, image id
     #     sample["file_name"]: , string, path to image
-    #     sample["class"]: (...,), int32
+    #     sample["class"]: (...,), int64
     #     sample["boxes"]: (..., 4), float32
     # Read image
     if self.config.mode == "infer":
       for file_name in self.test_samples:
-        yield (file_name,
+        yield (0,
+               file_name,
                np.empty([1], dtype=np.int32),
                np.empty([1, 4]))
+    elif self.config.mode == "eval":
+      for sample in self.samples[0:self.num_samples]:
+        yield(sample["id"],
+              sample["file_name"],
+              np.empty([1], dtype=np.int32),
+              np.empty([1, 4]))
     else:
-      for sample in self.samples[0:self.TRAIN_NUM_SAMPLES]:
+      for sample in self.samples[0:self.num_samples]:
         # remove crowd objects
         mask = sample['is_crowd'] == 0
         sample["class"] = sample["class"][mask]
         sample["boxes"] = sample["boxes"][mask, :]
         sample["is_crowd"] = sample["is_crowd"][mask]
 
-        yield (sample["file_name"],
+        yield (sample["id"],
+               sample["file_name"],
                sample["class"],
                sample["boxes"])
 
@@ -269,7 +285,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     return gt_labels, gt_bboxes, gt_mask
 
-  def parse_fn(self, file_name, classes, boxes):
+  def parse_fn(self, image_id, file_name, classes, boxes):
     """Parse a single input sample
     """
     image = tf.read_file(file_name)
@@ -290,15 +306,20 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       gt_labels = tf.zeros([1], dtype=tf.int64)
       gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
       gt_mask = tf.zeros([1], dtype=tf.int32)
-    else:
+    elif self.config.mode == "eval":
+      # For object detection use external library for evaluation
+      # Skip gt here
+      gt_labels = tf.zeros([1], dtype=tf.int64)
+      gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
+      gt_mask = tf.zeros([1], dtype=tf.int32)
+    elif self.config.mode == "train":
       gt_labels, gt_bboxes, gt_mask = tf.py_func(
         self.compute_gt, [classes, boxes], (tf.int64, tf.float32, tf.int32))
-
       # Encode the shift between gt_bboxes and anchors_map
       gt_bboxes = detection_common.encode_bbox_target(
         gt_bboxes, self.anchors_map)
 
-    return (image, gt_labels, gt_bboxes, gt_mask)
+    return (image_id, image, gt_labels, gt_bboxes, gt_mask)
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
@@ -306,7 +327,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     dataset = tf.data.Dataset.from_generator(
       generator=lambda: self.get_samples_fn(),
-      output_types=(tf.string,
+      output_types=(tf.int64,
+                    tf.string,
                     tf.int64,
                     tf.float32))
 
@@ -316,8 +338,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     dataset = dataset.repeat(self.config.epochs)
 
     dataset = dataset.map(
-      lambda file_name, classes, boxes: self.parse_fn(
-        file_name, classes, boxes),
+      lambda image_id, file_name, classes, boxes: self.parse_fn(
+        image_id, file_name, classes, boxes),
       num_parallel_calls=12)
 
     dataset = dataset.apply(

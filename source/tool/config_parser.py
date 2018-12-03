@@ -5,6 +5,15 @@ import argparse
 from tensorflow.python.client import device_lib
 
 
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def get_gpu_count():
     local_device_protos = device_lib.list_local_devices()
     return len([x.name for x in local_device_protos if x.device_type == 'GPU'])
@@ -123,6 +132,10 @@ def default_parser():
                             help="List of callbacks in training.",
                             type=str,
                             default="train_basic,train_loss,train_accuracy,train_speed,train_summary")
+  train_parser.add_argument("--reduce_ops",
+                            help="Whether need to do a reduce on the results collected from multiple gpus",
+                            type=str2bool,
+                            default=True)
 
   eval_parser = subparsers.add_parser("eval_args", help="Eval help")
   eval_parser.add_argument("--dataset_meta", type=str,
@@ -145,6 +158,10 @@ def default_parser():
                            help="List of callbacks in evaluation.",
                            type=str,
                            default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
+  eval_parser.add_argument("--reduce_ops",
+                           help="Whether need to do a reduce on the results collected from multiple gpus",
+                           type=str2bool,
+                           default=True)
 
   infer_parser = subparsers.add_parser("infer_args", help="Infer help")
   infer_parser.add_argument("--dataset_meta", type=str,
@@ -338,7 +355,8 @@ def default_config(config):
     batch_size_per_gpu=config.batch_size_per_gpu,
     gpu_count=config.gpu_count,
     summary_names=(None if not hasattr(config, "summary_names")
-                   else config.summary_names))
+                   else config.summary_names),
+    reduce_ops=config.reduce_ops)
 
   callback_config = CallbackConfig(
     mode=config.mode,

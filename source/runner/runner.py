@@ -6,8 +6,6 @@ Licensed under
 """
 from __future__ import print_function
 import sys
-import cv2
-import numpy as np
 import time
 
 import tensorflow as tf
@@ -138,7 +136,7 @@ class Runner(object):
   def print_global_variables(self):
 
     for i in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
-      print (i.name)
+      print(i.name)
 
     print(len(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)))
 
@@ -179,20 +177,30 @@ class Runner(object):
       fn()
 
     batch = self.inputter.input_fn()
+    results = self.modeler.model_fn(batch)
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
-      num_batch = 32
+      num_batch = 2
+
+      # # Test input_fn
+      # for i in range(num_batch):
+      #   if i == 1:
+      #     total_start_time = time.time()
+      #   start_time = time.time()
+      #   _batch = self.sess.run(batch)
+      #   print(_batch[0])
+      #   end_time = time.time()
+      #   print(end_time - start_time)
+      # total_end_time = time.time()
+      # print("average time: " +
+      #       str((total_end_time - total_start_time) / (num_batch - 1)))
+
+      # Test model_fn
       for i in range(num_batch):
-        if i == 1:
-          total_start_time = time.time()
-        start_time = time.time()
-        _batch = self.sess.run(batch)
-        end_time = time.time()
-        print(end_time - start_time)
-      total_end_time = time.time()
-      print("average time: " + str((total_end_time - total_start_time)/(num_batch - 1)))
+        _results = self.sess.run(results)
+        print(_results)
 
 
 def build(config, inputter, modeler, callbacks):

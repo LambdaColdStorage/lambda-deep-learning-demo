@@ -79,28 +79,43 @@ class ParameterServerRunner(Runner):
         return ops
 
     else:
-      output = {}
-      # Map
-      for i in range(self.config.gpu_count):
-        with tf.device(self.assign_to_device("/gpu:{}".format(i),
-                       ps_device="/cpu:0")):
-          # Split input data across multiple devices
-          x = self.batch_split(batch, i)
-          y = self.modeler.model_fn(x)
+      ops = {}
+      if self.config.reduce_ops:
+        output = {}
+        # Map
+        for i in range(self.config.gpu_count):
+          with tf.device(self.assign_to_device("/gpu:{}".format(i),
+                         ps_device="/cpu:0")):
+            # Split input data across multiple devices
+            x = self.batch_split(batch, i)
+            y = self.modeler.model_fn(x)
 
-          # Gather output across multiple devices
-          if i == 0:
-            for key in y:
-              output[key] = [y[key]]
-          else:
-            for key in y:
-              output[key].append(y[key])
-
-      # Reduce
-      reduced_ops = {}
-      for key in output:
-        reduced_ops[key] = self.reduce_op(output[key])
-      return reduced_ops
+            # Gather output across multiple devices
+            if i == 0:
+              for key in y:
+                output[key] = [y[key]]
+            else:
+              for key in y:
+                output[key].append(y[key])
+        # Reduce
+        for key in output:
+          ops[key] = self.reduce_op(output[key])
+      else:
+        # Map
+        for i in range(self.config.gpu_count):
+          with tf.device(self.assign_to_device("/gpu:{}".format(i),
+                         ps_device="/cpu:0")):
+            # Split input data across multiple devices
+            x = self.batch_split(batch, i)
+            y = self.modeler.model_fn(x)
+            # Gather output across multiple devices
+            if i == 0:
+              for key in y:
+                ops[key] = y[key]
+            else:
+              for key in y:
+                ops[key].extend(y[key])
+      return ops
 
   def create_graph(self):
 
