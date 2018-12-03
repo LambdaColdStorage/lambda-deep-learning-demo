@@ -30,7 +30,6 @@ infer_args \
 """
 import sys
 import os
-import argparse
 import importlib
 
 

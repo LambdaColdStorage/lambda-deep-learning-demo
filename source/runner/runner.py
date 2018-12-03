@@ -179,7 +179,6 @@ class Runner(object):
       fn()
 
     batch = self.inputter.input_fn()
-    # results = self.modeler.model_fn(batch)
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
@@ -190,39 +189,11 @@ class Runner(object):
           total_start_time = time.time()
         start_time = time.time()
         _batch = self.sess.run(batch)
-        end_time = time.time() 
+        end_time = time.time()
         print(end_time - start_time)
       total_end_time = time.time()
       print("average time: " + str((total_end_time - total_start_time)/(num_batch - 1)))
-  #      print(_batch[0])
-        # print(_batch[0].shape)
-        # print(_batch[1].shape)
-        # print(_batch[2].shape)
-        # print(_batch[3].shape)
-        # _results = self.sess.run(results)
-        # print(results[0].shape)
-        # print(results[1].shape)
-        # for r in _results[1]:
-        #   print(r.shape)
-        # for key, value in _results.items():
-        #   print(key)
-        #   print(value.shape)
-        # print(_results[0])
-        # for classes, bboxes in zip(_results[0], _results[1]):
-        #   print(classes.shape)
-        #   print(bboxes.shape)
 
-        # print(_results["vgg_16/conv5/conv5_4"].shape)
-        # print(len(_results))
-        # print(type(_results[0]))
-        # print(type(_results[1]))
-        # print(_batch)
-        # image_name = _batch[0][0]
-    #     print(image_name)
-    #     # label = _batch[1][0]
-    #     # box = _batch[2][0]
-    #     # image = cv2.imread(image_name)  
-    #     # self.inputter.draw_annotation(image, label, box)
 
 def build(config, inputter, modeler, callbacks):
   return Runner(config, inputter, modeler, callbacks)

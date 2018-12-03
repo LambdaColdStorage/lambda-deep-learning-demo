@@ -6,10 +6,7 @@ Licensed under
 """
 from __future__ import print_function
 import os
-import json
-import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 
 import tensorflow as tf
@@ -48,10 +45,10 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                           (460.8, 542.72)]
     self.num_anchors = []
     self.anchors_aspect_ratios = [((1.0, 2.0, 0.5), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1./3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
                                   ((1.0, 2.0, 0.5), (1.0,)),
                                   ((1.0, 2.0, 0.5), (1.0,))]
     self.anchors_map = None
@@ -105,8 +102,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       samples.extend(imgs)
 
     # Filter out images that has no object.
-    num = len(samples)
-
     samples = list(filter(
       lambda sample: len(
         sample['boxes'][sample['is_crowd'] == 0]) > 0, samples))
@@ -125,15 +120,17 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     if self.anchors is None:
 
       self.anchors = []
-      for stride, ratio, size in zip(self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
-       anchors_per_layer = detection_common.generate_anchors(stride, ratio, size)
+      for stride, ratio, sz in zip(
+        self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
+       anchors_per_layer = detection_common.generate_anchors(stride, ratio, sz)
        self.anchors.append(anchors_per_layer)
        self.num_anchors.append(len(anchors_per_layer))
 
       self.anchors_map = []
       for stride, anchors in zip(self.anchors_stride, self.anchors):
         self.anchors_map.append(
-          detection_common.generate_anchors_map(anchors, stride, self.config.resolution))
+          detection_common.generate_anchors_map(
+            anchors, stride, self.config.resolution))
 
       self.anchors = np.vstack(self.anchors)
       self.anchors_map = np.vstack(self.anchors_map)
@@ -166,7 +163,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
   def parse_gt(self, coco, category_id_to_class_id, img):
     ann_ids = coco.getAnnIds(imgIds=img["id"], iscrowd=None)
-    objs = coco.loadAnns(ann_ids)  
+    objs = coco.loadAnns(ann_ids)
 
     # clean-up boxes
     valid_objs = []
@@ -217,12 +214,12 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
   def compute_gt(self, classes, boxes):
     # Input:
-    #     classes: num_obj 
+    #     classes: num_obj
     #     boxes: num_obj x 4
     # Output:
     #     gt_labels: num_anchors
     #     gt_bboxes: num_anchors x 4
-    #     gt_mask: num_anchors 
+    #     gt_mask: num_anchors
 
     # Check there is at least one object in the image
     assert len(boxes) > 0
@@ -237,11 +234,10 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     # Forward selection
     max_idx = np.argmax(ret_iou, axis=1)
-    max_iou = ret_iou[np.arange(ret_iou.shape[0]), max_idx]    
+    max_iou = ret_iou[np.arange(ret_iou.shape[0]), max_idx]
     gt_labels = classes[max_idx]
-    gt_bboxes = boxes[max_idx, :]    
+    gt_bboxes = boxes[max_idx, :]
     gt_mask = np.zeros(ret_iou.shape[0], dtype=np.int32)
-
 
     fg_idx = np.where(max_iou > self.TRAIN_FG_IOU)[0]
     bg_idx = np.where(max_iou < self.TRAIN_BG_IOU)[0]
@@ -253,7 +249,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     # Reverse selection
     # Make sure every gt object is matched to at least one anchor
     max_idx_reverse = np.argmax(ret_iou, axis=0)
-    max_iou_reverse = ret_iou[max_idx_reverse, np.arange(ret_iou.shape[1])]
     gt_labels[max_idx_reverse] = classes
     gt_bboxes[max_idx_reverse] = boxes
     gt_mask[max_idx_reverse] = 1
@@ -271,7 +266,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     if bg_extra > 0:
       random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
       gt_mask[random_bg_ids] = 0
-    
+
     return gt_labels, gt_bboxes, gt_mask
 
   def parse_fn(self, file_name, classes, boxes):
@@ -283,29 +278,27 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     if self.augmenter:
       is_training = (self.config.mode == "train")
-      image, classes, boxes = \
-        self.augmenter.augment(
-          image,
-          classes,
-          boxes,
-          self.config.resolution,
-          is_training=is_training,
-          speed_mode=False)
+      image, classes, boxes = self.augmenter.augment(
+        image,
+        classes,
+        boxes,
+        self.config.resolution,
+        is_training=is_training,
+        speed_mode=False)
 
     if self.config.mode == "infer":
       gt_labels = tf.zeros([1], dtype=tf.int64)
       gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
       gt_mask = tf.zeros([1], dtype=tf.int32)
     else:
-      gt_labels, gt_bboxes, gt_mask = tf.py_func(self.compute_gt,
-                                        [classes, boxes],
-                                        (tf.int64, tf.float32, tf.int32))
+      gt_labels, gt_bboxes, gt_mask = tf.py_func(
+        self.compute_gt, [classes, boxes], (tf.int64, tf.float32, tf.int32))
 
       # Encode the shift between gt_bboxes and anchors_map
-      gt_bboxes = detection_common.encode_bbox_target(gt_bboxes, self.anchors_map)
+      gt_bboxes = detection_common.encode_bbox_target(
+        gt_bboxes, self.anchors_map)
 
     return (image, gt_labels, gt_bboxes, gt_mask)
-
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
@@ -323,7 +316,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     dataset = dataset.repeat(self.config.epochs)
 
     dataset = dataset.map(
-      lambda file_name, classes, boxes: self.parse_fn(file_name, classes, boxes),
+      lambda file_name, classes, boxes: self.parse_fn(
+        file_name, classes, boxes),
       num_parallel_calls=12)
 
     dataset = dataset.apply(
@@ -334,60 +328,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     iterator = dataset.make_one_shot_iterator()
     return iterator.get_next()
 
-  def draw_boxes(self, im, labels, boxes):
-      """
-      Args:
-          im (np.ndarray): a BGR image in range [0,255]. It will not be modified.
-          boxes (np.ndarray or list[BoxBase]): If an ndarray,
-              must be of shape Nx4 where the second dimension is [x1, y1, x2, y2].
-          labels: (list[str] or None)
-          color: a 3-tuple (in range [0, 255]). By default will choose automatically.
-      Returns:
-          np.ndarray: a new image.
-      """
-      FONT = cv2.FONT_HERSHEY_SIMPLEX
-      FONT_SCALE = 0.7
-      if isinstance(boxes, list):
-          arr = np.zeros((len(boxes), 4), dtype='int32')
-          for idx, b in enumerate(boxes):
-              assert isinstance(b, BoxBase), b
-              arr[idx, :] = [int(b.x1), int(b.y1), int(b.x2), int(b.y2)]
-          boxes = arr
-      else:
-          boxes = boxes.astype('int32')
-      if labels is not None:
-          assert len(labels) == len(boxes), "{} != {}".format(len(labels), len(boxes))
-
-      im = im.copy()
-      COLOR = (255, 255, 55)
-
-      areas = (boxes[:, 2] - boxes[:, 0] + 1) * (boxes[:, 3] - boxes[:, 1] + 1)
-      sorted_inds = np.argsort(-areas)    # draw large ones first
-      for i in sorted_inds:
-          box = boxes[i, :]
-
-          best_color = COLOR
-
-          if labels is not None:
-              label = self.cat_names[labels[i] - 1]
-              # find the best placement for the text
-              ((linew, lineh), _) = cv2.getTextSize(label, FONT, FONT_SCALE, 1)
-              top_left = [box[0] + 1, box[1] - 1.3 * lineh]
-              if top_left[1] < 0:     # out of image
-                  top_left[1] = box[3] - 1.3 * lineh
-              cv2.putText(im, label, (int(top_left[0]), int(top_left[1] + lineh)),
-                          FONT, FONT_SCALE, color=best_color, lineType=cv2.LINE_AA)
-
-          cv2.rectangle(im, (box[0], box[1]), (box[2], box[3]),
-                        color=best_color, thickness=2)
-      return im
-
-  def draw_annotation(self, img, labels, boxes):
-      """Will not modify img"""
-      img = img / 255.0
-      img = self.draw_boxes(img, labels, boxes)
-      plt.imshow(img)
-      plt.show()
 
 def build(config, augmenter):
   return ObjectDetectionMSCOCOInputter(config, augmenter)

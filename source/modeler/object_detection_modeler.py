@@ -5,7 +5,6 @@ Licensed under
 
 """
 import importlib
-import numpy as np
 
 import tensorflow as tf
 
@@ -72,7 +71,7 @@ class ObjectDetectionModeler(Modeler):
 
   def create_loss_fn(self, inputs, outputs):
     self.gether_train_vars()
-    
+
     return self.loss(inputs, outputs, self.config.CLASS_WEIGHTS, self.config.BBOXES_WEIGHTS)
 
   def create_detect_fn(self, feat_classes, feat_bboxes):
