@@ -38,6 +38,9 @@ class EvalMSCOCO(Callback):
   def after_run(self, sess):
     print("Detection Finished ...")
 
+    for item in self.detection:
+      print(item)
+
     if len(self.detection) > 0:
       annotation_file = os.path.join(
         DATASET_DIR,
@@ -66,6 +69,8 @@ class EvalMSCOCO(Callback):
         box = outputs_dict["bboxes"][i][d]
         box = box - [translation[1], translation[0], translation[1], translation[0]]
         box = box / scale
+        box[2] = box[2] - box[0]
+        box[3] = box[3] - box[1]
         result = {
           "image_id": outputs_dict["image_id"][i],
           "category_id": COCO_ID_MAP[outputs_dict["labels"][i][d]],
