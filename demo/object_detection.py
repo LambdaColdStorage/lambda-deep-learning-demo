@@ -17,7 +17,7 @@ train_args --learning_rate=0.001 --optimizer=momentum \
 
 python demo/object_detection.py \
 --mode=eval \
---model_dir=~/demo/model/ssd512_mscoco/tune/trial_learning_rate_4.56370_optimizer_rmsprop \
+--model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
 --batch_size_per_gpu=2 --epochs=1 \

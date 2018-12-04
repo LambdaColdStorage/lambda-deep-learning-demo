@@ -53,8 +53,6 @@ def aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
 
   return resized_image, scale, translation
 
-
-
 def preprocess_for_train(image,
                          classes,
                          boxes,
@@ -78,7 +76,7 @@ def preprocess_for_train(image,
       resolution)
     boxes = tf.scalar_mul(scale, boxes) + [translation[1], translation[0], translation[1], translation[0]]
 
-  return image, classes, boxes
+  return image, classes, boxes, scale, translation
 
 
 def preprocess_for_eval(image,
@@ -104,7 +102,7 @@ def preprocess_for_eval(image,
       resolution)
     boxes = tf.scalar_mul(scale, boxes) + [translation[1], translation[0], translation[1], translation[0]]
 
-  return image, classes, boxes
+  return image, classes, boxes, scale, translation
 
 
 def augment(image, classes, boxes, resolution,

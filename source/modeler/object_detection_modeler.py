@@ -97,6 +97,9 @@ class ObjectDetectionModeler(Modeler):
     # gt_label = inputs[2]
     # gt_boxes = decode_bboxes(inputs[3][0], self.anchors_map)
     # gt_mask = inputs[4][0]
+    # scale = inputs[5]
+    # translation = inputs[6]
+    # file_name = inputs[7]
     # return gt_image, gt_label, gt_boxes, gt_mask
 
     outputs = self.create_graph_fn(inputs[1])
@@ -110,7 +113,7 @@ class ObjectDetectionModeler(Modeler):
               "bboxes_losses": bboxes_losses,
               "grads": grads,
               "learning_rate": self.learning_rate,
-              "gt_bboxes": inputs[2]}
+              "gt_bboxes": inputs[3]}
     elif self.config.mode == "infer":
       feat_classes = outputs[0]
       feat_bboxes = outputs[1]
@@ -120,10 +123,13 @@ class ObjectDetectionModeler(Modeler):
               "labels": detection_labels,
               "bboxes": detection_bboxes,
               "anchors": detection_anchors,
-              "gt_bboxes": inputs[2],
-              "gt_labels": inputs[1],
-              "images": inputs[0],
-              "predict_scores": feat_classes}
+              "gt_bboxes": inputs[3],
+              "gt_labels": inputs[2],
+              "images": inputs[1],
+              "predict_scores": feat_classes,
+              "scales": inputs[5],
+              "translations": inputs[6],
+              "file_name": inputs[7]}
     elif self.config.mode == "eval":
       feat_classes = outputs[0]
       feat_bboxes = outputs[1]
@@ -133,7 +139,9 @@ class ObjectDetectionModeler(Modeler):
       return {"image_id": tf.unstack(inputs[0], self.config.batch_size_per_gpu),
               "scores": detection_scores,
               "labels": detection_labels,
-              "bboxes": detection_bboxes}
+              "bboxes": detection_bboxes,
+              "scales": tf.unstack(inputs[5], self.config.batch_size_per_gpu),
+              "translations": tf.unstack(inputs[6], self.config.batch_size_per_gpu)}
 
 
 def build(args, network):

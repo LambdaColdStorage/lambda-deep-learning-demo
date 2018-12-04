@@ -48,16 +48,25 @@ class EvalMSCOCO(Callback):
     num_images = len(outputs_dict["image_id"])
     for i in range(num_images):
       num_detections = len(outputs_dict["labels"][i])
+      translation = outputs_dict["translations"][i]
+      scale = outputs_dict["scales"][i]
+
+      print(translation)
+      print(scale)
+      print(outputs_dict["image_id"][i])
 
       # COCO evaluation is based on per detection
       for d in range(num_detections):
+        box = outputs_dict["bboxes"][i][d]
+        box = box - [translation[1], translation[0], translation[1], translation[0]]
+        box = box / scale
         result = {
           "image_id": outputs_dict["image_id"][i],
           "category_id": outputs_dict["labels"][i][d],
-          "bbox": outputs_dict["bboxes"][i][d],
+          "bbox": box,
           "score": outputs_dict["scores"][i][d]
         }
-
+        print(result)
         self.detection.append(result)
         self.image_ids.append(outputs_dict["image_id"][i])
 

@@ -54,8 +54,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
-    self.TRAIN_NUM_SAMPLES = 16
-    self.EVAL_NUM_SAMPLES = 16
+    self.TRAIN_NUM_SAMPLES = 1024
+    self.EVAL_NUM_SAMPLES = 4
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
     self.TRAIN_FG_IOU = 0.5
@@ -295,7 +295,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     if self.augmenter:
       is_training = (self.config.mode == "train")
-      image, classes, boxes = self.augmenter.augment(
+      image, classes, boxes, scale, translation = self.augmenter.augment(
         image,
         classes,
         boxes,
@@ -320,7 +320,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       gt_bboxes = detection_common.encode_bbox_target(
         gt_bboxes, self.anchors_map)
 
-    return (image_id, image, gt_labels, gt_bboxes, gt_mask)
+    return (image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name)
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *

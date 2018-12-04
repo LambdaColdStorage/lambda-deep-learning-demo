@@ -7,6 +7,8 @@ Licensed under
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+from scipy import misc
+from scipy import ndimage
 
 import tensorflow as tf
 
@@ -43,27 +45,25 @@ class InferDisplayObjectDetection(Callback):
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
 
-    for s, l, b, a, input_image in zip(
+    for s, l, b, a, scale, translation, file_name in zip(
       outputs_dict["scores"],
       outputs_dict["labels"],
       outputs_dict["bboxes"],
       outputs_dict["anchors"],
-      outputs_dict["images"]):
+      outputs_dict["scales"],
+      outputs_dict["translations"],
+      outputs_dict["file_name"]):
 
-      input_image = input_image + self.RGB_MEAN
-      input_image = np.clip(input_image, 0, 255)
-      input_image = input_image / 255.0
-
-      print(s)
-      print(l)
-      print(b)
-      print(a)
+      input_image = misc.imread(file_name).astype(np.float32) / 255.0
 
       plt.figure()
       plt.axis('off')
-      for label, box in zip(l, b):
 
+      for label, box in zip(l, b):
         # Compute the location to draw annotation
+        box = box - [translation[1], translation[0], translation[1], translation[0]]
+        box = box / scale
+        print(box)
         label = MSCOCO_CAT_NAME[label - 1]
         ((linew, lineh), _) = cv2.getTextSize(label, FONT, FONT_SCALE, 1)
         top_left = [box[0] + 1, box[1] - 1.3 * lineh]
