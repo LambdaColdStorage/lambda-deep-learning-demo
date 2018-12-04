@@ -5,6 +5,7 @@ Licensed under
 
 """
 import os
+import numpy as np
 
 import tensorflow as tf
 from pycocotools.coco import COCO
@@ -14,6 +15,15 @@ from callback import Callback
 
 DATASET_DIR = "/mnt/data/data/mscoco"
 DATASET_META = "valminusminival2014"
+
+COCO_ID_MAP = np.asarray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13,
+                          14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+                          25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38,
+                          39, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50,
+                          51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
+                          62, 63, 64, 65, 67, 70, 72, 73, 74, 75, 76,
+                          77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88,
+                          89, 90])
 
 
 class EvalMSCOCO(Callback):
@@ -51,10 +61,6 @@ class EvalMSCOCO(Callback):
       translation = outputs_dict["translations"][i]
       scale = outputs_dict["scales"][i]
 
-      print(translation)
-      print(scale)
-      print(outputs_dict["image_id"][i])
-
       # COCO evaluation is based on per detection
       for d in range(num_detections):
         box = outputs_dict["bboxes"][i][d]
@@ -62,11 +68,10 @@ class EvalMSCOCO(Callback):
         box = box / scale
         result = {
           "image_id": outputs_dict["image_id"][i],
-          "category_id": outputs_dict["labels"][i][d],
+          "category_id": COCO_ID_MAP[outputs_dict["labels"][i][d]],
           "bbox": box,
           "score": outputs_dict["scores"][i][d]
         }
-        print(result)
         self.detection.append(result)
         self.image_ids.append(outputs_dict["image_id"][i])
 

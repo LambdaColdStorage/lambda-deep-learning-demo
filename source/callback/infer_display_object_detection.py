@@ -31,6 +31,8 @@ MSCOCO_CAT_NAME = [u'person', u'bicycle', u'car', u'motorcycle', u'airplane',
                    u'microwave', u'oven', u'toaster', u'sink', u'refrigerator',
                    u'book', u'clock', u'vase', u'scissors', u'teddy bear',
                    u'hair drier', u'toothbrush']
+
+
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FONT_SCALE = 0.7
 
