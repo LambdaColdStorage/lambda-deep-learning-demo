@@ -28,17 +28,20 @@ class EvalMSCOCO(Callback):
   def after_run(self, sess):
     print("Detection Finished ...")
 
-    annotation_file = os.path.join(
-      DATASET_DIR,
-      "annotations",
-      "instances_" + DATASET_META + ".json")
-    coco = COCO(annotation_file)
-    coco_results = coco.loadRes(self.detection)
-    cocoEval = COCOeval(coco, coco_results, "bbox")
-    cocoEval.params.imgIds = self.image_ids
-    cocoEval.evaluate()
-    cocoEval.accumulate()
-    cocoEval.summarize()
+    if len(self.detection) > 0:
+      annotation_file = os.path.join(
+        DATASET_DIR,
+        "annotations",
+        "instances_" + DATASET_META + ".json")
+      coco = COCO(annotation_file)
+      coco_results = coco.loadRes(self.detection)
+      cocoEval = COCOeval(coco, coco_results, "bbox")
+      cocoEval.params.imgIds = self.image_ids
+      cocoEval.evaluate()
+      cocoEval.accumulate()
+      cocoEval.summarize()
+    else:
+      print("Found no valid detection. Consider re-train your model.")
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
 

@@ -13,7 +13,7 @@ import tensorflow as tf
 class Modeler(object):
   def __init__(self, config, net):
     self.config = config
-    self.net = net
+    self.net = net.net
 
     self.train_vars = []
     self.feed_dict_pre = {}

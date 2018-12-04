@@ -149,8 +149,7 @@ def main():
                  importlib.import_module(
                   "source.augmenter." + config.augmenter))
 
-    net = getattr(importlib.import_module(
-      "source.network." + config.network), "net")
+    net = importlib.import_module("source.network." + config.network)
 
     callbacks = []
     for name in config.callbacks:

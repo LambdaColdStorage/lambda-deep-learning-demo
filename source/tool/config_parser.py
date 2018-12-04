@@ -254,7 +254,15 @@ def default_parser():
   tune_parser.add_argument("--eval_callbacks",
                            help="List of callbacks in evaluation.",
                            type=str,
-                           default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")  
+                           default="eval_basic,eval_loss,eval_accuracy,eval_speed,eval_summary")
+  tune_parser.add_argument("--train_reduce_ops",
+                           help="Whether need to do a reduce on the results collected from multiple gpus",
+                           type=str2bool,
+                           default=True)
+  tune_parser.add_argument("--eval_reduce_ops",
+                           help="Whether need to do a reduce on the results collected from multiple gpus",
+                           type=str2bool,
+                           default=True)
   return parser
 
 
@@ -356,7 +364,8 @@ def default_config(config):
     gpu_count=config.gpu_count,
     summary_names=(None if not hasattr(config, "summary_names")
                    else config.summary_names),
-    reduce_ops=config.reduce_ops)
+    reduce_ops=(True if not hasattr(config, "reduce_ops")
+                else config.reduce_ops))
 
   callback_config = CallbackConfig(
     mode=config.mode,

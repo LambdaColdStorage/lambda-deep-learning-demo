@@ -54,7 +54,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
-    self.TRAIN_NUM_SAMPLES = 1024
+    self.TRAIN_NUM_SAMPLES = 16
     self.EVAL_NUM_SAMPLES = 16
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
@@ -76,6 +76,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         self.config.dataset_dir,
         "annotations",
         "instances_" + name_meta + ".json")
+
       coco = COCO(annotation_file)
 
       cat_ids = coco.getCatIds()

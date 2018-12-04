@@ -222,9 +222,9 @@ def net(feats,
 
 
 def loss(inputs, outputs, class_weights, bboxes_weights):
-  gt_classes = inputs[1]
-  gt_bboxes = inputs[2]
-  gt_mask = inputs[3]
+  gt_classes = inputs[2]
+  gt_bboxes = inputs[3]
+  gt_mask = inputs[4]
   feat_classes = outputs[0]
   feat_bboxes = outputs[1]
 

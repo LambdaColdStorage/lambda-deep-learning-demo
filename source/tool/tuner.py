@@ -43,8 +43,7 @@ def excute(config, runner_config, callback_config,
                importlib.import_module(
                 "source.augmenter." + config.augmenter))
 
-  net = getattr(importlib.import_module(
-    "source.network." + config.network), "net")
+  net = importlib.import_module("source.network." + config.network)
 
   callbacks = []
   for name in callback_names:
@@ -74,14 +73,15 @@ def train(config,
           inputter_module,
           modeler_module,
           runner_module):
-
+  runner_config.reduce_ops = config.train_reduce_ops
   runner_config.mode = "train"
   callback_config.mode = "train"
   inputter_config.mode = "train"
   modeler_config.mode = "train"
 
-  inputter_config.dataset_meta = \
-      os.path.expanduser(config.train_dataset_meta)
+  # inputter_config.dataset_meta = \
+  #     os.path.expanduser(config.train_dataset_meta)
+  inputter_config.dataset_meta = config.train_dataset_meta
 
   excute(config,
          runner_config,
@@ -102,7 +102,7 @@ def eval(config,
          inputter_module,
          modeler_module,
          runner_module):
-
+  runner_config.reduce_ops = config.eval_reduce_ops
   runner_config.mode = "eval"
   callback_config.mode = "eval"
   inputter_config.mode = "eval"
@@ -112,8 +112,9 @@ def eval(config,
 
   # Optional: use a different split for evaluation
   # Should not use testing dataset
-  inputter_config.dataset_meta = \
-      os.path.expanduser(config.eval_dataset_meta)
+  # inputter_config.dataset_meta = \
+  #     os.path.expanduser(config.eval_dataset_meta)
+  inputter_config.dataset_meta = config.eval_dataset_meta
 
   excute(config,
          runner_config,
@@ -168,7 +169,6 @@ def tune(config, runner_config, callback_config,
             setattr(config, field, v)
             dir_update = dir_update + "_" + field + "_" + str(v)
 
-    
     if not os.path.isdir(dir_update):
       config.model_dir = dir_update
 

@@ -1,5 +1,6 @@
 from config import Config
 
+
 class ObjectDetectionCallbackConfig(Config):
   def __init__(self,
                default_callback_config,

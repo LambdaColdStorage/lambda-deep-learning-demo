@@ -17,13 +17,12 @@ train_args --learning_rate=0.001 --optimizer=momentum \
 
 python demo/object_detection.py \
 --mode=eval \
---model_dir=~/demo/model/ssd512_mscoco \
+--model_dir=~/demo/model/ssd512_mscoco/tune/trial_learning_rate_4.56370_optimizer_rmsprop \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
 --batch_size_per_gpu=2 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco \
 eval_args --dataset_meta=valminusminival2014 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
-
 
 
 CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
@@ -38,6 +37,22 @@ infer_args \
 --callbacks=infer_basic,infer_display_object_detection \
 --test_samples=/media/chuan/cb8101e3-b1d2-4f5c-a4cd-7badb0dd6800/data/mscoco/val2014/COCO_val2014_000000000042.jpg
 
+
+python demo/object_detection.py \
+--mode=tune \
+--model_dir=~/demo/model/ssd512_mscoco \
+--network=ssd512 \
+--augmenter=ssd_augmenter \
+--batch_size_per_gpu=1 \
+--dataset_dir=/mnt/data/data/mscoco \
+tune_args \
+--train_callbacks=train_basic,train_loss,train_speed,train_summary \
+--eval_callbacks=eval_basic,eval_speed,eval_mscoco \
+--train_dataset_meta=valminusminival2014 \
+--eval_dataset_meta=valminusminival2014 \
+--tune_config=source/tool/ssd512_mscoco_tune_coarse.yaml \
+--eval_reduce_ops=False
+
 """
 import sys
 import os
@@ -48,7 +63,6 @@ def main():
 
   sys.path.append('.')
 
-  from source.tool import downloader
   from source.tool import tuner
   from source.tool import config_parser
 
@@ -86,6 +100,27 @@ def main():
 
   config = config_parser.prepare(config)
 
+  # Object detection can take a list of meta files (Other application should too)
+  if hasattr(config, 'train_dataset_meta'):
+    config.train_dataset_meta = (
+      None if not config.train_dataset_meta
+      else config.train_dataset_meta.split(","))
+
+    if not isinstance(
+      config.train_dataset_meta, (list, tuple)):
+        config.train_dataset_meta = \
+          [config.train_dataset_meta]
+
+  if hasattr(config, 'eval_dataset_meta'):
+    config.eval_dataset_meta = (
+      None if not config.eval_dataset_meta
+      else config.eval_dataset_meta.split(","))
+
+    if not isinstance(
+      config.eval_dataset_meta, (list, tuple)):
+        config.eval_dataset_meta = \
+          [config.eval_dataset_meta]
+
   # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
       config_parser.default_config(config)
@@ -104,7 +139,21 @@ def main():
     feature_net_path=config.feature_net_path)
 
   if config.mode == "tune":
-    pass
+    inputter_module = importlib.import_module(
+      "source.inputter.object_detection_mscoco_inputter")
+    modeler_module = importlib.import_module(
+      "source.modeler.object_detection_modeler")
+    runner_module = importlib.import_module(
+      "source.runner.parameter_server_runner")
+
+    tuner.tune(config,
+               runner_config,
+               callback_config,
+               inputter_config,
+               modeler_config,
+               inputter_module,
+               modeler_module,
+               runner_module)
   else:
     """
     An application owns a runner.
@@ -119,11 +168,8 @@ def main():
                  importlib.import_module(
                   "source.augmenter." + config.augmenter))
 
-    net = getattr(importlib.import_module(
-      "source.network." + config.network), "net")
-
-    loss = getattr(importlib.import_module(
-      "source.network." + config.network), "loss")
+    net = importlib.import_module(
+      "source.network." + config.network)
 
     callbacks = []
 
@@ -138,7 +184,7 @@ def main():
 
     modeler = importlib.import_module(
       "source.modeler.object_detection_modeler").build(
-      modeler_config, net, loss)
+      modeler_config, net)
 
     runner = importlib.import_module(
       "source.runner.parameter_server_runner").build(

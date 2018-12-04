@@ -13,9 +13,9 @@ from source.network.detection import detection_common
 
 
 class ObjectDetectionModeler(Modeler):
-  def __init__(self, args, net, loss):
+  def __init__(self, args, net):
     super(ObjectDetectionModeler, self).__init__(args, net)
-    self.loss = loss
+    self.loss = net.loss
     self.feature_net = getattr(
       importlib.import_module("source.network." + self.config.feature_net),
       "net")
@@ -136,5 +136,5 @@ class ObjectDetectionModeler(Modeler):
               "bboxes": detection_bboxes}
 
 
-def build(args, network, loss):
-  return ObjectDetectionModeler(args, network, loss)
+def build(args, network):
+  return ObjectDetectionModeler(args, network)

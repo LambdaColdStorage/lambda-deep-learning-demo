@@ -101,6 +101,8 @@ class ParameterServerRunner(Runner):
         for key in output:
           ops[key] = self.reduce_op(output[key])
       else:
+        # Sometime the results from multiple GPUs are not to be reduced.
+        # For example, in the case of saving results for evaluated by external tools.
         # Map
         for i in range(self.config.gpu_count):
           with tf.device(self.assign_to_device("/gpu:{}".format(i),
