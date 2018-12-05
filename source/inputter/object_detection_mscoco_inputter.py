@@ -54,8 +54,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
-    self.TRAIN_NUM_SAMPLES = 2
-    self.EVAL_NUM_SAMPLES = 2
+    self.TRAIN_NUM_SAMPLES = 1024
+    self.EVAL_NUM_SAMPLES = 1024
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
     self.TRAIN_FG_IOU = 0.5
@@ -303,6 +303,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         is_training=is_training,
         speed_mode=False)
 
+    return image, classes, boxes, scale, translation
+
     if self.config.mode == "infer":
       gt_labels = tf.zeros([1], dtype=tf.int64)
       gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
@@ -314,6 +316,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
       gt_mask = tf.zeros([1], dtype=tf.int32)
     elif self.config.mode == "train":
+
       gt_labels, gt_bboxes, gt_mask = tf.py_func(
         self.compute_gt, [classes, boxes], (tf.int64, tf.float32, tf.int32))
       # Encode the shift between gt_bboxes and anchors_map
@@ -333,20 +336,20 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                     tf.int64,
                     tf.float32))
 
-    if self.config.mode == "train":
-      dataset = dataset.shuffle(self.get_num_samples())
+    # if self.config.mode == "train":
+    #   dataset = dataset.shuffle(self.get_num_samples())
 
-    dataset = dataset.repeat(self.config.epochs)
+    # dataset = dataset.repeat(self.config.epochs)
 
     dataset = dataset.map(
       lambda image_id, file_name, classes, boxes: self.parse_fn(
         image_id, file_name, classes, boxes),
       num_parallel_calls=12)
 
-    dataset = dataset.apply(
-        tf.contrib.data.batch_and_drop_remainder(batch_size))
+    # dataset = dataset.apply(
+    #     tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.prefetch(2)
+    # dataset = dataset.prefetch(2)
 
     iterator = dataset.make_one_shot_iterator()
     return iterator.get_next()

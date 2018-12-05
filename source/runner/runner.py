@@ -177,30 +177,41 @@ class Runner(object):
       fn()
 
     batch = self.inputter.input_fn()
-    results = self.modeler.model_fn(batch)
+    # results = self.modeler.model_fn(batch)
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
-      num_batch = 2
+      num_batch = 10
 
-      # # Test input_fn
-      # for i in range(num_batch):
-      #   if i == 1:
-      #     total_start_time = time.time()
-      #   start_time = time.time()
-      #   _batch = self.sess.run(batch)
-      #   print(_batch[0])
-      #   end_time = time.time()
-      #   print(end_time - start_time)
-      # total_end_time = time.time()
-      # print("average time: " +
-      #       str((total_end_time - total_start_time) / (num_batch - 1)))
-
-      # Test model_fn
+      # Test input_fn
       for i in range(num_batch):
-        _results = self.sess.run(results)
-        print(_results)
+        if i == 1:
+          total_start_time = time.time()
+        start_time = time.time()
+        _batch = self.sess.run(batch)
+        # print(_batch[0])
+        # print(_batch[1])
+        # print(_batch[2])
+        # print(_batch[3])
+        # print(_batch[4])
+        end_time = time.time()
+        print(end_time - start_time)
+
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.axis('off')
+        plt.imshow(_batch[0])
+        plt.show()
+
+      total_end_time = time.time()
+      print("average time: " +
+            str((total_end_time - total_start_time) / (num_batch - 1)))
+
+      # # Test model_fn
+      # for i in range(num_batch):
+      #   _results = self.sess.run(results)
+      #   print(_results)
 
 
 def build(config, inputter, modeler, callbacks):
