@@ -4,6 +4,7 @@ import cv2
 
 import tensorflow as tf
 from tensorflow.python.ops import math_ops
+from tensorflow.python.ops import control_flow_ops
 
 _R_MEAN = 123.68
 _G_MEAN = 116.78
@@ -149,6 +150,111 @@ def bboxes_filter_overlap(labels, bboxes,
             bboxes = tf.boolean_mask(bboxes, mask)
         return labels, bboxes
 
+def fix_image_flip_shape(image, result):
+    """Set the shape to 3 dimensional if we don't know anything else.
+    Args:
+      image: original image size
+      result: flipped or transformed image
+    Returns:
+      An image whose shape is at least None,None,None.
+    """
+    image_shape = image.get_shape()
+    if image_shape == tensor_shape.unknown_shape():
+        result.set_shape([None, None, None])
+    else:
+        result.set_shape(image_shape)
+    return result
+
+def random_flip_left_right(image, bboxes, seed=None):
+    """Random flip left-right of an image and its bounding boxes.
+    """
+    def flip_bboxes(bboxes):
+        """Flip bounding boxes coordinates.
+        """
+        bboxes = tf.stack([1 - bboxes[:, 2], bboxes[:, 1],
+                           1 - bboxes[:, 0], bboxes[:, 3]], axis=-1)
+        return bboxes
+
+    # Random flip. Tensorflow implementation.
+    with tf.name_scope('random_flip_left_right'):
+        image = tf.convert_to_tensor(image, name='image')
+        uniform_random = tf.random.uniform([], 0, 1.0, seed=seed)
+        mirror_cond = tf.less(uniform_random, .5)
+        # Flip image.
+        image = tf.cond(mirror_cond,
+                        lambda: tf.image.flip_left_right(image),
+                        lambda: image)
+        # Flip bboxes.
+        bboxes = tf.cond(mirror_cond,
+                         lambda: flip_bboxes(bboxes),
+                         lambda: bboxes)
+        return image, bboxes
+
+def apply_with_random_selector(x, func, num_cases):
+    """Computes func(x, sel), with sel sampled from [0...num_cases-1].
+    Args:
+        x: input Tensor.
+        func: Python function to apply.
+        num_cases: Python int32, number of cases to sample sel from.
+    Returns:
+        The result of func(x, sel), where func receives the value of the
+        selector as a python integer, but sel is sampled dynamically.
+    """
+    sel = tf.random_uniform([], maxval=num_cases, dtype=tf.int32)
+    # Pass the real x only to one of the func calls.
+    return control_flow_ops.merge([
+            func(control_flow_ops.switch(x, tf.equal(sel, case))[1], case)
+            for case in range(num_cases)])[0]
+
+def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
+    """Distort the color of a Tensor image.
+    Each color distortion is non-commutative and thus ordering of the color ops
+    matters. Ideally we would randomly permute the ordering of the color ops.
+    Rather then adding that level of complication, we select a distinct ordering
+    of color ops for each preprocessing thread.
+    Args:
+        image: 3-D Tensor containing single image in [0, 1].
+        color_ordering: Python int, a type of distortion (valid values: 0-3).
+        fast_mode: Avoids slower ops (random_hue and random_contrast)
+        scope: Optional scope for name_scope.
+    Returns:
+        3-D Tensor color-distorted image on range [0, 1]
+    Raises:
+        ValueError: if color_ordering not in [0, 3]
+    """
+    with tf.name_scope(scope, 'distort_color', [image]):
+        if fast_mode:
+            if color_ordering == 0:
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+            else:
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+        else:
+            if color_ordering == 0:
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+                image = tf.image.random_hue(image, max_delta=0.2)
+                image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
+            elif color_ordering == 1:
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+                image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
+                image = tf.image.random_hue(image, max_delta=0.2)
+            elif color_ordering == 2:
+                image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
+                image = tf.image.random_hue(image, max_delta=0.2)
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+            elif color_ordering == 3:
+                image = tf.image.random_hue(image, max_delta=0.2)
+                image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
+                image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
+                image = tf.image.random_brightness(image, max_delta=32. / 255.)
+            else:
+                raise ValueError('color_ordering must be in [0, 3]')
+        # The random_* ops do not necessarily clamp.
+        return tf.clip_by_value(image, 0.0, 1.0)
 
 def preprocess_for_train(image,
                          classes,
@@ -158,12 +264,10 @@ def preprocess_for_train(image,
   if speed_mode:
     pass
   else:
-    # mean subtraction
-    means = [_R_MEAN, _G_MEAN, _B_MEAN]
-    channels = tf.split(axis=2, num_or_size_splits=3, value=image)
-    for i in range(3):
-      channels[i] -= means[i]
-    image = tf.concat(axis=2, values=channels)
+
+    image_ori = image
+    classes_ori = classes
+    boxes_ori = boxes
 
     # randomly sample patches
     image_shape = tf.shape(image)
@@ -178,9 +282,9 @@ def preprocess_for_train(image,
     bbox_begin, bbox_size, distort_bbox = tf.image.sample_distorted_bounding_box(
       image_shape,
       bounding_boxes=tf.expand_dims(boxes, 0),
-      min_object_covered=0.3,
+      min_object_covered=BBOX_CROP_OVERLAP,
       aspect_ratio_range=(0.9, 1.1),
-      area_range=(0.1, 1.0),
+      area_range=(0.25, 1.0),
       max_attempts=200,
       use_image_if_no_bounding_boxes=True)
 
@@ -188,22 +292,55 @@ def preprocess_for_train(image,
 
     image = tf.slice(image, bbox_begin, bbox_size)
 
-    # cropped_image.set_shape([None, None, 3])
-
     boxes = bboxes_resize(distort_bbox, boxes)
 
     classes, boxes = bboxes_filter_overlap(classes, boxes,
                                            threshold=BBOX_CROP_OVERLAP,
                                            assign_negative=False)
 
-    # transform bboxes back to pixel space
-    image_shape = tf.shape(image)
     y1, x1, y2, x2 = tf.unstack(boxes, 4, axis=1)
+    x1 = tf.expand_dims(x1, -1)
+    x2 = tf.expand_dims(x2, -1)
+    y1 = tf.expand_dims(y1, -1)
+    y2 = tf.expand_dims(y2, -1)
+    boxes = tf.concat([x1, y1, x2, y2], axis=1)
+
+    # Randomly flip the image horizontally.
+    image, boxes = random_flip_left_right(image, boxes)
+    
+    # Color distortion
+    image = tf.div(image, 255.0)
+    image = apply_with_random_selector(
+            image,
+            lambda x, ordering: distort_color(x, ordering, fast_mode=False),
+            num_cases=4)
+    image = tf.scalar_mul(255.0, image)
+    
+    # # transform bboxes back to pixel space
+    image_shape = tf.shape(image)
+    x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
     x1 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[1]), x1), -1)
     x2 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[1]), x2), -1)
     y1 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[0]), y1), -1)
     y2 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[0]), y2), -1)
     boxes = tf.concat([x1, y1, x2, y2], axis=1)
+
+
+    # Rollback to the full image if there is no boxes
+    no_box_cond = tf.equal(tf.size(boxes), 0)
+    image = tf.cond(no_box_cond,
+                    lambda: image_ori,
+                    lambda: image)
+    boxes = tf.cond(no_box_cond,
+                    lambda: boxes_ori,
+                    lambda: boxes)
+    classes = tf.cond(no_box_cond,
+                     lambda: classes_ori,
+                     lambda: classes)
+
+    #image = image_ori
+    #boxes = boxes_ori
+    #classes = classes_ori
 
     # transform image and boxes
     image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
@@ -212,6 +349,13 @@ def preprocess_for_train(image,
       resolution,
       resolution)
     boxes = tf.scalar_mul(scale, boxes) + [translation[1], translation[0], translation[1], translation[0]]
+
+    # mean subtraction
+    means = [_R_MEAN, _G_MEAN, _B_MEAN]
+    channels = tf.split(axis=2, num_or_size_splits=3, value=image)
+    for i in range(3):
+      channels[i] -= means[i]
+    image = tf.concat(axis=2, values=channels)
 
   return image, classes, boxes, scale, translation
 

@@ -191,7 +191,7 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.dev()
+    runner.run()
 
 
 if __name__ == "__main__":
