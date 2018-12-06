@@ -54,12 +54,12 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
-    self.TRAIN_NUM_SAMPLES = 1024
-    self.EVAL_NUM_SAMPLES = 1024
+    self.TRAIN_NUM_SAMPLES = 82081
+    self.EVAL_NUM_SAMPLES = 16
 
     self.TRAIN_SAMPLES_PER_IMAGE = 256
-    self.TRAIN_FG_IOU = 0.5
-    self.TRAIN_BG_IOU = 0.5
+    self.TRAIN_FG_IOU = 0.7
+    self.TRAIN_BG_IOU = 0.3
     self.TRAIN_FG_RATIO = 0.5
 
     if self.config.mode == "infer":

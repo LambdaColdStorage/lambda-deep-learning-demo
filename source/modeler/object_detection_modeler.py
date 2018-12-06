@@ -24,11 +24,12 @@ class ObjectDetectionModeler(Modeler):
     self.config.CLASS_WEIGHTS = 1.0
     self.config.BBOXES_WEIGHTS = 50.0
 
-    self.config.RESULT_SCORE_THRESH = 0.8
+    self.config.RESULT_SCORE_THRESH = 0.95
     self.config.RESULTS_PER_IM = 10
     self.config.NMS_THRESH = 0.5
 
-    self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/conv5/conv5_3"
+    # self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/conv5/conv5_3"
+    self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/pool5"
     self.config.FEATURE_LAYERS = ("vgg_16/conv4/conv4_3",
                                   "ssd_conv7", "ssd_conv8_2",
                                   "ssd_conv9_2", "ssd_conv10_2",
@@ -54,13 +55,13 @@ class ObjectDetectionModeler(Modeler):
     #     feat_bboxes: batch_size x num_anchors x 4
 
     # Feature net
-    inputs, self.feature_net_init_flag = self.feature_net(
+    last_layer, inputs, self.feature_net_init_flag = self.feature_net(
       inputs, self.config.data_format,
       is_training=False, init_flag=self.feature_net_init_flag,
       ckpt_path=self.config.feature_net_path)
 
     is_training = (self.config.mode == "train")
-    return self.net(inputs,
+    return self.net(last_layer, inputs,
                     self.config.BACKBONE_OUTPUT_LAYER,
                     self.config.FEATURE_LAYERS,
                     self.config.num_classes, self.num_anchors,
@@ -106,7 +107,11 @@ class ObjectDetectionModeler(Modeler):
 
     if self.config.mode == "train":
       class_losses, bboxes_losses = self.create_loss_fn(inputs, outputs)
-      loss = class_losses + bboxes_losses
+
+      loss_l2 = self.l2_regularization()
+      
+      loss = tf.identity(class_losses + bboxes_losses + loss_l2, "total_loss")
+
       grads = self.create_grad_fn(loss)
       return {"loss": loss,
               "class_losses": class_losses,

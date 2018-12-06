@@ -1,18 +1,23 @@
 import tensorflow as tf
 
 
-def ssd_feature_fn(feats, backbone_output_layer):
+def ssd_feature_fn(last_layer, feats, backbone_output_layer):
   # # Shared SSD feature layer
-  output_backbone = feats[backbone_output_layer]
+
+  # print(feats)
+  # print(feats)
+  # output_backbone = feats[backbone_output_layer]
+  output_backbone = last_layer
 
   # Add additional feature layers
-  kernel_init = tf.variance_scaling_initializer()
+  kernel_init = tf.contrib.layers.xavier_initializer()
 
   net = tf.layers.conv2d(inputs=output_backbone,
                          filters=1024,
                          kernel_size=[3, 3],
                          strides=(1, 1),
                          padding=('SAME'),
+                         dilation_rate=6,
                          kernel_initializer=kernel_init,
                          activation=tf.nn.relu,
                          name='conv6')
@@ -29,7 +34,7 @@ def ssd_feature_fn(feats, backbone_output_layer):
 
   net = tf.layers.conv2d(inputs=net,
                          filters=256,
-                         kernel_size=[3, 3],
+                         kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
                          kernel_initializer=kernel_init,
@@ -147,10 +152,7 @@ def class_graph_fn(feat, num_classes, num_anchors):
 def bbox_graph_fn(feat, num_anchors):
   data_format = 'channels_last'
   kernel_init = tf.variance_scaling_initializer()
-  output = tf.math.l2_normalize(feat,
-                                axis=-1,
-                                epsilon=1e-12)
-  output = tf.layers.conv2d(inputs=output,
+  output = tf.layers.conv2d(inputs=feat,
                             filters=num_anchors * 4,
                             kernel_size=[3, 3],
                             strides=(1, 1),
@@ -196,24 +198,38 @@ def create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask):
   return loss
 
 
-def net(feats,
+def net(last_layer, feats,
         backbone_output_layer,
         feature_layers,
         num_classes, num_anchors,
         is_training, data_format="channels_last"):
 
+  
   with tf.variable_scope(name_or_scope='SSD',
                          values=[feats],
                          reuse=tf.AUTO_REUSE):
 
     # Add shared features
-    feats = ssd_feature_fn(feats, backbone_output_layer)
+    feats = ssd_feature_fn(last_layer, feats, backbone_output_layer)
 
     classes = []
     bboxes = []
     for layer, num in zip(feature_layers, num_anchors):
-      classes.append(class_graph_fn(feats[layer], num_classes, num))
-      bboxes.append(bbox_graph_fn(feats[layer], num))
+      feat = feats[layer]                 
+      
+      # # According to author's paper, only do it on conv4_3 with learnable scale
+      # if layer == "vgg_16/conv4/conv4_3":
+      #   weight_scale = tf.Variable([20.] * 512, trainable=is_training, name='l2_norm_scaler')
+      #   feat = tf.multiply(weight_scale,
+      #                      tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
+
+      classes.append(class_graph_fn(feat, num_classes, num))
+
+      # Do it for all bboxes layers, with no learnable scale
+      feat = tf.math.l2_normalize(feat,
+                                  axis=-1,
+                                  epsilon=1e-12)
+      bboxes.append(bbox_graph_fn(feat, num))
 
     classes = tf.concat(classes, axis=1)
     bboxes = tf.concat(bboxes, axis=1)
@@ -233,9 +249,3 @@ def loss(inputs, outputs, class_weights, bboxes_weights):
   loss_bboxes = bboxes_weights * create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask)
 
   return loss_classes, loss_bboxes
-
-  # loss = loss_classes + loss_bboxes
-
-  # loss = bboxes_weights * loss_bboxes
-  #loss = class_weights * loss_classes
-  #return loss

@@ -34,4 +34,4 @@ def net(inputs, data_format, is_training, init_flag, ckpt_path):
     print("Weights restored.")
     tf.logging.set_verbosity(tf.logging.INFO)
 
-  return end_points, init_flag
+  return net, end_points, init_flag
