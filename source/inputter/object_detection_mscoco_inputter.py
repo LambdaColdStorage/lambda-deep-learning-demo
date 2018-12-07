@@ -54,11 +54,11 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
-    # self.TRAIN_NUM_SAMPLES = 82081
-    # self.EVAL_NUM_SAMPLES = 16
+    self.TRAIN_NUM_SAMPLES = 82081
+    self.EVAL_NUM_SAMPLES = 16
 
-    self.TRAIN_NUM_SAMPLES = 16
-    self.EVAL_NUM_SAMPLES = 1
+    # self.TRAIN_NUM_SAMPLES = 1024
+    # self.EVAL_NUM_SAMPLES = 2048
 
     self.TRAIN_SAMPLES_PER_IMAGE = 512
     self.TRAIN_FG_IOU = 0.7
@@ -273,19 +273,19 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     gt_bboxes[max_idx_reverse] = boxes
     gt_mask[max_idx_reverse] = 1
 
-    # Balance & Sub-sample fg and bg objects
-    fg_ids = np.where(gt_mask == 1)[0]
-    fg_extra = (len(fg_ids) -
-                int(math.floor(self.TRAIN_SAMPLES_PER_IMAGE * self.TRAIN_FG_RATIO)))
-    if fg_extra > 0:
-      random_fg_ids = np.random.choice(fg_ids, fg_extra, replace=False)
-      gt_mask[random_fg_ids] = 0
+    # # Balance & Sub-sample fg and bg objects
+    # fg_ids = np.where(gt_mask == 1)[0]
+    # fg_extra = (len(fg_ids) -
+    #             int(math.floor(self.TRAIN_SAMPLES_PER_IMAGE * self.TRAIN_FG_RATIO)))
+    # if fg_extra > 0:
+    #   random_fg_ids = np.random.choice(fg_ids, fg_extra, replace=False)
+    #   gt_mask[random_fg_ids] = 0
 
-    bg_ids = np.where(gt_mask == -1)[0]
-    bg_extra = len(bg_ids) - (self.TRAIN_SAMPLES_PER_IMAGE - np.sum(gt_mask == 1))
-    if bg_extra > 0:
-      random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
-      gt_mask[random_bg_ids] = 0
+    # bg_ids = np.where(gt_mask == -1)[0]
+    # bg_extra = len(bg_ids) - (self.TRAIN_SAMPLES_PER_IMAGE - np.sum(gt_mask == 1))
+    # if bg_extra > 0:
+    #   random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
+    #   gt_mask[random_bg_ids] = 0
 
     return gt_labels, gt_bboxes, gt_mask
 
