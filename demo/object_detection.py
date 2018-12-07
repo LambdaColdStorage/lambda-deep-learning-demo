@@ -3,19 +3,17 @@ Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
 
-python demo/object_detection.py \
+CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --mode=train \
 --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
---batch_size_per_gpu=4 --epochs=1000 \
+--batch_size_per_gpu=1 --epochs=1000 \
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
 train_args --learning_rate=0.001 --optimizer=momentum \
---piecewise_boundaries=500,750,900 --piecewise_lr_decay=1.0,0.1,0.01,0.001 \
+--piecewise_boundaries=500 --piecewise_lr_decay=1.0,0.1 \
 --dataset_meta=valminusminival2014 --callbacks=train_basic,train_loss,train_speed,train_summary \
 --trainable_vars=SSD --skip_l2_loss_vars=l2_norm_scaler --summary_names=loss,learning_rate,class_losses,bboxes_losses
-
-
 
 python demo/object_detection.py \
 --mode=eval \
@@ -25,7 +23,6 @@ python demo/object_detection.py \
 --batch_size_per_gpu=2 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco \
 eval_args --dataset_meta=valminusminival2014 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
-
 
 CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --mode=infer \
@@ -38,7 +35,6 @@ CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 infer_args \
 --callbacks=infer_basic,infer_display_object_detection \
 --test_samples=/mnt/data/data/mscoco/val2014/COCO_val2014_000000000042.jpg
-
 
 python demo/object_detection.py \
 --mode=tune \

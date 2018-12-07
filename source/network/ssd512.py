@@ -168,30 +168,28 @@ def bbox_graph_fn(feat, num_anchors):
   return output
 
 
-def create_loss_classes_fn(feat_classes, gt_classes, gt_mask):
-  mask = tf.math.not_equal(gt_mask, 0)
-  mask.set_shape([None])
-  logits = tf.boolean_mask(
-    tf.reshape(feat_classes, [-1, tf.shape(feat_classes)[2]]),
-    mask)
-  labels = tf.boolean_mask(
-    tf.reshape(gt_classes, [-1, 1]),
-    mask)
-  loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(
-    logits=logits,
-    labels=labels))
-  return loss
+def create_loss_classes_fn(logits_classes, gt_labels, fg_index, bg_index):
+
+  fg_labels = tf.gather(gt_labels, fg_index)
+  bg_labels = tf.gather(gt_labels, bg_index)
+
+  fg_logits = tf.gather(logits_classes, fg_index)
+  bg_logits = tf.gather(logits_classes, bg_index)
+
+  fg_loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(
+    logits=fg_logits,
+    labels=fg_labels))
+  bg_loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(
+    logits=bg_logits,
+    labels=bg_labels))  
+
+  return fg_loss + bg_loss
 
 
-def create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask):
-  mask = tf.math.equal(gt_mask, 1)
-  mask.set_shape([None])
-  pred = tf.boolean_mask(
-    tf.reshape(feat_bboxes, [-1, 4]),
-    mask)
-  gt = tf.boolean_mask(
-    tf.reshape(gt_bboxes, [-1, 4]),
-    mask)
+def create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index):
+  pred = tf.gather(logits_bboxes, fg_index)
+  gt = tf.gather(gt_bboxes, fg_index)
+
   abs_diff = tf.abs(pred - gt)
   minx = tf.minimum(abs_diff, 1)
   loss = tf.reduce_mean(0.5 * ((abs_diff - 1) * minx + abs_diff))
@@ -236,6 +234,27 @@ def net(last_layer, feats,
 
     return classes, bboxes
 
+def hard_negative_mining(logits_classes, gt_mask):
+  # compute mask and index for foregound objects
+  fg_mask = tf.to_float(tf.math.equal(gt_mask, 1))
+  fg_index = tf.where(tf.math.equal(gt_mask, 1))
+
+  # decide number of samples
+  fg_num = tf.to_int32(tf.reduce_sum(fg_mask))
+  bg_num = tf.math.minimum(tf.shape(fg_mask)[0] - fg_num, fg_num * 3)
+
+  # compute index for background object (class = 0)
+  bg_score = tf.nn.softmax(logits_classes)[:, 0]
+  bg_score = tf.multiply(bg_score, 1 - fg_mask) + fg_mask
+  bg_score = tf.multiply(-1.0, bg_score)
+  bg_v, bg_index = tf.math.top_k(bg_score, k=bg_num)
+
+  return fg_index, bg_index
+
+def heuristic_sampling(gt_mask):
+  fg_index = tf.where(tf.math.equal(gt_mask, 1))
+  bg_index = tf.where(tf.math.equal(gt_mask, -1))
+  return fg_index, bg_index
 
 def loss(inputs, outputs, class_weights, bboxes_weights):
   gt_classes = inputs[2]
@@ -244,8 +263,17 @@ def loss(inputs, outputs, class_weights, bboxes_weights):
   feat_classes = outputs[0]
   feat_bboxes = outputs[1]
 
-  loss_classes = class_weights * create_loss_classes_fn(feat_classes, gt_classes, gt_mask)
+  gt_mask = tf.reshape(gt_mask, [-1])
+  logits_classes = tf.reshape(feat_classes, [-1, tf.shape(feat_classes)[2]])
+  gt_classes = tf.reshape(gt_classes, [-1, 1])
+  logits_bboxes = tf.reshape(feat_bboxes, [-1, 4])
+  gt_bboxes = tf.reshape(gt_bboxes, [-1, 4])
 
-  loss_bboxes = bboxes_weights * create_loss_bboxes_fn(feat_bboxes, gt_bboxes, gt_mask)
+  # fg_index, bg_index = heuristic_sampling(gt_mask)
+  fg_index, bg_index = hard_negative_mining(logits_classes, gt_mask)
+
+  loss_classes = class_weights * create_loss_classes_fn(logits_classes, gt_classes, fg_index, bg_index)
+
+  loss_bboxes = bboxes_weights * create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index)
 
   return loss_classes, loss_bboxes

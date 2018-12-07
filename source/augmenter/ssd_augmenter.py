@@ -305,16 +305,16 @@ def preprocess_for_train(image,
     y2 = tf.expand_dims(y2, -1)
     boxes = tf.concat([x1, y1, x2, y2], axis=1)
 
-    # Randomly flip the image horizontally.
-    image, boxes = random_flip_left_right(image, boxes)
+    # # Randomly flip the image horizontally.
+    # image, boxes = random_flip_left_right(image, boxes)
     
-    # Color distortion
-    image = tf.div(image, 255.0)
-    image = apply_with_random_selector(
-            image,
-            lambda x, ordering: distort_color(x, ordering, fast_mode=False),
-            num_cases=4)
-    image = tf.scalar_mul(255.0, image)
+    # # Color distortion
+    # image = tf.div(image, 255.0)
+    # image = apply_with_random_selector(
+    #         image,
+    #         lambda x, ordering: distort_color(x, ordering, fast_mode=False),
+    #         num_cases=4)
+    # image = tf.scalar_mul(255.0, image)
     
     # # transform bboxes back to pixel space
     image_shape = tf.shape(image)

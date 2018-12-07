@@ -45,8 +45,7 @@ class InferDisplayObjectDetection(Callback):
     self.graph = tf.get_default_graph()
     self.RGB_MEAN = [123.68, 116.78, 103.94]
 
-  def after_step(self, sess, outputs_dict, feed_dict=None):
-
+  def display_ori(self, outputs_dict):
     for s, l, b, a, scale, translation, file_name in zip(
       outputs_dict["scores"],
       outputs_dict["labels"],
@@ -89,6 +88,61 @@ class InferDisplayObjectDetection(Callback):
 
       plt.imshow(input_image)
       plt.show()
+
+  def display_normalized(self, outputs_dict):
+    for input_image, s, l, b, a, scale, translation, file_name in zip(
+      outputs_dict["images"],
+      outputs_dict["scores"],
+      outputs_dict["labels"],
+      outputs_dict["bboxes"],
+      outputs_dict["anchors"],
+      outputs_dict["scales"],
+      outputs_dict["translations"],
+      outputs_dict["file_name"]):
+
+      input_image = (input_image + self.RGB_MEAN).astype(np.float32)
+      input_image = np.clip(input_image, 0, 255) / 255.0
+
+      plt.figure()
+      plt.axis('off')
+
+      for label, box, anchor in zip(l, b, a):
+        # Compute the location to draw annotation
+        print("box: ")
+        print(box)
+        label = MSCOCO_CAT_NAME[label - 1]
+        ((linew, lineh), _) = cv2.getTextSize(label, FONT, FONT_SCALE, 1)
+        top_left = [box[0] + 1, box[1] - 1.3 * lineh]
+        if top_left[1] < 0:     # out of image
+            top_left[1] = box[3] - 1.3 * lineh
+
+        # Draw twice to make detections more visually noticable
+        cv2.rectangle(input_image, (box[0], box[1]), (box[2], box[3]),
+                      color=(0, 0, 0), thickness=5)
+        cv2.rectangle(input_image, (box[0], box[1]), (box[2], box[3]),
+                      color=(1, 0, 0), thickness=2)
+
+        # Draw anchor for debugging
+        anchor = np.clip(anchor, 0, input_image.shape[0])
+        cv2.rectangle(input_image, (anchor[0], anchor[1]), (anchor[2], anchor[3]),
+                      color=(0, 1, 0), thickness=2)
+        print("anchor: ")
+        print(anchor)
+
+        cv2.putText(input_image, label,
+                    (int(top_left[0]), int(top_left[1] + lineh)),
+                    FONT, FONT_SCALE, color=(0, 0, 0),
+                    lineType=cv2.LINE_AA, thickness=3)
+        cv2.putText(input_image, label,
+                    (int(top_left[0]), int(top_left[1] + lineh)),
+                    FONT, FONT_SCALE, color=(1, 1, 0),
+                    lineType=cv2.LINE_AA, thickness=1)
+
+      plt.imshow(input_image)
+      plt.show()
+
+  def after_step(self, sess, outputs_dict, feed_dict=None):
+    self.display_normalized(outputs_dict)
 
 
 def build(config):
