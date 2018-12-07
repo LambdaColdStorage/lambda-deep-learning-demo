@@ -279,24 +279,24 @@ def preprocess_for_train(image,
     y2 = tf.expand_dims(tf.div(y2, tf.to_float(image_shape[0])), -1)
     boxes = tf.concat([y1, x1, y2, x2], axis=1)
 
-    # bbox_begin, bbox_size, distort_bbox = tf.image.sample_distorted_bounding_box(
-    #   image_shape,
-    #   bounding_boxes=tf.expand_dims(boxes, 0),
-    #   min_object_covered=BBOX_CROP_OVERLAP,
-    #   aspect_ratio_range=(0.8, 1.2),
-    #   area_range=(0.5, 1.0),
-    #   max_attempts=200,
-    #   use_image_if_no_bounding_boxes=True)
+    bbox_begin, bbox_size, distort_bbox = tf.image.sample_distorted_bounding_box(
+      image_shape,
+      bounding_boxes=tf.expand_dims(boxes, 0),
+      min_object_covered=BBOX_CROP_OVERLAP,
+      aspect_ratio_range=(0.8, 1.2),
+      area_range=(0.5, 1.0),
+      max_attempts=200,
+      use_image_if_no_bounding_boxes=True)
 
-    # distort_bbox = distort_bbox[0, 0]
+    distort_bbox = distort_bbox[0, 0]
 
-    # image = tf.slice(image, bbox_begin, bbox_size)
+    image = tf.slice(image, bbox_begin, bbox_size)
 
-    # boxes = bboxes_resize(distort_bbox, boxes)
+    boxes = bboxes_resize(distort_bbox, boxes)
 
-    # classes, boxes = bboxes_filter_overlap(classes, boxes,
-    #                                        threshold=BBOX_CROP_OVERLAP,
-    #                                        assign_negative=False)
+    classes, boxes = bboxes_filter_overlap(classes, boxes,
+                                           threshold=BBOX_CROP_OVERLAP,
+                                           assign_negative=False)
 
     y1, x1, y2, x2 = tf.unstack(boxes, 4, axis=1)
     x1 = tf.expand_dims(x1, -1)

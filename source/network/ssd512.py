@@ -1,5 +1,10 @@
+import numpy as np
+import math
+
 import tensorflow as tf
 
+TRAIN_SAMPLES_PER_IMAGE = 512
+TRAIN_FG_RATIO = 0.5
 
 def ssd_feature_fn(last_layer, feats, backbone_output_layer):
   # # Shared SSD feature layer
@@ -252,8 +257,22 @@ def hard_negative_mining(logits_classes, gt_mask):
   return fg_index, bg_index
 
 def heuristic_sampling(gt_mask):
-  fg_index = tf.where(tf.math.equal(gt_mask, 1))
-  bg_index = tf.where(tf.math.equal(gt_mask, -1))
+  # Balance & Sub-sample fg and bg objects
+  fg_ids = np.where(gt_mask == 1)[0]
+  fg_extra = (len(fg_ids) -
+              int(math.floor(TRAIN_SAMPLES_PER_IMAGE * TRAIN_FG_RATIO)))
+  if fg_extra > 0:
+    random_fg_ids = np.random.choice(fg_ids, fg_extra, replace=False)
+    gt_mask[random_fg_ids] = 0
+
+  bg_ids = np.where(gt_mask == -1)[0]
+  bg_extra = len(bg_ids) - (TRAIN_SAMPLES_PER_IMAGE - np.sum(gt_mask == 1))
+  if bg_extra > 0:
+    random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
+    gt_mask[random_bg_ids] = 0
+
+  fg_index = np.where(gt_mask == 1)[0]
+  bg_index = np.where(gt_mask == -1)[0]
   return fg_index, bg_index
 
 def loss(inputs, outputs, class_weights, bboxes_weights):
@@ -269,7 +288,11 @@ def loss(inputs, outputs, class_weights, bboxes_weights):
   logits_bboxes = tf.reshape(feat_bboxes, [-1, 4])
   gt_bboxes = tf.reshape(gt_bboxes, [-1, 4])
 
-  # fg_index, bg_index = heuristic_sampling(gt_mask)
+  # # heuristic sampling
+  # fg_index, bg_index = tf.py_func(
+  #   heuristic_sampling, [gt_mask], (tf.int64, tf.int64))
+
+  # hard negative mining
   fg_index, bg_index = hard_negative_mining(logits_classes, gt_mask)
 
   loss_classes = class_weights * create_loss_classes_fn(logits_classes, gt_classes, fg_index, bg_index)
