@@ -5,6 +5,7 @@ import tensorflow as tf
 
 TRAIN_SAMPLES_PER_IMAGE = 512
 TRAIN_FG_RATIO = 0.5
+KERNEL_INIT = tf.contrib.layers.xavier_initializer()
 
 def ssd_feature_fn(last_layer, feats, backbone_output_layer):
   # # Shared SSD feature layer
@@ -15,7 +16,6 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
   output_backbone = last_layer
 
   # Add additional feature layers
-  kernel_init = tf.contrib.layers.xavier_initializer()
 
   net = tf.layers.conv2d(inputs=output_backbone,
                          filters=1024,
@@ -23,7 +23,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          strides=(1, 1),
                          padding=('SAME'),
                          dilation_rate=6,
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv6')
 
@@ -32,7 +32,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv7')
   feats["ssd_conv7"] = net
@@ -42,7 +42,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv8_1')
 
@@ -51,7 +51,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[3, 3],
                          strides=(2, 2),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv8_2')
   feats["ssd_conv8_2"] = net
@@ -61,7 +61,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv9_1')
 
@@ -70,7 +70,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[3, 3],
                          strides=(2, 2),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv9_2')
   feats["ssd_conv9_2"] = net
@@ -80,7 +80,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv10_1')
 
@@ -89,7 +89,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[3, 3],
                          strides=(2, 2),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv10_2')
   feats["ssd_conv10_2"] = net
@@ -99,7 +99,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv11_1')
 
@@ -108,7 +108,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[3, 3],
                          strides=(2, 2),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv11_2')
   feats["ssd_conv11_2"] = net
@@ -118,7 +118,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv12_1')
 
@@ -127,7 +127,7 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          kernel_size=[3, 3],
                          strides=(2, 2),
                          padding=('SAME'),
-                         kernel_initializer=kernel_init,
+                         kernel_initializer=KERNEL_INIT,
                          activation=tf.nn.relu,
                          name='conv12_2')
   feats["ssd_conv12_2"] = net
@@ -135,41 +135,41 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
   return feats
 
 
-def class_graph_fn(feat, num_classes, num_anchors):
+def class_graph_fn(feat, num_classes, num_anchors, layer):
   data_format = 'channels_last'
-  kernel_init = tf.variance_scaling_initializer()
   output = tf.layers.conv2d(inputs=feat,
                             filters=num_anchors * num_classes,
                             kernel_size=[3, 3],
                             strides=(1, 1),
                             padding=('SAME'),
                             data_format=data_format,
-                            kernel_initializer=kernel_init,
-                            activation=None)
+                            kernel_initializer=KERNEL_INIT,
+                            activation=None,
+                            name="class/" + layer)
   output = tf.reshape(output,
                       [tf.shape(output)[0],
                        -1,
                        num_classes],
-                      name='feat_classes')
+                      name='feat_classes' + layer)
   return output
 
 
-def bbox_graph_fn(feat, num_anchors):
+def bbox_graph_fn(feat, num_anchors, layer):
   data_format = 'channels_last'
-  kernel_init = tf.variance_scaling_initializer()
   output = tf.layers.conv2d(inputs=feat,
                             filters=num_anchors * 4,
                             kernel_size=[3, 3],
                             strides=(1, 1),
                             padding=('SAME'),
                             data_format=data_format,
-                            kernel_initializer=kernel_init,
-                            activation=None)
+                            kernel_initializer=KERNEL_INIT,
+                            activation=None,
+                            name="bbox/" + layer)
   output = tf.reshape(output,
                       [tf.shape(output)[0],
                        -1,
                        4],
-                      name='feat_bboxes')
+                      name='feat_bboxes' + layer)
   return output
 
 
@@ -195,9 +195,8 @@ def create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index):
   pred = tf.gather(logits_bboxes, fg_index)
   gt = tf.gather(gt_bboxes, fg_index)
 
-  abs_diff = tf.abs(pred - gt)
-  minx = tf.minimum(abs_diff, 1)
-  loss = tf.reduce_mean(0.5 * ((abs_diff - 1) * minx + abs_diff))
+  loss = tf.losses.huber_loss(gt, pred, delta=0.5)
+
   return loss
 
 
@@ -220,19 +219,20 @@ def net(last_layer, feats,
     for layer, num in zip(feature_layers, num_anchors):
       feat = feats[layer]                 
       
-      # # According to author's paper, only do it on conv4_3 with learnable scale
-      # if layer == "vgg_16/conv4/conv4_3":
-      #   weight_scale = tf.Variable([20.] * 512, trainable=is_training, name='l2_norm_scaler')
-      #   feat = tf.multiply(weight_scale,
-      #                      tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
+      # According to the original SSD paper, normalize conv4_3 with learnable scale
+      # In pratice doing so indeed reduce the classification loss significantly
+      if layer == "vgg_16/conv4/conv4_3":
+        weight_scale = tf.Variable([20.] * 512, trainable=is_training, name='l2_norm_scaler')
+        feat = tf.multiply(weight_scale,
+                           tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
 
-      classes.append(class_graph_fn(feat, num_classes, num))
+      classes.append(class_graph_fn(feat, num_classes, num, layer))
 
-      # Do it for all bboxes layers, with no learnable scale
-      feat = tf.math.l2_normalize(feat,
-                                  axis=-1,
-                                  epsilon=1e-12)
-      bboxes.append(bbox_graph_fn(feat, num))
+      # Different from the original SSD paper, we normalize the feature maps for all bbox layers
+      # Otherwise we found bbox loss will be too high
+      feat = tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12)
+
+      bboxes.append(bbox_graph_fn(feat, num, layer))
 
     classes = tf.concat(classes, axis=1)
     bboxes = tf.concat(bboxes, axis=1)

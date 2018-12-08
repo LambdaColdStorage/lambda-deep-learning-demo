@@ -22,11 +22,12 @@ class ObjectDetectionModeler(Modeler):
     self.feature_net_init_flag = True
 
     self.config.CLASS_WEIGHTS = 1.0
-    self.config.BBOXES_WEIGHTS = 50.0
+    self.config.BBOXES_WEIGHTS = 1.0
+    self.config.L2_REGULARIZATION = 0.1
 
     self.config.RESULT_SCORE_THRESH = 0.8
     self.config.RESULTS_PER_IM = 10
-    self.config.NMS_THRESH = 0.5
+    self.config.NMS_THRESH = 0.25
 
     # self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/conv5/conv5_3"
     self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/pool5"
@@ -108,11 +109,9 @@ class ObjectDetectionModeler(Modeler):
     if self.config.mode == "train":
       class_losses, bboxes_losses = self.create_loss_fn(inputs, outputs)
 
-      # loss_l2 = self.l2_regularization()
+      loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
       
-      # loss = tf.identity(class_losses + bboxes_losses + loss_l2, "total_loss")
-
-      loss = tf.identity(class_losses + bboxes_losses, "total_loss")
+      loss = tf.identity(class_losses + bboxes_losses + loss_l2, "total_loss")
 
       grads = self.create_grad_fn(loss)
       return {"loss": loss,

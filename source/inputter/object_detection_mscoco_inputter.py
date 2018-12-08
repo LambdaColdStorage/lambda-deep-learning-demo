@@ -44,25 +44,24 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                           (460.8, 542.72)]
     self.num_anchors = []
     self.anchors_aspect_ratios = [((1.0, 2.0, 0.5), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
+                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
                                   ((1.0, 2.0, 0.5), (1.0,)),
                                   ((1.0, 2.0, 0.5), (1.0,))]
     self.anchors_map = None
 
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
-    # self.TRAIN_NUM_SAMPLES = 82081
+    self.TRAIN_NUM_SAMPLES = 82081
+    self.EVAL_NUM_SAMPLES = 16
+
+    # self.TRAIN_NUM_SAMPLES = 1024
     # self.EVAL_NUM_SAMPLES = 16
-
-    self.TRAIN_NUM_SAMPLES = 4
-    self.EVAL_NUM_SAMPLES = 4
-
     
-    self.TRAIN_FG_IOU = 0.7
-    self.TRAIN_BG_IOU = 0.7
+    self.TRAIN_FG_IOU = 0.5
+    self.TRAIN_BG_IOU = 0.5
 
     if self.config.mode == "infer":
       self.test_samples = self.config.test_samples

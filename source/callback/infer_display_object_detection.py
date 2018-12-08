@@ -122,10 +122,10 @@ class InferDisplayObjectDetection(Callback):
         cv2.rectangle(input_image, (box[0], box[1]), (box[2], box[3]),
                       color=(1, 0, 0), thickness=2)
 
-        # Draw anchor for debugging
-        anchor = np.clip(anchor, 0, input_image.shape[0])
-        cv2.rectangle(input_image, (anchor[0], anchor[1]), (anchor[2], anchor[3]),
-                      color=(0, 1, 0), thickness=2)
+        # # Draw anchor for debugging
+        # anchor = np.clip(anchor, 0, input_image.shape[0])
+        # cv2.rectangle(input_image, (anchor[0], anchor[1]), (anchor[2], anchor[3]),
+        #               color=(0, 1, 0), thickness=2)
         print("anchor: ")
         print(anchor)
 

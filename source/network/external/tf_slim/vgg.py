@@ -376,8 +376,8 @@ def vgg_16_ssd512(inputs,
       net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
       net = slim.max_pool2d(net, [2, 2], scope='pool4')
       net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
-      # SSD paper uses pool5. I found it is better to use conv5_3
-      # net = slim.max_pool2d(net, [3, 3], 1, scope='pool5')
+      # SSD paper uses modified pool5.
+      net = slim.max_pool2d(net, [3, 3], 1, scope='pool5', padding='SAME')
 
       # Convert end_points_collection into a end_point dict.
       end_points = slim.utils.convert_collection_to_dict(end_points_collection)

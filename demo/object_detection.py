@@ -5,10 +5,10 @@ Licensed under
 
 python demo/object_detection.py \
 --mode=train --model_dir=~/demo/model/ssd512_mscoco \
---network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=64 \
+--network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=24 \
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
-train_args --learning_rate=0.001 --optimizer=momentum --piecewise_boundaries=48 \
---piecewise_lr_decay=1.0,0.1 --dataset_meta=train2014 \
+train_args --learning_rate=0.001 --optimizer=momentum --piecewise_boundaries=12,18 \
+--piecewise_lr_decay=1.0,0.1,0.01 --dataset_meta=train2014 \
 --callbacks=train_basic,train_loss,train_speed,train_summary --trainable_vars=SSD \
 --skip_l2_loss_vars=l2_norm_scaler --summary_names=loss,learning_rate,class_losses,bboxes_losses
 
@@ -22,7 +22,7 @@ CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
 train_args --learning_rate=0.001 --optimizer=momentum \
 --piecewise_boundaries=500 --piecewise_lr_decay=1.0,0.1 \
---dataset_meta=train2014 --callbacks=train_basic,train_loss,train_speed,train_summary \
+--dataset_meta=valminusminival2014 --callbacks=train_basic,train_loss,train_speed,train_summary \
 --trainable_vars=SSD --skip_l2_loss_vars=l2_norm_scaler --summary_names=loss,learning_rate,class_losses,bboxes_losses
 
 python demo/object_detection.py \
