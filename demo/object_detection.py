@@ -51,15 +51,16 @@ python demo/object_detection.py \
 --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
---batch_size_per_gpu=1 \
+--batch_size_per_gpu=16 \
 --dataset_dir=/mnt/data/data/mscoco \
 tune_args \
 --train_callbacks=train_basic,train_loss,train_speed,train_summary \
 --eval_callbacks=eval_basic,eval_speed,eval_mscoco \
---train_dataset_meta=valminusminival2014 \
---eval_dataset_meta=valminusminival2014 \
+--train_dataset_meta=train2014 \
+--eval_dataset_meta=val2014 \
 --tune_config=source/tool/ssd512_mscoco_tune_coarse.yaml \
---eval_reduce_ops=False
+--eval_reduce_ops=False \
+--skip_l2_loss_vars=l2_norm_scaler
 
 """
 import sys

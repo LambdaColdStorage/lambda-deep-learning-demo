@@ -55,7 +55,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
     self.TRAIN_NUM_SAMPLES = 82081
-    self.EVAL_NUM_SAMPLES = 16
+    self.EVAL_NUM_SAMPLES = 2048
 
     # self.TRAIN_NUM_SAMPLES = 1024
     # self.EVAL_NUM_SAMPLES = 16
