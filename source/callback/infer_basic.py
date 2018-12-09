@@ -9,7 +9,7 @@ import sys
 
 import tensorflow as tf
 
-from callback import Callback
+from .callback import Callback
 
 
 class InferBasic(Callback):

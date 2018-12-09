@@ -179,6 +179,9 @@ class Runner(object):
     batch = self.inputter.input_fn()
     results = self.modeler.model_fn(batch)
 
+
+    # self.print_trainable_variables()
+
     # with tf.Session(config=self.session_config) as self.sess:
     #   self.sess.run(tf.global_variables_initializer())
 

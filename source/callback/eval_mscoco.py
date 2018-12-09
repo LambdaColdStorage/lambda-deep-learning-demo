@@ -11,10 +11,10 @@ import tensorflow as tf
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
-from callback import Callback
+from .callback import Callback
 
 DATASET_DIR = "/mnt/data/data/mscoco"
-DATASET_META = "valminusminival2014"
+DATASET_META = "val2017"
 
 COCO_ID_MAP = np.asarray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13,
                           14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
@@ -38,8 +38,8 @@ class EvalMSCOCO(Callback):
   def after_run(self, sess):
     print("Detection Finished ...")
 
-    for item in self.detection:
-      print(item)
+    # for item in self.detection:
+    #   print(item)
 
     if len(self.detection) > 0:
       annotation_file = os.path.join(

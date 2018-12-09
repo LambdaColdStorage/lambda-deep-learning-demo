@@ -10,7 +10,7 @@ import numpy as np
 
 import tensorflow as tf
 
-from callback import Callback
+from .callback import Callback
 
 
 def pick(prob):

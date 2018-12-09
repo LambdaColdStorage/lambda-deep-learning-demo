@@ -12,7 +12,7 @@ import numpy as np
 
 import tensorflow as tf
 
-from inputter import Inputter
+from .inputter import Inputter
 
 
 class TextGenerationTXTInputter(Inputter):

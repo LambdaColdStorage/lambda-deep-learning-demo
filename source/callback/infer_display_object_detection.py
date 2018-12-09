@@ -12,7 +12,7 @@ from scipy import ndimage
 
 import tensorflow as tf
 
-from callback import Callback
+from .callback import Callback
 
 MSCOCO_CAT_NAME = [u'person', u'bicycle', u'car', u'motorcycle', u'airplane',
                    u'bus', u'train', u'truck', u'boat', u'traffic light',

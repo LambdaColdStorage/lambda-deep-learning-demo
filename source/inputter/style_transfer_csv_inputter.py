@@ -10,7 +10,7 @@ import csv
 
 import tensorflow as tf
 
-from inputter import Inputter
+from .inputter import Inputter
 from source.augmenter.external import vgg_preprocessing
 
 

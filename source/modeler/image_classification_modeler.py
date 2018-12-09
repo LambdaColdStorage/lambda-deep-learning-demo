@@ -6,7 +6,7 @@ Licensed under
 """
 import tensorflow as tf
 
-from modeler import Modeler
+from .modeler import Modeler
 
 
 class ImageClassificationModeler(Modeler):

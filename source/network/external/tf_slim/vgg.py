@@ -376,8 +376,15 @@ def vgg_16_ssd512(inputs,
       net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv4')
       net = slim.max_pool2d(net, [2, 2], scope='pool4')
       net = slim.repeat(net, 3, slim.conv2d, 512, [3, 3], scope='conv5')
+
+      # The rest of the original vgg layers, for loading fc layers and converting to conv layerss 
+      origin_vgg = net
+      origin_vgg = slim.max_pool2d(origin_vgg, [2, 2], scope='pool5')
+      origin_vgg = slim.conv2d(origin_vgg, 4096, [7, 7], padding=fc_conv_padding, scope='fc6')
+      origin_vgg = slim.conv2d(origin_vgg, 4096, [1, 1], scope='fc7')
+
       # SSD paper uses modified pool5.
-      net = slim.max_pool2d(net, [3, 3], 1, scope='pool5', padding='SAME')
+      net = slim.max_pool2d(net, [3, 3], 1, scope='mod_pool5', padding='SAME')
 
       # Convert end_points_collection into a end_point dict.
       end_points = slim.utils.convert_collection_to_dict(end_points_collection)

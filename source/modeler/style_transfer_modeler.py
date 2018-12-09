@@ -8,7 +8,7 @@ import importlib
 
 import tensorflow as tf
 
-from modeler import Modeler
+from .modeler import Modeler
 from source.augmenter.external import vgg_preprocessing
 
 

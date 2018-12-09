@@ -11,12 +11,14 @@ import math
 
 import tensorflow as tf
 
-from inputter import Inputter
+from .inputter import Inputter
 from pycocotools.coco import COCO
 from source.network.detection import detection_common
 
 
 JSON_TO_IMAGE = {
+    "train2017": "train2017",
+    "val2017": "val2017",
     "train2014": "train2014",
     "val2014": "val2014",
     "valminusminival2014": "val2014",
@@ -54,11 +56,14 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
-    self.TRAIN_NUM_SAMPLES = 82081
-    self.EVAL_NUM_SAMPLES = 2048
+    # self.TRAIN_NUM_SAMPLES = 2048
+    # self.EVAL_NUM_SAMPLES = 2048
 
-    # self.TRAIN_NUM_SAMPLES = 1024
-    # self.EVAL_NUM_SAMPLES = 16
+    # self.TRAIN_NUM_SAMPLES = 82784
+    # self.EVAL_NUM_SAMPLES = 2048
+
+    self.TRAIN_NUM_SAMPLES = 118288
+    self.EVAL_NUM_SAMPLES = 2048
     
     self.TRAIN_FG_IOU = 0.5
     self.TRAIN_BG_IOU = 0.5

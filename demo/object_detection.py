@@ -5,10 +5,10 @@ Licensed under
 
 python demo/object_detection.py \
 --mode=train --model_dir=~/demo/model/ssd512_mscoco \
---network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=24 \
+--network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
-train_args --learning_rate=0.001 --optimizer=momentum --piecewise_boundaries=12,18 \
---piecewise_lr_decay=1.0,0.1,0.01 --dataset_meta=train2014 \
+train_args --learning_rate=0.00034 --optimizer=momentum --piecewise_boundaries=12,18 \
+--piecewise_lr_decay=1.0,0.1,0.01 --dataset_meta=train2017 \
 --callbacks=train_basic,train_loss,train_speed,train_summary --trainable_vars=SSD \
 --skip_l2_loss_vars=l2_norm_scaler --summary_names=loss,learning_rate,class_losses,bboxes_losses
 
@@ -56,10 +56,11 @@ python demo/object_detection.py \
 tune_args \
 --train_callbacks=train_basic,train_loss,train_speed,train_summary \
 --eval_callbacks=eval_basic,eval_speed,eval_mscoco \
---train_dataset_meta=train2014 \
---eval_dataset_meta=val2014 \
+--train_dataset_meta=train2017 \
+--eval_dataset_meta=val2017 \
 --tune_config=source/tool/ssd512_mscoco_tune_coarse.yaml \
 --eval_reduce_ops=False \
+--trainable_vars=SSD \
 --skip_l2_loss_vars=l2_norm_scaler
 
 """

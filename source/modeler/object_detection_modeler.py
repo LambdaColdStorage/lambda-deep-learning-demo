@@ -8,7 +8,7 @@ import importlib
 
 import tensorflow as tf
 
-from modeler import Modeler
+from .modeler import Modeler
 from source.network.detection import detection_common
 
 
@@ -30,12 +30,14 @@ class ObjectDetectionModeler(Modeler):
     self.config.NMS_THRESH = 0.25
 
     # self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/conv5/conv5_3"
-    self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/pool5"
+    self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/mod_pool5"
     self.config.FEATURE_LAYERS = ("vgg_16/conv4/conv4_3",
                                   "ssd_conv7", "ssd_conv8_2",
                                   "ssd_conv9_2", "ssd_conv10_2",
                                   "ssd_conv11_2", "ssd_conv12_2")
     self.config.FEATURE_MAP_SIZE = (64, 32, 16, 8, 4, 2, 1)
+
+    self.pre_weights = {}
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
@@ -56,14 +58,13 @@ class ObjectDetectionModeler(Modeler):
     #     feat_bboxes: batch_size x num_anchors x 4
 
     # Feature net
-    last_layer, inputs, self.feature_net_init_flag = self.feature_net(
-      inputs, self.config.data_format,
+    last_layer, inputs, self.feature_net_init_flag, self.pre_weights = self.feature_net(
+      inputs, self.pre_weights, self.config.data_format,
       is_training=False, init_flag=self.feature_net_init_flag,
       ckpt_path=self.config.feature_net_path)
 
     is_training = (self.config.mode == "train")
-    return self.net(last_layer, inputs,
-                    self.config.BACKBONE_OUTPUT_LAYER,
+    return self.net(last_layer, inputs, self.pre_weights,
                     self.config.FEATURE_LAYERS,
                     self.config.num_classes, self.num_anchors,
                     is_training=is_training, data_format=self.config.data_format)

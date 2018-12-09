@@ -8,7 +8,7 @@ import numpy as np
 
 import tensorflow as tf
 
-from modeler import Modeler
+from .modeler import Modeler
 
 
 class ImageSegmentationModeler(Modeler):

@@ -7,15 +7,15 @@ TRAIN_SAMPLES_PER_IMAGE = 512
 TRAIN_FG_RATIO = 0.5
 KERNEL_INIT = tf.contrib.layers.xavier_initializer()
 
-def ssd_feature_fn(last_layer, feats, backbone_output_layer):
-  # # Shared SSD feature layer
 
-  # print(feats)
-  # print(feats)
-  # output_backbone = feats[backbone_output_layer]
+def vgg_mod_fn(last_layer, feats, pre_weights):
+  # Shared SSD feature layer
+
   output_backbone = last_layer
 
-  # Add additional feature layers
+  # Add modified VGG layers 
+  init_ssd_conv6_w = tf.constant_initializer(pre_weights["mod_w_fc6"])
+  init_ssd_conv6_b = tf.constant_initializer(pre_weights["mod_b_fc6"])
 
   net = tf.layers.conv2d(inputs=output_backbone,
                          filters=1024,
@@ -23,21 +23,34 @@ def ssd_feature_fn(last_layer, feats, backbone_output_layer):
                          strides=(1, 1),
                          padding=('SAME'),
                          dilation_rate=6,
-                         kernel_initializer=KERNEL_INIT,
+                         kernel_initializer=init_ssd_conv6_w,
+                         bias_initializer=init_ssd_conv6_b,
                          activation=tf.nn.relu,
                          name='conv6')
+  feats["ssd_conv6"] = net
+
+  init_ssd_conv7_w = tf.constant_initializer(pre_weights["mod_w_fc7"])
+  init_ssd_conv7_b = tf.constant_initializer(pre_weights["mod_b_fc7"])
 
   net = tf.layers.conv2d(inputs=net,
                          filters=1024,
                          kernel_size=[1, 1],
                          strides=(1, 1),
                          padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
+                         kernel_initializer=init_ssd_conv7_w,
+                         bias_initializer=init_ssd_conv7_b,
                          activation=tf.nn.relu,
                          name='conv7')
   feats["ssd_conv7"] = net
 
-  net = tf.layers.conv2d(inputs=net,
+  return net, feats
+
+def ssd_feature_fn(last_layer, feats):
+
+
+  # Add additional convolutional layers
+
+  net = tf.layers.conv2d(inputs=last_layer,
                          filters=256,
                          kernel_size=[1, 1],
                          strides=(1, 1),
@@ -200,19 +213,23 @@ def create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index):
   return loss
 
 
-def net(last_layer, feats,
-        backbone_output_layer,
+def net(last_layer, feats, pre_weights,
         feature_layers,
         num_classes, num_anchors,
         is_training, data_format="channels_last"):
 
-  
+  with tf.variable_scope(name_or_scope='MOD',
+                         values=[last_layer, feats],
+                         reuse=tf.AUTO_REUSE):
+    # Add shared features
+    net, feats = vgg_mod_fn(last_layer, feats, pre_weights)
+
   with tf.variable_scope(name_or_scope='SSD',
-                         values=[feats],
+                         values=[net, feats],
                          reuse=tf.AUTO_REUSE):
 
     # Add shared features
-    feats = ssd_feature_fn(last_layer, feats, backbone_output_layer)
+    feats = ssd_feature_fn(net, feats)
 
     classes = []
     bboxes = []

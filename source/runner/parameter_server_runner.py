@@ -6,7 +6,7 @@ Licensed under
 """
 import tensorflow as tf
 
-from runner import Runner
+from .runner import Runner
 
 
 class ParameterServerRunner(Runner):

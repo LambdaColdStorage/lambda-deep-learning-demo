@@ -9,7 +9,7 @@ from __future__ import print_function
 import tensorflow as tf
 from tensorflow.python.util import nest
 
-from inputter import Inputter
+from .inputter import Inputter
 
 
 class ImageClassificationSynInputter(Inputter):
