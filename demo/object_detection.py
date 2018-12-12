@@ -5,46 +5,27 @@ Licensed under
 
 python demo/object_detection.py \
 --mode=train --model_dir=~/demo/model/ssd512_mscoco \
---network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=1 \
+--network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=128 \
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
-train_args --learning_rate=0.00034 --optimizer=momentum --piecewise_boundaries=12,18 \
---piecewise_lr_decay=1.0,0.1,0.01 --dataset_meta=train2017 \
+train_args --learning_rate=0.001 --optimizer=momentum --piecewise_boundaries=10000 \
+--piecewise_lr_decay=1.0,0.1 --dataset_meta=train2017 \
 --callbacks=train_basic,train_loss,train_speed,train_summary --trainable_vars=SSD \
 --skip_l2_loss_vars=l2_norm_scaler --summary_names=loss,learning_rate,class_losses,bboxes_losses
-
-
-CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
---mode=train \
---model_dir=~/demo/model/ssd512_mscoco \
---network=ssd512 \
---augmenter=ssd_augmenter \
---batch_size_per_gpu=1 --epochs=1000 \
---dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
-train_args --learning_rate=0.001 --optimizer=momentum \
---piecewise_boundaries=500 --piecewise_lr_decay=1.0,0.1 \
---dataset_meta=valminusminival2014 --callbacks=train_basic,train_loss,train_speed,train_summary \
---trainable_vars=SSD --skip_l2_loss_vars=l2_norm_scaler --summary_names=loss,learning_rate,class_losses,bboxes_losses
 
 python demo/object_detection.py \
 --mode=eval \
 --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 \
 --augmenter=ssd_augmenter \
---batch_size_per_gpu=2 --epochs=1 \
+--batch_size_per_gpu=8 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco \
-eval_args --dataset_meta=valminusminival2014 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
+eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
-CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py \
---mode=infer \
---model_dir=~/demo/model/ssd512_mscoco \
---network=ssd512 \
---augmenter=ssd_augmenter \
---batch_size_per_gpu=1 --epochs=1 \
---dataset_dir=/mnt/data/data/mscoco \
---num_classes=81 --resolution=512 \
-infer_args \
---callbacks=infer_basic,infer_display_object_detection \
---test_samples=/mnt/data/data/mscoco/val2014/COCO_val2014_000000000042.jpg
+CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py --mode=infer --model_dir=~/ssd512_mscoco \
+--network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=1 --epochs=1 \
+--dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
+infer_args --callbacks=infer_basic,infer_display_object_detection \
+--test_samples=/mnt/data/data/mscoco/val2014/COCO_val2014_000000000042.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000073.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000074.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000133.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000136.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000143.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000164.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000192.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000196.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000208.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000241.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000257.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000283.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000294.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000328.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000338.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000357.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000359.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000360.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000387.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000395.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000397.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000400.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000415.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000428.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000459.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000472.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000474.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000486.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000488.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000502.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000520.jpg
 
 python demo/object_detection.py \
 --mode=tune \

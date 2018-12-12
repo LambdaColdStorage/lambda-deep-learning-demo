@@ -247,7 +247,7 @@ def net(last_layer, feats, pre_weights,
 
       # Different from the original SSD paper, we normalize the feature maps for all bbox layers
       # Otherwise we found bbox loss will be too high
-      feat = tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12)
+      # feat = tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12)
 
       bboxes.append(bbox_graph_fn(feat, num, layer))
 

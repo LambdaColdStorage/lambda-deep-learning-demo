@@ -62,7 +62,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     # self.TRAIN_NUM_SAMPLES = 82784
     # self.EVAL_NUM_SAMPLES = 2048
 
-    self.TRAIN_NUM_SAMPLES = 118288
+    self.TRAIN_NUM_SAMPLES = 117266
     self.EVAL_NUM_SAMPLES = 2048
     
     self.TRAIN_FG_IOU = 0.5

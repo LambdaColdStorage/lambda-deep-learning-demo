@@ -148,7 +148,8 @@ class ObjectDetectionModeler(Modeler):
               "labels": detection_labels,
               "bboxes": detection_bboxes,
               "scales": tf.unstack(inputs[5], self.config.batch_size_per_gpu),
-              "translations": tf.unstack(inputs[6], self.config.batch_size_per_gpu)}
+              "translations": tf.unstack(inputs[6], self.config.batch_size_per_gpu),
+              "file_name": tf.unstack(inputs[7], self.config.batch_size_per_gpu)}
 
 
 def build(args, network):

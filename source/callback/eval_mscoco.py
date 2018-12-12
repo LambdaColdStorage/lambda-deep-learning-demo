@@ -6,6 +6,7 @@ Licensed under
 """
 import os
 import numpy as np
+from scipy import misc
 
 import tensorflow as tf
 from pycocotools.coco import COCO
@@ -60,15 +61,23 @@ class EvalMSCOCO(Callback):
 
     num_images = len(outputs_dict["image_id"])
     for i in range(num_images):
+      file_name = outputs_dict["file_name"][i]
       num_detections = len(outputs_dict["labels"][i])
       translation = outputs_dict["translations"][i]
       scale = outputs_dict["scales"][i]
 
+      input_image = misc.imread(file_name)
+      h, w = input_image.shape[:2]
+
       # COCO evaluation is based on per detection
-      for d in range(num_detections):
+      for d in range(num_detections):      
         box = outputs_dict["bboxes"][i][d]
         box = box - [translation[1], translation[0], translation[1], translation[0]]
         box = box / scale
+        box[0] = np.clip(box[0], 0, w)
+        box[1] = np.clip(box[1], 0, h)
+        box[2] = np.clip(box[2], 0, w)
+        box[3] = np.clip(box[3], 0, h)
         box[2] = box[2] - box[0]
         box[3] = box[3] - box[1]
         result = {

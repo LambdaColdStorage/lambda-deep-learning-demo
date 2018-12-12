@@ -56,6 +56,7 @@ class InferDisplayObjectDetection(Callback):
       outputs_dict["file_name"]):
 
       input_image = misc.imread(file_name).astype(np.float32) / 255.0
+      h, w = input_image.shape[:2]
 
       plt.figure()
       plt.axis('off')
@@ -64,7 +65,10 @@ class InferDisplayObjectDetection(Callback):
         # Compute the location to draw annotation
         box = box - [translation[1], translation[0], translation[1], translation[0]]
         box = box / scale
-        print(box)
+        box[0] = np.clip(box[0], 0, w)
+        box[1] = np.clip(box[1], 0, h)
+        box[2] = np.clip(box[2], 0, w)
+        box[3] = np.clip(box[3], 0, h)        
         label = MSCOCO_CAT_NAME[label - 1]
         ((linew, lineh), _) = cv2.getTextSize(label, FONT, FONT_SCALE, 1)
         top_left = [box[0] + 1, box[1] - 1.3 * lineh]
@@ -142,7 +146,7 @@ class InferDisplayObjectDetection(Callback):
       plt.show()
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
-    self.display_normalized(outputs_dict)
+    self.display_ori(outputs_dict)
 
 
 def build(config):
