@@ -177,56 +177,56 @@ class Runner(object):
       fn()
 
     batch = self.inputter.input_fn()
-    results = self.modeler.model_fn(batch)
+    # results = self.modeler.model_fn(batch)
 
 
     # self.print_trainable_variables()
 
-    # with tf.Session(config=self.session_config) as self.sess:
-    #   self.sess.run(tf.global_variables_initializer())
+    with tf.Session(config=self.session_config) as self.sess:
+      self.sess.run(tf.global_variables_initializer())
 
-    #   num_batch = 1024
+      num_batch = 16
 
-    #   # Test input_fn
-    #   for i in range(num_batch):
-    #     if i == 1:
-    #       total_start_time = time.time()
-    #     start_time = time.time()
-    #     _batch = self.sess.run(batch)
-    #     end_time = time.time()
-    #     #print(end_time - start_time)
-    #     if _batch.shape[0] == 0:
-    #       print(_batch.shape)
-    #     #import matplotlib.pyplot as plt
-    #     #import numpy as np
-    #     #import cv2
-    #     #image = _batch[0]
-    #     #_R_MEAN = 123.68
-    #     #_G_MEAN = 116.78
-    #     #_B_MEAN = 103.94
-    #     #image[:, :, 0] = image[:, :, 0] + _R_MEAN
-    #     #image[:, :, 1] = image[:, :, 1] + _G_MEAN
-    #     #image[:, :, 2] = image[:, :, 2] + _B_MEAN
-    #     #image = image / 255.0
-    #     #for box in _batch[2]:
-    #     #  # Draw twice to make detections more visually noticable
-    #     #  cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]),
-    #     #                color=(0, 0, 0), thickness=5)
-    #     #  cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]),
-    #     #                color=(1, 0, 0), thickness=2)        
-    #     #plt.figure()
-    #     #plt.axis('off')
-    #     #plt.imshow(image)
-    #     #plt.show()
+      # Test input_fn
+      for i in range(num_batch):
+        if i == 1:
+          total_start_time = time.time()
+        start_time = time.time()
+        _batch = self.sess.run(batch)
+        end_time = time.time()
+        #print(end_time - start_time)
+        # if _batch.shape[0] == 0:
+        #   print(_batch.shape)
+        import matplotlib.pyplot as plt
+        import numpy as np
+        import cv2
+        image = _batch[0]
+        _R_MEAN = 123.68
+        _G_MEAN = 116.78
+        _B_MEAN = 103.94
+        image[:, :, 0] = image[:, :, 0] + _R_MEAN
+        image[:, :, 1] = image[:, :, 1] + _G_MEAN
+        image[:, :, 2] = image[:, :, 2] + _B_MEAN
+        image = image / 255.0
+        for box in _batch[2]:
+          # Draw twice to make detections more visually noticable
+          cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]),
+                       color=(0, 0, 0), thickness=5)
+          cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]),
+                       color=(1, 0, 0), thickness=2)        
+        plt.figure()
+        plt.axis('off')
+        plt.imshow(image)
+        plt.show()
 
-    #   total_end_time = time.time()
-    #   #print("average time: " +
-    #   #      str((total_end_time - total_start_time) / (num_batch - 1)))
+      total_end_time = time.time()
+      #print("average time: " +
+      #      str((total_end_time - total_start_time) / (num_batch - 1)))
 
-    #   # # Test model_fn
-    #   # for i in range(num_batch):
-    #   #   _results = self.sess.run(results)
-    #   #   print(_results)
+      # # Test model_fn
+      # for i in range(num_batch):
+      #   _results = self.sess.run(results)
+      #   print(_results)
 
 
 def build(config, inputter, modeler, callbacks):

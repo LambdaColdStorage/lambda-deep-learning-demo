@@ -23,13 +23,12 @@ class ObjectDetectionModeler(Modeler):
 
     self.config.CLASS_WEIGHTS = 1.0
     self.config.BBOXES_WEIGHTS = 1.0
-    self.config.L2_REGULARIZATION = 0.1
+    self.config.L2_REGULARIZATION = 0.00025
 
     self.config.RESULT_SCORE_THRESH = 0.5
     self.config.RESULTS_PER_IM = 10
     self.config.NMS_THRESH = 0.25
 
-    # self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/conv5/conv5_3"
     self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/mod_pool5"
     self.config.FEATURE_LAYERS = ("vgg_16/conv4/conv4_3",
                                   "ssd_conv7", "ssd_conv8_2",
@@ -42,8 +41,6 @@ class ObjectDetectionModeler(Modeler):
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
     self.anchors, self.anchors_map, self.num_anchors = inputter.get_anchors()
-    # self.anchors = inputter.get_anchors()
-    # self.anchors_map = inputter.get_anchors_map()
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
@@ -95,15 +92,17 @@ class ObjectDetectionModeler(Modeler):
     return detection_topk_scores, detection_topk_labels, detection_topk_bboxes,detection_topk_anchors
 
   def model_fn(self, inputs):
-    # image_id = inputs[0]
-    # gt_image = inputs[1]
-    # gt_label = inputs[2]
-    # gt_boxes = decode_bboxes(inputs[3][0], self.anchors_map)
-    # gt_mask = inputs[4][0]
-    # scale = inputs[5]
-    # translation = inputs[6]
-    # file_name = inputs[7]
-    # return gt_image, gt_label, gt_boxes, gt_mask
+    # Args:
+    #     image_id = inputs[0]
+    #     gt_image = inputs[1]
+    #     gt_label = inputs[2]
+    #     gt_boxes = decode_bboxes(inputs[3][0], self.anchors_map)
+    #     gt_mask = inputs[4][0]
+    #     scale = inputs[5]
+    #     translation = inputs[6]
+    #     file_name = inputs[7]
+    # Returns:
+    #     bboxes: x1, y1, x2, y2
 
     outputs = self.create_graph_fn(inputs[1])
 

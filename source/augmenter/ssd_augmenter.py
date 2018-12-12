@@ -12,6 +12,9 @@ _B_MEAN = 103.94
 
 BBOX_CROP_OVERLAP = 0.5         # Minimum overlap to keep a bbox after cropping.
 
+RANDOM_SUB_SAMPLE = False
+RANDOM_HFLIP = True
+RANDOM_COLOR = True
 
 def compute_new_shape(height, width, resolution):
   height = tf.to_float(height)
@@ -171,8 +174,9 @@ def random_flip_left_right(image, bboxes, seed=None):
     def flip_bboxes(bboxes):
         """Flip bounding boxes coordinates.
         """
-        bboxes = tf.stack([1 - bboxes[:, 2], bboxes[:, 1],
-                           1 - bboxes[:, 0], bboxes[:, 3]], axis=-1)
+        image_shape = tf.to_float(tf.shape(image))
+        bboxes = tf.stack([image_shape[1] - bboxes[:, 2], bboxes[:, 1],
+                           image_shape[1] - bboxes[:, 0], bboxes[:, 3]], axis=-1)        
         return bboxes
 
     # Random flip. Tensorflow implementation.
@@ -270,62 +274,71 @@ def preprocess_for_train(image,
     boxes_ori = boxes
 
     # randomly sample patches
-    image_shape = tf.shape(image)
+    if RANDOM_SUB_SAMPLE:
+      image_shape = tf.shape(image)
 
-    x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
-    x1 = tf.expand_dims(tf.div(x1, tf.to_float(image_shape[1])), -1)
-    x2 = tf.expand_dims(tf.div(x2, tf.to_float(image_shape[1])), -1)
-    y1 = tf.expand_dims(tf.div(y1, tf.to_float(image_shape[0])), -1)
-    y2 = tf.expand_dims(tf.div(y2, tf.to_float(image_shape[0])), -1)
-    boxes = tf.concat([y1, x1, y2, x2], axis=1)
+      x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
+      x1 = tf.expand_dims(tf.div(x1, tf.to_float(image_shape[1])), -1)
+      x2 = tf.expand_dims(tf.div(x2, tf.to_float(image_shape[1])), -1)
+      y1 = tf.expand_dims(tf.div(y1, tf.to_float(image_shape[0])), -1)
+      y2 = tf.expand_dims(tf.div(y2, tf.to_float(image_shape[0])), -1)
+      boxes = tf.concat([y1, x1, y2, x2], axis=1)
 
-    bbox_begin, bbox_size, distort_bbox = tf.image.sample_distorted_bounding_box(
-      image_shape,
-      bounding_boxes=tf.expand_dims(boxes, 0),
-      min_object_covered=BBOX_CROP_OVERLAP,
-      aspect_ratio_range=(0.8, 1.2),
-      area_range=(0.5, 1.0),
-      max_attempts=200,
-      use_image_if_no_bounding_boxes=True)
+      bbox_begin, bbox_size, distort_bbox = tf.image.sample_distorted_bounding_box(
+        image_shape,
+        bounding_boxes=tf.expand_dims(boxes, 0),
+        min_object_covered=BBOX_CROP_OVERLAP,
+        aspect_ratio_range=(0.8, 1.2),
+        area_range=(0.5, 1.0),
+        max_attempts=200,
+        use_image_if_no_bounding_boxes=True)
 
-    distort_bbox = distort_bbox[0, 0]
+      distort_bbox = distort_bbox[0, 0]
 
-    image = tf.slice(image, bbox_begin, bbox_size)
+      image = tf.slice(image, bbox_begin, bbox_size)
 
-    boxes = bboxes_resize(distort_bbox, boxes)
+      boxes = bboxes_resize(distort_bbox, boxes)
 
-    classes, boxes = bboxes_filter_overlap(classes, boxes,
-                                           threshold=BBOX_CROP_OVERLAP,
-                                           assign_negative=False)
+      classes, boxes = bboxes_filter_overlap(classes, boxes,
+                                             threshold=BBOX_CROP_OVERLAP,
+                                             assign_negative=False)
 
-    y1, x1, y2, x2 = tf.unstack(boxes, 4, axis=1)
-    x1 = tf.expand_dims(x1, -1)
-    x2 = tf.expand_dims(x2, -1)
-    y1 = tf.expand_dims(y1, -1)
-    y2 = tf.expand_dims(y2, -1)
-    boxes = tf.concat([x1, y1, x2, y2], axis=1)
+      y1, x1, y2, x2 = tf.unstack(boxes, 4, axis=1)
+      image_shape = tf.shape(image)
 
-    # Randomly flip the image horizontally.
-    image, boxes = random_flip_left_right(image, boxes)
+      w = tf.to_float(image_shape[1])
+      h = tf.to_float(image_shape[0])
+
+      x1 = tf.scalar_mul(w, x1)
+      x2 = tf.scalar_mul(w, x2)
+      y1 = tf.scalar_mul(h, y1)
+      y2 = tf.scalar_mul(h, y2)
+
+      x1 = tf.clip_by_value(x1, 0.0, w)
+      x2 = tf.clip_by_value(x2, 0.0, w)
+      y1 = tf.clip_by_value(y1, 0.0, h)
+      y2 = tf.clip_by_value(y2, 0.0, h)
+
+      x1 = tf.expand_dims(x1, -1)
+      x2 = tf.expand_dims(x2, -1)
+      y1 = tf.expand_dims(y1, -1)
+      y2 = tf.expand_dims(y2, -1)
+
+      boxes = tf.concat([x1, y1, x2, y2], axis=1)
+
+    if RANDOM_HFLIP:
+      # Randomly flip the image horizontally.
+      image, boxes = random_flip_left_right(image, boxes)
     
-    # Color distortion
-    image = tf.div(image, 255.0)
-    image = apply_with_random_selector(
-            image,
-            lambda x, ordering: distort_color(x, ordering, fast_mode=False),
-            num_cases=4)
-    image = tf.scalar_mul(255.0, image)
+    if RANDOM_COLOR:
+      # Color distortion
+      image = tf.div(image, 255.0)
+      image = apply_with_random_selector(
+              image,
+              lambda x, ordering: distort_color(x, ordering, fast_mode=False),
+              num_cases=4)
+      image = tf.scalar_mul(255.0, image)
     
-    # # transform bboxes back to pixel space
-    image_shape = tf.shape(image)
-    x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
-    x1 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[1]), x1), -1)
-    x2 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[1]), x2), -1)
-    y1 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[0]), y1), -1)
-    y2 = tf.expand_dims(tf.scalar_mul(tf.to_float(image_shape[0]), y2), -1)
-    boxes = tf.concat([x1, y1, x2, y2], axis=1)
-
-
     # Rollback to the full image if there is no boxes
     no_box_cond = tf.equal(tf.size(boxes), 0)
     image = tf.cond(no_box_cond,

@@ -37,6 +37,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     self.anchors = None
     self.anchors_stride = [8, 16, 32, 64, 128, 256, 512]
+
     self.anchors_sizes = [(20.48, 51.2),
                           (51.2, 133.12),
                           (133.12, 215.04),
@@ -44,6 +45,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                           (296.96, 378.88),
                           (378.88, 460.8),
                           (460.8, 542.72)]
+
     self.num_anchors = []
     self.anchors_aspect_ratios = [((1.0, 2.0, 0.5), (1.0,)),
                                   ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
