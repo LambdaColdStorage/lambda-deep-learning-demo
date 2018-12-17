@@ -25,7 +25,7 @@ class ObjectDetectionModeler(Modeler):
     self.config.BBOXES_WEIGHTS = 1.0
     self.config.L2_REGULARIZATION = 0.00025
 
-    self.config.RESULT_SCORE_THRESH = 0.5
+    self.config.RESULT_SCORE_THRESH = 0.8
     self.config.RESULTS_PER_IM = 10
     self.config.NMS_THRESH = 0.25
 

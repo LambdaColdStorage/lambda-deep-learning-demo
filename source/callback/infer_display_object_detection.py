@@ -64,7 +64,7 @@ class InferDisplayObjectDetection(Callback):
       for label, box in zip(l, b):
         # Compute the location to draw annotation
         box = box - [translation[1], translation[0], translation[1], translation[0]]
-        box = box / scale
+        box = box / [scale[1], scale[0], scale[1], scale[0]]
         box[0] = np.clip(box[0], 0, w)
         box[1] = np.clip(box[1], 0, h)
         box[2] = np.clip(box[2], 0, w)

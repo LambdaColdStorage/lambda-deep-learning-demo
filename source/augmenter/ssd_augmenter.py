@@ -24,12 +24,25 @@ def compute_new_shape(height, width, resolution):
   scale = tf.cond(tf.greater(height, width),
                   lambda: resolution / height,
                   lambda: resolution / width)
-  new_height = tf.to_int32(tf.rint(height * scale))
-  new_width = tf.to_int32(tf.rint(width * scale))
+  scale = [scale, scale]
+  new_height = tf.to_int32(tf.rint(height * scale[0]))
+  new_width = tf.to_int32(tf.rint(width * scale[1]))
 
   translation = (resolution - [tf.to_float(new_height), tf.to_float(new_width)]) / 2.0
   return new_height, new_width, scale, translation
 
+
+def compute_new_shape_bilinear(height, width, resolution):
+  height = tf.to_float(height)
+  width = tf.to_float(width)
+  resolution = tf.to_float(resolution)
+
+  scale = [resolution / height, resolution / width]
+  new_height = tf.to_int32(tf.rint(height * scale[0]))
+  new_width = tf.to_int32(tf.rint(width * scale[1]))
+
+  translation = [tf.to_float(0), tf.to_float(0)]
+  return new_height, new_width, scale, translation
 
 def aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear"):
   resolution = tf.convert_to_tensor(resolution, dtype=tf.int32)
@@ -39,6 +52,35 @@ def aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
   width = shape[1]
 
   new_height, new_width, scale, translation = compute_new_shape(height, width, resolution)
+  image = tf.expand_dims(image, 0)
+
+  if resize_mode == 'bilinear':
+    resized_image = tf.image.resize_bilinear(image,
+                                             [new_height, new_width],
+                                             align_corners=False)
+  elif resize_mode == 'nearest':
+    resized_image = tf.image.resize_nearest_neighbor(image,
+                                                     [new_height, new_width],
+                                                     align_corners=False)
+  else:
+    assert False, "Unknown image resize mode: '{}'".format(resize_mode)
+
+  resized_image = tf.squeeze(resized_image, 0)
+  new_shape = tf.shape(resized_image)
+
+  resized_image.set_shape([None, None, depth])
+
+  return resized_image, scale, translation
+
+
+def bilinear_resize(image, resolution, depth=3, resize_mode="bilinear"):
+  resolution = tf.convert_to_tensor(resolution, dtype=tf.int32)
+
+  shape = tf.shape(image)
+  height = shape[0]
+  width = shape[1]
+
+  new_height, new_width, scale, translation = compute_new_shape_bilinear(height, width, resolution)
   image = tf.expand_dims(image, 0)
 
   if resize_mode == 'bilinear':
@@ -385,12 +427,25 @@ def preprocess_for_eval(image,
     image = tf.concat(axis=2, values=channels)
 
     # transform image and boxes
-    image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
+    # image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
+
+
+    image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
+
     image = tf.image.resize_image_with_crop_or_pad(
       image,
       resolution,
       resolution)
-    boxes = tf.scalar_mul(scale, boxes) + [translation[1], translation[0], translation[1], translation[0]]
+
+    x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
+    x1 = tf.scalar_mul(scale[1], x1)
+    y1 = tf.scalar_mul(scale[0], y1)
+    x2 = tf.scalar_mul(scale[1], x2)
+    y2 = tf.scalar_mul(scale[0], y2)
+    boxes = tf.concat([x1, y1, x2, y2], axis=1)
+
+    boxes = boxes + [translation[1], translation[0], translation[1], translation[0]]
+
 
   return image, classes, boxes, scale, translation
 
