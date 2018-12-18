@@ -72,8 +72,7 @@ class EvalMSCOCO(Callback):
       # COCO evaluation is based on per detection
       for d in range(num_detections):      
         box = outputs_dict["bboxes"][i][d]
-        box = box - [translation[1], translation[0], translation[1], translation[0]]
-        box = box / [scale[1], scale[0], scale[1], scale[0]]
+        box = box * [float(w), float(h), float(w), float(h)]
         box[0] = np.clip(box[0], 0, w)
         box[1] = np.clip(box[1], 0, h)
         box[2] = np.clip(box[2], 0, w)

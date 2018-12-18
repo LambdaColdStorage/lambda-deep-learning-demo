@@ -25,7 +25,7 @@ class ObjectDetectionModeler(Modeler):
     self.config.BBOXES_WEIGHTS = 1.0
     self.config.L2_REGULARIZATION = 0.00025
 
-    self.config.RESULT_SCORE_THRESH = 0.8
+    self.config.RESULT_SCORE_THRESH = 0.2
     self.config.RESULTS_PER_IM = 10
     self.config.NMS_THRESH = 0.25
 
@@ -35,7 +35,6 @@ class ObjectDetectionModeler(Modeler):
                                   "ssd_conv9_2", "ssd_conv10_2",
                                   "ssd_conv11_2", "ssd_conv12_2")
     self.config.FEATURE_MAP_SIZE = (64, 32, 16, 8, 4, 2, 1)
-
     self.pre_weights = {}
 
   def get_dataset_info(self, inputter):
@@ -86,6 +85,7 @@ class ObjectDetectionModeler(Modeler):
 
     feat_bboxes = detection_common.decode_bboxes_batch(feat_bboxes, self.anchors_map)
 
+
     detection_topk_scores, detection_topk_labels, detection_topk_bboxes, detection_topk_anchors = detection_common.detect_batch(
       score_classes, feat_bboxes, self.config, self.anchors_map)
 
@@ -104,7 +104,7 @@ class ObjectDetectionModeler(Modeler):
     # Returns:
     #     bboxes: x1, y1, x2, y2
 
-    outputs = self.create_graph_fn(inputs[1])
+    outputs = self.create_graph_fn(inputs[1])    
 
     if self.config.mode == "train":
       class_losses, bboxes_losses = self.create_loss_fn(inputs, outputs)

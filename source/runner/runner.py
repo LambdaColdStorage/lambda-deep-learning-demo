@@ -181,7 +181,10 @@ class Runner(object):
     # image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name
     batch = self.inputter.input_fn()
 
-    # results = self.modeler.model_fn(batch)
+    results = self.modeler.model_fn(batch)
+
+    print(results)
+    sys.exit()
     # self.print_trainable_variables()
 
     with tf.Session(config=self.session_config) as self.sess:
@@ -194,12 +197,12 @@ class Runner(object):
         if i == 1:
           total_start_time = time.time()
         start_time = time.time()
-        _batch = self.sess.run(batch)
+        # _batch = self.sess.run(batch)
+        _results = self.sess.run(results)
         end_time = time.time()
+        print(_results.shape)
         #print(end_time - start_time)
 
-        print(_batch[3])
-        print(_batch[7])
 
         # import matplotlib.pyplot as plt
         # import numpy as np

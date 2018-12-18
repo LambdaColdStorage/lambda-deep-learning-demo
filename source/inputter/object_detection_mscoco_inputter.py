@@ -366,8 +366,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                     tf.int64,
                     tf.float32))
 
-    # if self.config.mode == "train":
-    #   dataset = dataset.shuffle(self.get_num_samples())
+    if self.config.mode == "train":
+      dataset = dataset.shuffle(self.get_num_samples())
 
     dataset = dataset.repeat(self.config.epochs)
 

@@ -12,10 +12,10 @@ _B_MEAN = 103.94
 
 BBOX_CROP_OVERLAP = 0.5         # Minimum overlap to keep a bbox after cropping.
 
-RANDOM_SUB_SAMPLE = False
+RANDOM_SUB_SAMPLE = True
 RANDOM_ZOOM_OUT = True
 RANDOM_HFLIP = True
-RANDOM_COLOR = False
+RANDOM_COLOR = True
 
 def compute_new_shape(height, width, resolution):
   height = tf.to_float(height)
@@ -495,14 +495,14 @@ def preprocess_for_eval(image,
 
     # transform image and boxes
     # image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
+    # image = tf.image.resize_image_with_crop_or_pad(
+    #   image,
+    #   resolution,
+    #   resolution)
 
     image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
-
-    image = tf.image.resize_image_with_crop_or_pad(
-      image,
-      resolution,
-      resolution)
-
+    # Need this to make later tensor unstack working
+    image.set_shape([resolution, resolution, 3])
     x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
     x1 = tf.scalar_mul(scale[1], x1)
     y1 = tf.scalar_mul(scale[0], y1)
