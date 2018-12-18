@@ -12,9 +12,10 @@ _B_MEAN = 103.94
 
 BBOX_CROP_OVERLAP = 0.5         # Minimum overlap to keep a bbox after cropping.
 
-RANDOM_SUB_SAMPLE = False
+RANDOM_SUB_SAMPLE = True
+RANDOM_ZOOM_OUT = True
 RANDOM_HFLIP = True
-RANDOM_COLOR = True
+RANDOM_COLOR = False
 
 def compute_new_shape(height, width, resolution):
   height = tf.to_float(height)
@@ -216,9 +217,8 @@ def random_flip_left_right(image, bboxes, seed=None):
     def flip_bboxes(bboxes):
         """Flip bounding boxes coordinates.
         """
-        image_shape = tf.to_float(tf.shape(image))
-        bboxes = tf.stack([image_shape[1] - bboxes[:, 2], bboxes[:, 1],
-                           image_shape[1] - bboxes[:, 0], bboxes[:, 3]], axis=-1)        
+        bboxes = tf.stack([1.0 - bboxes[:, 2], bboxes[:, 1],
+                           1.0 - bboxes[:, 0], bboxes[:, 3]], axis=-1)        
         return bboxes
 
     # Random flip. Tensorflow implementation.
@@ -235,6 +235,60 @@ def random_flip_left_right(image, bboxes, seed=None):
                          lambda: flip_bboxes(bboxes),
                          lambda: bboxes)
         return image, bboxes
+
+
+def random_zoom_out(image, boxes, seed=None):
+  def zoom(image, boxes):
+    
+    zoom_factor = tf.random.uniform([], 1.0, 4.0, seed=seed)
+    old_height = tf.to_float(tf.shape(image)[0])
+    old_width = tf.to_float(tf.shape(image)[1])
+    new_height = old_height / zoom_factor
+    new_width = old_width / zoom_factor
+    # new_image = tf.zeros((sz, sz))
+    image = tf.expand_dims(image, 0)
+    image = tf.image.resize_bilinear(image,
+                                     [tf.to_int32(new_height), tf.to_int32(new_width)],
+                                     align_corners=False)
+    image = tf.squeeze(image, 0)
+    scale = [new_height / old_height, new_width / old_width]
+
+    # make a new image by padding zeros
+    pad_x = old_width - new_width
+    pad_y = old_height - new_height
+    pad_left = tf.random.uniform([], 0, pad_x)
+    pad_right = pad_x - pad_left
+    pad_top = tf.random.uniform([], 0, pad_y)
+    pad_down = pad_y - pad_top
+
+    image = tf.pad(image, [[pad_top, pad_down], [pad_left, pad_right], [0, 0]], "CONSTANT")
+    
+    translate_x = tf.to_float(pad_left) / tf.to_float(old_width)
+    translate_y = tf.to_float(pad_top)  / tf.to_float(old_height)
+
+    x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
+    x1 = tf.scalar_mul(scale[1], x1)
+    y1 = tf.scalar_mul(scale[0], y1)
+    x2 = tf.scalar_mul(scale[1], x2)
+    y2 = tf.scalar_mul(scale[0], y2)
+    boxes = tf.concat([tf.expand_dims(x1, -1),
+                       tf.expand_dims(y1, -1),
+                       tf.expand_dims(x2, -1),
+                       tf.expand_dims(y2, -1)], axis=1)
+    boxes = boxes + [translate_x, translate_y, translate_x, translate_y]
+
+    return (image, boxes)
+
+  with tf.name_scope("random_zoom_out"):
+    uniform_random = tf.random.uniform([], 0, 1.0, seed=seed)
+
+    zoom_cond = tf.less(uniform_random, .5)
+
+    (image, boxes) = tf.cond(zoom_cond,
+                             lambda: (image, boxes),
+                             lambda: zoom(image, boxes))
+  return image, boxes
+
 
 def apply_with_random_selector(x, func, num_cases):
     """Computes func(x, sel), with sel sampled from [0...num_cases-1].
@@ -320,18 +374,18 @@ def preprocess_for_train(image,
       image_shape = tf.shape(image)
 
       x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
-      x1 = tf.expand_dims(tf.div(x1, tf.to_float(image_shape[1])), -1)
-      x2 = tf.expand_dims(tf.div(x2, tf.to_float(image_shape[1])), -1)
-      y1 = tf.expand_dims(tf.div(y1, tf.to_float(image_shape[0])), -1)
-      y2 = tf.expand_dims(tf.div(y2, tf.to_float(image_shape[0])), -1)
+      x1 = tf.expand_dims(x1, -1)
+      x2 = tf.expand_dims(x2, -1)
+      y1 = tf.expand_dims(y1, -1)
+      y2 = tf.expand_dims(y2, -1)      
       boxes = tf.concat([y1, x1, y2, x2], axis=1)
 
       bbox_begin, bbox_size, distort_bbox = tf.image.sample_distorted_bounding_box(
         image_shape,
         bounding_boxes=tf.expand_dims(boxes, 0),
         min_object_covered=BBOX_CROP_OVERLAP,
-        aspect_ratio_range=(0.8, 1.2),
-        area_range=(0.5, 1.0),
+        aspect_ratio_range=(0.5, 2.0),
+        area_range=(0.3, 1.0),
         max_attempts=200,
         use_image_if_no_bounding_boxes=True)
 
@@ -348,18 +402,10 @@ def preprocess_for_train(image,
       y1, x1, y2, x2 = tf.unstack(boxes, 4, axis=1)
       image_shape = tf.shape(image)
 
-      w = tf.to_float(image_shape[1])
-      h = tf.to_float(image_shape[0])
-
-      x1 = tf.scalar_mul(w, x1)
-      x2 = tf.scalar_mul(w, x2)
-      y1 = tf.scalar_mul(h, y1)
-      y2 = tf.scalar_mul(h, y2)
-
-      x1 = tf.clip_by_value(x1, 0.0, w)
-      x2 = tf.clip_by_value(x2, 0.0, w)
-      y1 = tf.clip_by_value(y1, 0.0, h)
-      y2 = tf.clip_by_value(y2, 0.0, h)
+      x1 = tf.clip_by_value(x1, 0.0, 1.0)
+      x2 = tf.clip_by_value(x2, 0.0, 1.0)
+      y1 = tf.clip_by_value(y1, 0.0, 1.0)
+      y2 = tf.clip_by_value(y2, 0.0, 1.0)
 
       x1 = tf.expand_dims(x1, -1)
       x2 = tf.expand_dims(x2, -1)
@@ -367,6 +413,9 @@ def preprocess_for_train(image,
       y2 = tf.expand_dims(y2, -1)
 
       boxes = tf.concat([x1, y1, x2, y2], axis=1)
+
+    if RANDOM_ZOOM_OUT:
+      image, boxes = random_zoom_out(image, boxes)
 
     if RANDOM_HFLIP:
       # Randomly flip the image horizontally.
@@ -380,7 +429,7 @@ def preprocess_for_train(image,
               lambda x, ordering: distort_color(x, ordering, fast_mode=False),
               num_cases=4)
       image = tf.scalar_mul(255.0, image)
-    
+
     # Rollback to the full image if there is no boxes
     no_box_cond = tf.equal(tf.size(boxes), 0)
     image = tf.cond(no_box_cond,
@@ -394,12 +443,9 @@ def preprocess_for_train(image,
                      lambda: classes)
 
     # transform image and boxes
-    image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
-    image = tf.image.resize_image_with_crop_or_pad(
-      image,
-      resolution,
-      resolution)
-    boxes = tf.scalar_mul(scale, boxes) + [translation[1], translation[0], translation[1], translation[0]]
+    # scale = [1.0, 1.0]
+    # translation = [0.0, 0.0]
+    image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
 
     # mean subtraction
     means = [_R_MEAN, _G_MEAN, _B_MEAN]
@@ -429,7 +475,6 @@ def preprocess_for_eval(image,
     # transform image and boxes
     # image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
 
-
     image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
 
     image = tf.image.resize_image_with_crop_or_pad(
@@ -442,7 +487,10 @@ def preprocess_for_eval(image,
     y1 = tf.scalar_mul(scale[0], y1)
     x2 = tf.scalar_mul(scale[1], x2)
     y2 = tf.scalar_mul(scale[0], y2)
-    boxes = tf.concat([x1, y1, x2, y2], axis=1)
+    boxes = tf.concat([tf.expand_dims(x1, -1),
+                       tf.expand_dims(y1, -1),
+                       tf.expand_dims(x2, -1),
+                       tf.expand_dims(y2, -1)], axis=1)
 
     boxes = boxes + [translation[1], translation[0], translation[1], translation[0]]
 

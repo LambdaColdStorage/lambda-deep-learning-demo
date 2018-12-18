@@ -214,7 +214,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       h = y2 - y1
 
       if obj['area'] > 1 and w > 0 and h > 0 and w * h >= 4:
-        obj['bbox'] = [x1, y1, x2, y2]
+        # normalize box to [0, 1]
+        obj['bbox'] = [x1 / float(width), y1 / float(height), x2 / float(width), y2 / float(height)]
         valid_objs.append(obj)
 
     boxes = np.asarray([obj['bbox'] for obj in valid_objs], dtype='float32')  # (n, 4)
@@ -296,6 +297,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         self.config.resolution,
         is_training=is_training,
         speed_mode=False)
+
+    return image, classes, boxes, scale, translation
 
     if self.config.mode == "infer":
       gt_labels = tf.zeros([1], dtype=tf.int64)
