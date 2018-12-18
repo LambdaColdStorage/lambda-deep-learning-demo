@@ -12,7 +12,7 @@ _B_MEAN = 103.94
 
 BBOX_CROP_OVERLAP = 0.5         # Minimum overlap to keep a bbox after cropping.
 
-RANDOM_SUB_SAMPLE = True
+RANDOM_SUB_SAMPLE = False
 RANDOM_ZOOM_OUT = True
 RANDOM_HFLIP = True
 RANDOM_COLOR = False
@@ -445,7 +445,30 @@ def preprocess_for_train(image,
     # transform image and boxes
     # scale = [1.0, 1.0]
     # translation = [0.0, 0.0]
-    image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
+    image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
+    new_image = tf.image.resize_image_with_crop_or_pad(
+      image,
+      resolution,
+      resolution)
+
+    scale_x = tf.to_float(tf.shape(image)[1]) / tf.to_float(resolution)
+    scale_y = tf.to_float(tf.shape(image)[0]) / tf.to_float(resolution)
+    shift_x = tf.math.maximum(0.0, tf.to_float(resolution - tf.shape(image)[1])/float(resolution * 2))
+    shift_y = tf.math.maximum(0.0, tf.to_float(resolution - tf.shape(image)[0])/float(resolution * 2))
+    x1, y1, x2, y2 = tf.unstack(boxes, 4, axis=1)
+    x1 = tf.scalar_mul(scale_x, x1)
+    y1 = tf.scalar_mul(scale_y, y1)
+    x2 = tf.scalar_mul(scale_x, x2)
+    y2 = tf.scalar_mul(scale_y, y2)
+    boxes = tf.concat([tf.expand_dims(x1, -1),
+                       tf.expand_dims(y1, -1),
+                       tf.expand_dims(x2, -1),
+                       tf.expand_dims(y2, -1)], axis=1)
+    boxes = boxes + [shift_x, shift_y, shift_x, shift_y]
+    
+    image = new_image
+
+    # image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
 
     # mean subtraction
     means = [_R_MEAN, _G_MEAN, _B_MEAN]
