@@ -442,9 +442,7 @@ def preprocess_for_train(image,
                      lambda: classes_ori,
                      lambda: classes)
 
-    # transform image and boxes
-    # scale = [1.0, 1.0]
-    # translation = [0.0, 0.0]
+    # Scaling to canonical size without perspective preserved
     image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
     new_image = tf.image.resize_image_with_crop_or_pad(
       image,
@@ -465,9 +463,9 @@ def preprocess_for_train(image,
                        tf.expand_dims(x2, -1),
                        tf.expand_dims(y2, -1)], axis=1)
     boxes = boxes + [shift_x, shift_y, shift_x, shift_y]
-    
     image = new_image
 
+    # Scaling to canonical size without preserving perspective
     # image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
 
     # mean subtraction

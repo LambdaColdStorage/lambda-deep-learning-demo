@@ -8,6 +8,7 @@ from __future__ import print_function
 import os
 import numpy as np
 import math
+import pickle
 
 import tensorflow as tf
 
@@ -35,8 +36,12 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.class_id_to_category_id = None
     self.cat_names = None
 
+    self.priorbox_path = "/home/ubuntu/git/caffe_ssd/SSD_512x512_priorbox.p"
+    self.priorvariance = [0.1, 0.1, 0.2, 0.2]
+
     self.anchors = None
     self.anchors_stride = [8, 16, 32, 64, 128, 256, 512]
+
 
     self.anchors_sizes = [(20.48, 51.2),
                           (51.2, 133.12),
@@ -132,9 +137,31 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         self.num_samples = self.TRAIN_NUM_SAMPLES
     return self.num_samples
 
+  # def get_anchors(self):
+  #   if self.anchors is None:
+
+  #     self.anchors = []
+  #     for stride, ratio, sz in zip(
+  #       self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
+  #      anchors_per_layer = detection_common.generate_anchors(stride, ratio, sz)
+  #      self.anchors.append(anchors_per_layer)
+  #      self.num_anchors.append(len(anchors_per_layer))
+
+  #     self.anchors_map = []
+  #     for stride, anchors in zip(self.anchors_stride, self.anchors):
+  #       self.anchors_map.append(
+  #         detection_common.generate_anchors_map(
+  #           anchors, stride, self.config.resolution))
+
+  #     self.anchors = np.vstack(self.anchors)
+  #     self.anchors_map = np.vstack(self.anchors_map)
+
+  #   return self.anchors, self.anchors_map, self.num_anchors
+
   def get_anchors(self):
     if self.anchors is None:
 
+      # TODO: match official SSD results
       self.anchors = []
       for stride, ratio, sz in zip(
         self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
@@ -142,16 +169,14 @@ class ObjectDetectionMSCOCOInputter(Inputter):
        self.anchors.append(anchors_per_layer)
        self.num_anchors.append(len(anchors_per_layer))
 
-      self.anchors_map = []
-      for stride, anchors in zip(self.anchors_stride, self.anchors):
-        self.anchors_map.append(
-          detection_common.generate_anchors_map(
-            anchors, stride, self.config.resolution))
+      priorbox_data = pickle.load(open(self.priorbox_path, "rb"))
+      priorbox = []
+      for k, v in priorbox_data.items():
+          priorbox.append(np.reshape(v[0][0], (-1, 4)))
+      priorbox = np.concatenate(priorbox, axis=0)
+      self.anchors_map = priorbox
 
-      self.anchors = np.vstack(self.anchors)
-      self.anchors_map = np.vstack(self.anchors_map)
-
-    return self.anchors, self.anchors_map, self.num_anchors
+      return self.anchors, self.anchors_map, self.num_anchors
 
   def get_samples_fn(self):
     # Args:
@@ -288,6 +313,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     image = tf.image.decode_png(image, channels=3)
     image = tf.to_float(image)
 
+    scale = [0, 0]
+    translation = [0, 0]
     if self.augmenter:
       is_training = (self.config.mode == "train")
       image, classes, boxes, scale, translation = self.augmenter.augment(
@@ -297,8 +324,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         self.config.resolution,
         is_training=is_training,
         speed_mode=False)
-
-    return image, classes, boxes, scale, translation
 
     if self.config.mode == "infer":
       gt_labels = tf.zeros([1], dtype=tf.int64)
@@ -311,12 +336,22 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
       gt_mask = tf.zeros([1], dtype=tf.int32)
     elif self.config.mode == "train":
-
       gt_labels, gt_bboxes, gt_mask = tf.py_func(
         self.compute_gt, [classes, boxes], (tf.int64, tf.float32, tf.int32))
       # Encode the shift between gt_bboxes and anchors_map
       gt_bboxes = detection_common.encode_bbox_target(
         gt_bboxes, self.anchors_map)
+
+      # scale with variance 
+      cx, cy, w, h = tf.unstack(gt_bboxes, 4, axis=1)
+      cx = tf.scalar_mul(1.0 / self.priorvariance[0], cx)
+      cy = tf.scalar_mul(1.0 / self.priorvariance[1], cy)
+      w = tf.scalar_mul(1.0 / self.priorvariance[2], w)
+      h = tf.scalar_mul(1.0 / self.priorvariance[3], h)
+      gt_bboxes = tf.concat([tf.expand_dims(cx, -1),
+                             tf.expand_dims(cy, -1),
+                             tf.expand_dims(w, -1),
+                             tf.expand_dims(h, -1)], axis=1)
 
     return (image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name)
 
@@ -331,8 +366,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                     tf.int64,
                     tf.float32))
 
-    if self.config.mode == "train":
-      dataset = dataset.shuffle(self.get_num_samples())
+    # if self.config.mode == "train":
+    #   dataset = dataset.shuffle(self.get_num_samples())
 
     dataset = dataset.repeat(self.config.epochs)
 

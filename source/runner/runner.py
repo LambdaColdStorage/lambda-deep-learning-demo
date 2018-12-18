@@ -178,6 +178,7 @@ class Runner(object):
     for fn in nonreplicated_fns:
       fn()
 
+    # image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name
     batch = self.inputter.input_fn()
 
     # results = self.modeler.model_fn(batch)
@@ -186,7 +187,7 @@ class Runner(object):
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
-      num_batch = 16
+      num_batch = 1
 
       # Test input_fn
       for i in range(num_batch):
@@ -196,51 +197,50 @@ class Runner(object):
         _batch = self.sess.run(batch)
         end_time = time.time()
         #print(end_time - start_time)
-        # if _batch.shape[0] == 0:
-        #   print(_batch.shape)
-        import matplotlib.pyplot as plt
-        import numpy as np
-        import cv2
-        image = _batch[0][0]
-        classes = batch[1][0]
-        boxes = _batch[2][0]
-        scale = _batch[3][0]
-        translation = _batch[4][0]
 
+        print(_batch[3])
+        print(_batch[7])
 
-        print(image.shape)
+        # import matplotlib.pyplot as plt
+        # import numpy as np
+        # import cv2
+        # image = _batch[0][0]
+        # classes = batch[1][0]
+        # boxes = _batch[2][0]
+        # scale = _batch[3][0]
+        # translation = _batch[4][0]
 
-        _R_MEAN = 123.68
-        _G_MEAN = 116.78
-        _B_MEAN = 103.94
-        image[:, :, 0] = image[:, :, 0] + _R_MEAN
-        image[:, :, 1] = image[:, :, 1] + _G_MEAN
-        image[:, :, 2] = image[:, :, 2] + _B_MEAN
-        image = image / 255.0
+        # _R_MEAN = 123.68
+        # _G_MEAN = 116.78
+        # _B_MEAN = 103.94
+        # image[:, :, 0] = image[:, :, 0] + _R_MEAN
+        # image[:, :, 1] = image[:, :, 1] + _G_MEAN
+        # image[:, :, 2] = image[:, :, 2] + _B_MEAN
+        # image = image / 255.0
 
-        plt.rcParams['figure.figsize'] = (10, 10)
-        plt.rcParams['image.interpolation'] = 'nearest'
-        plt.rcParams['image.cmap'] = 'gray'
-        colors = plt.cm.hsv(np.linspace(0, 1, 121)).tolist()
-        plt.imshow(image)
-        currentAxis = plt.gca()
+        # plt.rcParams['figure.figsize'] = (10, 10)
+        # plt.rcParams['image.interpolation'] = 'nearest'
+        # plt.rcParams['image.cmap'] = 'gray'
+        # colors = plt.cm.hsv(np.linspace(0, 1, 121)).tolist()
+        # plt.imshow(image)
+        # currentAxis = plt.gca()
 
-        for i in xrange(boxes.shape[0]):
-            xmin = int(round(boxes[i, 0] * image.shape[1]))
-            ymin = int(round(boxes[i, 1] * image.shape[0]))
-            xmax = int(round(boxes[i, 2] * image.shape[1]))
-            ymax = int(round(boxes[i, 3] * image.shape[0]))
+        # for i in xrange(boxes.shape[0]):
+        #     xmin = int(round(boxes[i, 0] * image.shape[1]))
+        #     ymin = int(round(boxes[i, 1] * image.shape[0]))
+        #     xmax = int(round(boxes[i, 2] * image.shape[1]))
+        #     ymax = int(round(boxes[i, 3] * image.shape[0]))
 
-            score = 1.0
-            label = 1
-            label_name = "object"
-            display_txt = '%s: %.2f'%(label_name, score)
-            coords = (xmin, ymin), xmax-xmin+1, ymax-ymin+1
-            color = colors[label]
-            currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
-            currentAxis.text(xmin, ymin, display_txt, bbox={'facecolor':color, 'alpha':0.5})
+        #     score = 1.0
+        #     label = 1
+        #     label_name = "object"
+        #     display_txt = '%s: %.2f'%(label_name, score)
+        #     coords = (xmin, ymin), xmax-xmin+1, ymax-ymin+1
+        #     color = colors[label]
+        #     currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
+        #     currentAxis.text(xmin, ymin, display_txt, bbox={'facecolor':color, 'alpha':0.5})
 
-        plt.show()
+        # plt.show()
 
       total_end_time = time.time()
       #print("average time: " +

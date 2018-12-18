@@ -9,7 +9,7 @@ python demo/object_detection.py \
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
 train_args --learning_rate=0.001 --optimizer=momentum --piecewise_boundaries=10000 \
 --piecewise_lr_decay=1.0,0.1 --dataset_meta=train2017 \
---callbacks=train_basic,train_loss,train_speed,train_summary --trainable_vars=SSD \
+--callbacks=train_basic,train_loss,train_speed,train_summary \
 --skip_l2_loss_vars=l2_norm_scaler --summary_names=loss,learning_rate,class_losses,bboxes_losses
 
 
@@ -192,7 +192,7 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.dev()
+    runner.run()
 
 
 if __name__ == "__main__":
