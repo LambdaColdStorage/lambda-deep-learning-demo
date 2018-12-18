@@ -24,7 +24,8 @@ JSON_TO_IMAGE = {
     "val2014": "val2014",
     "valminusminival2014": "val2014",
     "minival2014": "val2014",
-    "test2014": "test2014"
+    "test2014": "test2014",
+    "test-dev2015": "val2017"
 }
 
 
@@ -69,9 +70,15 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     # self.TRAIN_NUM_SAMPLES = 82784
     # self.EVAL_NUM_SAMPLES = 2048
 
-    self.TRAIN_NUM_SAMPLES = 117266
-    self.EVAL_NUM_SAMPLES = 2048
+    # self.TRAIN_NUM_SAMPLES = 117266 # train2017
+    # self.EVAL_NUM_SAMPLES = 2048
+
+    # self.TRAIN_NUM_SAMPLES = 82081 # train2014
+    # self.TRAIN_NUM_SAMPLES = 35185 # valminusminival2014
     
+    self.TRAIN_NUM_SAMPLES = 117266 # train2014 + valminusminival2014
+    self.EVAL_NUM_SAMPLES = 4952 # val2017 (same as test-dev2015)
+
     self.TRAIN_FG_IOU = 0.5
     self.TRAIN_BG_IOU = 0.5
 
@@ -81,6 +88,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       self.parse_coco()
 
     self.num_samples = self.get_num_samples()
+
 
   def parse_coco(self):
     samples = []
@@ -136,27 +144,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       elif self.config.mode == "train":
         self.num_samples = self.TRAIN_NUM_SAMPLES
     return self.num_samples
-
-  # def get_anchors(self):
-  #   if self.anchors is None:
-
-  #     self.anchors = []
-  #     for stride, ratio, sz in zip(
-  #       self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
-  #      anchors_per_layer = detection_common.generate_anchors(stride, ratio, sz)
-  #      self.anchors.append(anchors_per_layer)
-  #      self.num_anchors.append(len(anchors_per_layer))
-
-  #     self.anchors_map = []
-  #     for stride, anchors in zip(self.anchors_stride, self.anchors):
-  #       self.anchors_map.append(
-  #         detection_common.generate_anchors_map(
-  #           anchors, stride, self.config.resolution))
-
-  #     self.anchors = np.vstack(self.anchors)
-  #     self.anchors_map = np.vstack(self.anchors_map)
-
-  #   return self.anchors, self.anchors_map, self.num_anchors
 
   def get_anchors(self):
     if self.anchors is None:
