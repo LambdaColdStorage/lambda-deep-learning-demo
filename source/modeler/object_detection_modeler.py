@@ -35,7 +35,6 @@ class ObjectDetectionModeler(Modeler):
                                   "ssd_conv9_2", "ssd_conv10_2",
                                   "ssd_conv11_2", "ssd_conv12_2")
     self.config.FEATURE_MAP_SIZE = (64, 32, 16, 8, 4, 2, 1)
-    self.pre_weights = {}
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
@@ -54,14 +53,11 @@ class ObjectDetectionModeler(Modeler):
     #     feat_bboxes: batch_size x num_anchors x 4
 
     # Feature net
-    last_layer, inputs, self.feature_net_init_flag, self.pre_weights = self.feature_net(
-      inputs, self.pre_weights, self.config.data_format,
-      is_training=False, init_flag=self.feature_net_init_flag,
-      ckpt_path=self.config.feature_net_path)
+    outputs = self.feature_net(
+      inputs, self.config.data_format)
 
     is_training = (self.config.mode == "train")
-    return self.net(last_layer, inputs, self.pre_weights,
-                    self.config.FEATURE_LAYERS,
+    return self.net(outputs,
                     self.config.num_classes, self.num_anchors,
                     is_training=is_training, data_format=self.config.data_format)
 
@@ -104,7 +100,7 @@ class ObjectDetectionModeler(Modeler):
     # Returns:
     #     bboxes: x1, y1, x2, y2
 
-    outputs = self.create_graph_fn(inputs[1])    
+    outputs = self.create_graph_fn(inputs[1])
 
     if self.config.mode == "train":
       class_losses, bboxes_losses = self.create_loss_fn(inputs, outputs)

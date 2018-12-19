@@ -171,13 +171,13 @@ class Runner(object):
 
       self.after_run()
 
-  def dev(self):
+  def dev2(self):
     self.create_graph()
 
     self.print_trainable_variables()
 
 
-  def dev2(self):
+  def dev(self):
     nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
                          self.inputter.create_nonreplicated_fn]
 
@@ -188,6 +188,8 @@ class Runner(object):
     batch = self.inputter.input_fn()
 
     results = self.modeler.model_fn(batch)
+
+    print(results)
 
     self.print_trainable_variables()
 

@@ -8,145 +8,50 @@ TRAIN_FG_RATIO = 0.5
 KERNEL_INIT = tf.contrib.layers.xavier_initializer()
 
 
-def vgg_mod_fn(last_layer, feats, pre_weights):
-  # Shared SSD feature layer
+def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters):
 
-  output_backbone = last_layer
+    num_conv = len(conv_strides)
+    for i in range(num_conv):
+        stride = conv_strides[i]
+        w = filter_size[i]
+        num_filter = num_filters[i]
 
-  # Add modified VGG layers 
-  init_ssd_conv6_w = tf.constant_initializer(pre_weights["mod_w_fc6"])
-  init_ssd_conv6_b = tf.constant_initializer(pre_weights["mod_b_fc6"])
+        if stride == 2:
+            # Use customized padding when stride == 2
+            # https://stackoverflow.com/questions/42924324/tensorflows-asymmetric-padding-assumptions
+            if data_format == "channels_last":
+              outputs = tf.pad(outputs, [[0, 0], [1, 0], [1, 0], [0, 0]], "CONSTANT")
+            else:
+              outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 0], [1, 0]], "CONSTANT")
+            padding_strategy = "VALID"
+        elif w == 4:
+            # Use customized padding when for the last ssd feature layer (filter_size == 4)
+            if data_format == "channels_last":
+              outputs = tf.pad(outputs, [[0, 0], [1, 1], [1, 1], [0, 0]], "CONSTANT")
+            else:
+              outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 1], [1, 1]], "CONSTANT")
+            padding_strategy = "VALID"
+        else:
+            padding_strategy = "SAME"
+        outputs = tf.layers.conv2d(
+                outputs,
+          filters=num_filter,
+          kernel_size=(w, w),
+          strides=(stride, stride),
+          padding=(padding_strategy),
+          data_format=data_format,
+          kernel_initializer=KERNEL_INIT,
+          activation=tf.nn.relu,
+          name=name + "_" + str(i + 1))
+    return outputs
 
-  net = tf.layers.conv2d(inputs=output_backbone,
-                         filters=1024,
-                         kernel_size=[3, 3],
-                         strides=(1, 1),
-                         padding=('SAME'),
-                         dilation_rate=6,
-                         kernel_initializer=init_ssd_conv6_w,
-                         bias_initializer=init_ssd_conv6_b,
-                         activation=tf.nn.relu,
-                         name='conv6')
-  feats["ssd_conv6"] = net
-
-  init_ssd_conv7_w = tf.constant_initializer(pre_weights["mod_w_fc7"])
-  init_ssd_conv7_b = tf.constant_initializer(pre_weights["mod_b_fc7"])
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=1024,
-                         kernel_size=[1, 1],
-                         strides=(1, 1),
-                         padding=('SAME'),
-                         kernel_initializer=init_ssd_conv7_w,
-                         bias_initializer=init_ssd_conv7_b,
-                         activation=tf.nn.relu,
-                         name='conv7')
-  feats["ssd_conv7"] = net
-
-  return net, feats
-
-def ssd_feature_fn(last_layer, feats):
-
-
-  # Add additional convolutional layers
-
-  net = tf.layers.conv2d(inputs=last_layer,
-                         filters=256,
-                         kernel_size=[1, 1],
-                         strides=(1, 1),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv8_1')
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=512,
-                         kernel_size=[3, 3],
-                         strides=(2, 2),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv8_2')
-  feats["ssd_conv8_2"] = net
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=128,
-                         kernel_size=[1, 1],
-                         strides=(1, 1),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv9_1')
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=256,
-                         kernel_size=[3, 3],
-                         strides=(2, 2),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv9_2')
-  feats["ssd_conv9_2"] = net
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=128,
-                         kernel_size=[1, 1],
-                         strides=(1, 1),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv10_1')
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=256,
-                         kernel_size=[3, 3],
-                         strides=(2, 2),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv10_2')
-  feats["ssd_conv10_2"] = net
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=128,
-                         kernel_size=[1, 1],
-                         strides=(1, 1),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv11_1')
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=256,
-                         kernel_size=[3, 3],
-                         strides=(2, 2),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv11_2')
-  feats["ssd_conv11_2"] = net
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=128,
-                         kernel_size=[1, 1],
-                         strides=(1, 1),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv12_1')
-
-  net = tf.layers.conv2d(inputs=net,
-                         filters=256,
-                         kernel_size=[3, 3],
-                         strides=(2, 2),
-                         padding=('SAME'),
-                         kernel_initializer=KERNEL_INIT,
-                         activation=tf.nn.relu,
-                         name='conv12_2')
-  feats["ssd_conv12_2"] = net
-
-  return feats
-
+def ssd_feature(outputs, data_format):
+    outputs_conv6_2 = ssd_block(outputs, "conv6", data_format, [1, 2], [1, 3], [128, 256])
+    outputs_conv7_2 = ssd_block(outputs_conv6_2, "conv7", data_format, [1, 2], [1, 3], [128, 256])
+    outputs_conv8_2 = ssd_block(outputs_conv7_2, "conv8", data_format, [1, 2], [1, 3], [128, 256])
+    outputs_conv9_2 = ssd_block(outputs_conv8_2, "conv9", data_format, [1, 2], [1, 3], [128, 256])
+    outputs_conv10_2 = ssd_block(outputs_conv9_2, "conv10", data_format, [1, 1], [1, 4], [128, 256])
+    return outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2
 
 def class_graph_fn(feat, num_classes, num_anchors, layer):
   data_format = 'channels_last'
@@ -213,32 +118,29 @@ def create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index):
   return loss
 
 
-def net(last_layer, feats, pre_weights,
-        feature_layers,
+def net(outputs,
         num_classes, num_anchors,
         is_training, data_format="channels_last"):
 
-  with tf.variable_scope(name_or_scope='MOD',
-                         values=[last_layer, feats],
-                         reuse=tf.AUTO_REUSE):
-    # Add shared features
-    net, feats = vgg_mod_fn(last_layer, feats, pre_weights)
-
   with tf.variable_scope(name_or_scope='SSD',
-                         values=[net, feats],
+                         values=[outputs],
                          reuse=tf.AUTO_REUSE):
 
+    outputs_conv4_3 = outputs[0]
+    outputs_fc7 = outputs[1]
+
     # Add shared features
-    feats = ssd_feature_fn(net, feats)
+    outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2 = ssd_feature(outputs_fc7, data_format)
 
     classes = []
     bboxes = []
-    for layer, num in zip(feature_layers, num_anchors):
-      feat = feats[layer]                 
-      
+    feature_layers = (outputs_conv4_3, outputs_fc7, outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2)
+    name_layers = ("VGG/conv4_3", "VGG/fc7", "SSD/conv6_2", "SSD/conv7_2", "SSD/conv8_2", "SSD/conv9_2", "SSD/conv10_2")
+
+    for name, feat, num in zip(name_layers, feature_layers, num_anchors):      
       # According to the original SSD paper, normalize conv4_3 with learnable scale
       # In pratice doing so indeed reduce the classification loss significantly
-      if layer == "vgg_16/conv4/conv4_3":
+      if name == "VGG/conv4_3":
         l2_w_init = tf.constant_initializer([20.] * 512)
         weight_scale = tf.get_variable('l2_norm_scaler',
                                        initializer=[20.] * 512,
@@ -246,13 +148,8 @@ def net(last_layer, feats, pre_weights,
         feat = tf.multiply(weight_scale,
                            tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
 
-      classes.append(class_graph_fn(feat, num_classes, num, layer))
-
-      # Different from the original SSD paper, we normalize the feature maps for all bbox layers
-      # Otherwise we found bbox loss will be too high
-      # feat = tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12)
-
-      bboxes.append(bbox_graph_fn(feat, num, layer))
+      classes.append(class_graph_fn(feat, num_classes, num, name))
+      bboxes.append(bbox_graph_fn(feat, num, name))
 
     classes = tf.concat(classes, axis=1)
     bboxes = tf.concat(bboxes, axis=1)

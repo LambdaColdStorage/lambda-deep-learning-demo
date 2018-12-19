@@ -77,7 +77,7 @@ def main():
                       default="/mnt/data/data/mscoco")
   parser.add_argument("--feature_net",
                       help="Name of feature net",
-                      default="vgg_16_ssd512")
+                      default="vgg_16_reduced")
   parser.add_argument("--feature_net_path",
                       help="Path to pre-trained vgg model.",
                       default=os.path.join(
