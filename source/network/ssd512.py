@@ -239,7 +239,10 @@ def net(last_layer, feats, pre_weights,
       # According to the original SSD paper, normalize conv4_3 with learnable scale
       # In pratice doing so indeed reduce the classification loss significantly
       if layer == "vgg_16/conv4/conv4_3":
-        weight_scale = tf.Variable([20.] * 512, trainable=is_training, name='l2_norm_scaler')
+        l2_w_init = tf.constant_initializer([20.] * 512)
+        weight_scale = tf.get_variable('l2_norm_scaler',
+                                       initializer=[20.] * 512,
+                                       trainable=is_training)        
         feat = tf.multiply(weight_scale,
                            tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
 

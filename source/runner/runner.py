@@ -172,6 +172,12 @@ class Runner(object):
       self.after_run()
 
   def dev(self):
+    self.create_graph()
+
+    self.print_trainable_variables()
+
+
+  def dev2(self):
     nonreplicated_fns = [self.modeler.create_nonreplicated_fn,
                          self.inputter.create_nonreplicated_fn]
 
@@ -181,13 +187,11 @@ class Runner(object):
     # image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name
     batch = self.inputter.input_fn()
 
-    sys.exit()
-
     results = self.modeler.model_fn(batch)
 
-    print(results)
+    self.print_trainable_variables()
+
     sys.exit()
-    # self.print_trainable_variables()
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
