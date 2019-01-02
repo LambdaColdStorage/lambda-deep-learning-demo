@@ -15,7 +15,8 @@ from pycocotools.cocoeval import COCOeval
 from .callback import Callback
 
 DATASET_DIR = "/mnt/data/data/mscoco"
-DATASET_META = "val2017"
+# DATASET_META = "val2017"
+DATASET_META = "val2014"
 
 COCO_ID_MAP = np.asarray([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13,
                           14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
@@ -48,7 +49,12 @@ class EvalMSCOCO(Callback):
         "annotations",
         "instances_" + DATASET_META + ".json")
       coco = COCO(annotation_file)
+
       coco_results = coco.loadRes(self.detection)
+
+      # DETECTION_FILE = "/home/chuan/data/mscoco/results/SSD_512x512_score/detections_minival_ssd512_results.json"
+      # coco_results = coco.loadRes(DETECTION_FILE)
+
       cocoEval = COCOeval(coco, coco_results, "bbox")
       cocoEval.params.imgIds = self.image_ids
       cocoEval.evaluate()
@@ -60,8 +66,11 @@ class EvalMSCOCO(Callback):
   def after_step(self, sess, outputs_dict, feed_dict=None):
 
     num_images = len(outputs_dict["image_id"])
+    # print(num_images)
+    # print('----------------------')
     for i in range(num_images):
       file_name = outputs_dict["file_name"][i]
+      # print(file_name)
       num_detections = len(outputs_dict["labels"][i])
       translation = outputs_dict["translations"][i]
       scale = outputs_dict["scales"][i]

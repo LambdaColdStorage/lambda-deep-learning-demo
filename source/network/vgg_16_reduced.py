@@ -1,9 +1,10 @@
+import os
 import numpy as np
 import pickle
 
 import tensorflow as tf
 
-VGG_PARAMS_FILE = "/home/ubuntu/git/caffe_ssd/SSD_512x512.p"
+VGG_PARAMS_FILE = os.path.join(os.path.expanduser("~"), "git/caffe_ssd/SSD_512x512.p")
 
 def vgg_block(outputs, params, name, data_format, num_conv):
 

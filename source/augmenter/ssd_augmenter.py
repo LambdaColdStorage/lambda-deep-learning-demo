@@ -473,7 +473,10 @@ def preprocess_for_train(image,
     channels = tf.split(axis=2, num_or_size_splits=3, value=image)
     for i in range(3):
       channels[i] -= means[i]
-    image = tf.concat(axis=2, values=channels)
+    # image = tf.concat(axis=2, values=channels)
+
+    # caffe swaps color channels
+    image = tf.concat(axis=2, values=[channels[2], channels[1], channels[0]]) 
 
   return image, classes, boxes, scale, translation
 
@@ -486,19 +489,19 @@ def preprocess_for_eval(image,
   if speed_mode:
     pass
   else:
-    # mean subtraction
+
+    # mean subtraction   
     means = [_R_MEAN, _G_MEAN, _B_MEAN]
+
     channels = tf.split(axis=2, num_or_size_splits=3, value=image)
     for i in range(3):
       channels[i] -= means[i]
-    image = tf.concat(axis=2, values=channels)
 
-    # transform image and boxes
-    # image, scale, translation = aspect_preserving_resize(image, resolution, depth=3, resize_mode="bilinear")
-    # image = tf.image.resize_image_with_crop_or_pad(
-    #   image,
-    #   resolution,
-    #   resolution)
+    # image = tf.concat(axis=2, values=channels)
+
+    # caffe swaps color channels
+    image = tf.concat(axis=2, values=[channels[2], channels[1], channels[0]]) 
+
 
     image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
     # Need this to make later tensor unstack working

@@ -25,13 +25,18 @@ class EvalBasic(Callback):
       name="global_saver")
 
     ckpt_path = os.path.join(self.config.model_dir, "*ckpt*")
-    if tf.train.checkpoint_exists(ckpt_path):
-      self.saver.restore(sess,
-                    tf.train.latest_checkpoint(self.config.model_dir))
-      print("Parameters restored.")
+    if os.path.isdir(self.config.model_dir):
+      if tf.train.checkpoint_exists(ckpt_path):
+        self.saver.restore(sess,
+                      tf.train.latest_checkpoint(self.config.model_dir))
+        print("Parameters restored.")
+      else:
+        print("Can not find checkpoint at " + ckpt_path + ", use default initialization.")
+        sess.run(tf.global_variables_initializer())
     else:
-      sys.exit("Can not find checkpoint at " + ckpt_path)
-
+      print(self.config.model_dir + "is not a directory, use default initialization.")
+      sess.run(tf.global_variables_initializer())
+      
     print("Start evaluation.")
 
   def after_run(self, sess):

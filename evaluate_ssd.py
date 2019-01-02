@@ -17,7 +17,7 @@ coco_results = coco.loadRes(DETECTION_FILE)
 cocoEval = COCOeval(coco, coco_results, "bbox")
 
 imgIds=sorted(coco.getImgIds())
-imgIds=imgIds[0:4000]
+imgIds=imgIds[0:5000]
 cocoEval.params.imgIds = imgIds
 cocoEval.evaluate()
 cocoEval.accumulate()

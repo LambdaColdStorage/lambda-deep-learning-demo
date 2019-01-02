@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import pickle
 
 import tensorflow as tf
 
@@ -7,6 +8,7 @@ TRAIN_SAMPLES_PER_IMAGE = 512
 TRAIN_FG_RATIO = 0.5
 KERNEL_INIT = tf.contrib.layers.xavier_initializer()
 
+params = pickle.load(open("/home/chuan/git/caffe_ssd/SSD_512x512.p", "rb"))
 
 def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters):
 
@@ -15,6 +17,13 @@ def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters
         stride = conv_strides[i]
         w = filter_size[i]
         num_filter = num_filters[i]
+
+        load_name = name.rsplit('/',1)[-1]
+        layer_name = load_name + "_" + str(i + 1)
+        # print(layer_name)
+        # print(params[layer_name][0].shape)
+        weights = np.swapaxes(np.swapaxes(np.swapaxes(params[layer_name][0], 0, 3), 1, 2), 0, 1)
+        bias = params[layer_name][1]
 
         if stride == 2:
             # Use customized padding when stride == 2
@@ -40,7 +49,9 @@ def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters
           strides=(stride, stride),
           padding=(padding_strategy),
           data_format=data_format,
-          kernel_initializer=KERNEL_INIT,
+          # kernel_initializer=KERNEL_INIT,
+          kernel_initializer=tf.constant_initializer(weights),
+          bias_initializer=tf.constant_initializer(bias),
           activation=tf.nn.relu,
           name=name + "_" + str(i + 1))
     return outputs
@@ -53,41 +64,61 @@ def ssd_feature(outputs, data_format):
     outputs_conv10_2 = ssd_block(outputs_conv9_2, "conv10", data_format, [1, 1], [1, 4], [128, 256])
     return outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2
 
-def class_graph_fn(feat, num_classes, num_anchors, layer):
+def class_graph_fn(feat, num_classes, num_anchors, name):
   data_format = 'channels_last'
+  load_name = name.rsplit('/',1)[-1]
+  if load_name == "conv4_3":
+    load_name += "_norm_mbox_conf"
+  else:
+    load_name += "_mbox_conf"
+  weights = np.swapaxes(np.swapaxes(np.swapaxes(params[load_name][0], 0, 3), 1, 2), 0, 1)
+  bias = params[load_name][1]  
+  # print(load_name)
+  # print(params[load_name][0].shape)  
   output = tf.layers.conv2d(inputs=feat,
                             filters=num_anchors * num_classes,
                             kernel_size=[3, 3],
                             strides=(1, 1),
                             padding=('SAME'),
                             data_format=data_format,
-                            kernel_initializer=KERNEL_INIT,
+                            # kernel_initializer=KERNEL_INIT,
+                            kernel_initializer=tf.constant_initializer(weights),
+                            bias_initializer=tf.constant_initializer(bias),                            
                             activation=None,
-                            name="class/" + layer)
+                            name="class/" + name)
   output = tf.reshape(output,
                       [tf.shape(output)[0],
                        -1,
                        num_classes],
-                      name='feat_classes' + layer)
+                      name='feat_classes' + name)
   return output
 
 
-def bbox_graph_fn(feat, num_anchors, layer):
+def bbox_graph_fn(feat, num_anchors, name):
   data_format = 'channels_last'
+  load_name = name.rsplit('/',1)[-1]
+  if load_name == "conv4_3":
+    load_name += "_norm_mbox_loc"
+  else:
+    load_name += "_mbox_loc"
+  weights = np.swapaxes(np.swapaxes(np.swapaxes(params[load_name][0], 0, 3), 1, 2), 0, 1)
+  bias = params[load_name][1]  
   output = tf.layers.conv2d(inputs=feat,
                             filters=num_anchors * 4,
                             kernel_size=[3, 3],
                             strides=(1, 1),
                             padding=('SAME'),
                             data_format=data_format,
-                            kernel_initializer=KERNEL_INIT,
+                            # kernel_initializer=KERNEL_INIT,
+                            kernel_initializer=tf.constant_initializer(weights),
+                            bias_initializer=tf.constant_initializer(bias),                             
                             activation=None,
-                            name="bbox/" + layer)
+                            name="bbox/" + name)
   output = tf.reshape(output,
                       [tf.shape(output)[0],
                        -1,
                        4],
-                      name='feat_bboxes' + layer)
+                      name='feat_bboxes' + name)
   return output
 
 
@@ -141,11 +172,18 @@ def net(outputs,
       # According to the original SSD paper, normalize conv4_3 with learnable scale
       # In pratice doing so indeed reduce the classification loss significantly
       if name == "VGG/conv4_3":
-        l2_w_init = tf.constant_initializer([20.] * 512)
-        weight_scale = tf.get_variable('l2_norm_scaler',
-                                       initializer=[20.] * 512,
-                                       trainable=is_training)        
-        feat = tf.multiply(weight_scale,
+        weight_scale = tf.get_variable("l2_norm_scaler",
+                                       initializer=params["conv4_3_norm"][0],
+                                       trainable=is_training)
+        # weight_scale = tf.get_variable('l2_norm_scaler',
+        #                                initializer=[20.] * 512,
+        #                                trainable=is_training)        
+        # channels first
+        # feat = tf.multiply(tf.expand_dims(tf.expand_dims(tf.expand_dims(weight_scale, 0), -1), -1),
+        #                    tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
+
+        # channels last
+        feat = tf.multiply(tf.expand_dims(tf.expand_dims(tf.expand_dims(weight_scale, 0), 0), 0),
                            tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
 
       classes.append(class_graph_fn(feat, num_classes, num, name))

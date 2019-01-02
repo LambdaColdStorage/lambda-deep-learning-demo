@@ -37,7 +37,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.class_id_to_category_id = None
     self.cat_names = None
 
-    self.priorbox_path = "/home/ubuntu/git/caffe_ssd/SSD_512x512_priorbox.p"
+    self.priorbox_path = os.path.join(os.path.expanduser("~"), "git/caffe_ssd/SSD_512x512_priorbox.p")
     self.priorvariance = [0.1, 0.1, 0.2, 0.2]
 
     self.anchors = None
@@ -78,6 +78,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     
     self.TRAIN_NUM_SAMPLES = 117266 # train2014 + valminusminival2014
     self.EVAL_NUM_SAMPLES = 4952 # val2017 (same as test-dev2015)
+    # self.EVAL_NUM_SAMPLES = 2
 
     self.TRAIN_FG_IOU = 0.5
     self.TRAIN_BG_IOU = 0.5

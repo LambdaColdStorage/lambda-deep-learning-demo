@@ -4,6 +4,7 @@ from pycocotools.mask import iou
 
 import tensorflow as tf
 
+NUM_CLASSES = 81
 
 def _mkanchors(ws, hs, x_ctr, y_ctr):
     """Given a vector of widths (ws) and heights (hs) around a center
@@ -199,7 +200,9 @@ def decode_bboxes_batch(boxes, anchors):
   return boxes
 
 
-def detect(scores, bboxes, config, anchors_map):
+def detect_joint_classes(scores, bboxes, config, anchors_map):
+  # Non-Max surpression is applied to all classes together
+  # Also remove the background classes for better mAP
 
   def nms_bboxes(prob, box, idx, anchors):
     """
@@ -211,6 +214,11 @@ def detect(scores, bboxes, config, anchors_map):
     """
     output_shape = tf.shape(prob)
 
+    # print('******************************************************')
+    # print(config.RESULT_SCORE_THRESH)
+    # print(config.RESULTS_PER_IM)
+    # print(config.NMS_THRESH)
+    # print('******************************************************')
     # filter by score threshold
     ids = tf.reshape(tf.where(prob > config.RESULT_SCORE_THRESH), [-1])
     prob = tf.gather(prob, ids)
@@ -235,6 +243,11 @@ def detect(scores, bboxes, config, anchors_map):
     anchors = tf.gather(anchors, ids)
     return prob, idx, box, anchors
 
+  # HACK: make background class zero score
+  scores_list = tf.split(axis=1, num_or_size_splits=NUM_CLASSES, value=scores)
+  scores_list[0] = scores_list[0] * 0
+  scores = tf.concat(axis=1, values=scores_list)
+
   best_classes = tf.argmax(scores, axis=1)
   idx = tf.stack(
     [tf.dtypes.cast(tf.range(tf.shape(scores)[0]), tf.int64), best_classes],
@@ -250,6 +263,64 @@ def detect(scores, bboxes, config, anchors_map):
 
   topk_scores, topk_labels, topk_bboxes, topk_anchors = nms_bboxes(best_scores, bboxes, best_classes, anchors)
 
+  return topk_scores, topk_labels, topk_bboxes, topk_anchors
+
+
+def detect(scores, bboxes, config, anchors_map):
+  # Non-Max Surpression applied to each class separately
+  # Background class is not cosidered in detection
+
+  def nms_bboxes(prob, box, idx, anchors):
+    """
+    Args:
+        prob: n probabilities
+        box: n x 4 boxes
+    Returns:
+        n boolean, the selection
+    """
+    # filter by score threshold
+
+    ids = tf.reshape(tf.where(tf.reshape(prob, [-1]) > config.RESULT_SCORE_THRESH), [-1])
+    prob = tf.reshape(tf.gather(prob, ids), [-1])
+    box = tf.gather(box, ids)
+    idx = tf.reshape(tf.gather(idx, ids), [-1])
+    anchors = tf.gather(anchors, ids)
+
+
+    # NMS within each class
+    mask = tf.image.non_max_suppression(
+        box, prob, config.RESULTS_PER_IM, config.NMS_THRESH)
+
+    prob = tf.gather(prob, mask)
+    box = tf.gather(box, mask)
+    idx = tf.gather(idx, mask)
+    anchors = tf.gather(anchors, mask)
+    return prob, idx, box, anchors
+
+  list_scores = tf.split(axis=1, num_or_size_splits=NUM_CLASSES, value=scores)
+
+  topk_scores = None
+  topk_labels = None
+  topk_labels = None
+  topk_anchors = None
+
+  for i in range(NUM_CLASSES):
+    if i > 0:
+      class_id = tf.scalar_mul(i, tf.ones_like(list_scores[i], dtype=tf.int32))
+      if i == 1:
+        topk_scores, topk_labels, topk_bboxes, topk_anchors = nms_bboxes(list_scores[i], bboxes, class_id, anchors_map)
+      else:
+        s, l, b, a = nms_bboxes(list_scores[i], bboxes, class_id, anchors_map)
+        topk_scores = tf.concat([topk_scores, s], axis=0)
+        topk_labels = tf.concat([topk_labels, l], axis=0)
+        topk_bboxes = tf.concat([topk_bboxes, b], axis=0)
+        topk_anchors = tf.concat([topk_anchors, a], axis=0)
+
+  # sort the result
+  topk_scores, ids = tf.nn.top_k(topk_scores, k=tf.math.minimum(tf.size(topk_scores), config.RESULTS_PER_IM))
+  topk_bboxes = tf.gather(topk_bboxes, ids)
+  topk_labels = tf.gather(topk_labels, ids)
+  topk_anchors = tf.gather(topk_anchors, ids)
   return topk_scores, topk_labels, topk_bboxes, topk_anchors
 
 

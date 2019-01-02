@@ -25,9 +25,11 @@ class ObjectDetectionModeler(Modeler):
     self.config.BBOXES_WEIGHTS = 1.0
     self.config.L2_REGULARIZATION = 0.00025
 
-    self.config.RESULT_SCORE_THRESH = 0.2
-    self.config.RESULTS_PER_IM = 10
-    self.config.NMS_THRESH = 0.25
+    # For get high mAP in evaluation.
+    # For detection one should actually use higher RESULT_SCORE_THRESH (e.g. RESULT_SCORE_THRESH = 0.6)
+    self.config.RESULT_SCORE_THRESH = 0.01
+    self.config.RESULTS_PER_IM = 200
+    self.config.NMS_THRESH = 0.45
 
     self.config.BACKBONE_OUTPUT_LAYER = "vgg_16/mod_pool5"
     self.config.FEATURE_LAYERS = ("vgg_16/conv4/conv4_3",
