@@ -8,7 +8,6 @@ from __future__ import print_function
 import os
 import numpy as np
 import math
-import pickle
 
 import tensorflow as tf
 
@@ -37,31 +36,19 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.class_id_to_category_id = None
     self.cat_names = None
 
-    self.priorbox_path = os.path.join(os.path.expanduser("~"), "git/caffe_ssd/SSD_512x512_priorbox.p")
+    # self.priorbox_path = os.path.join(os.path.expanduser("~"), "git/caffe_ssd/SSD_512x512_priorbox.p")
     self.priorvariance = [0.1, 0.1, 0.2, 0.2]
 
-    self.anchors = None
-    self.anchors_stride = [8, 16, 32, 64, 128, 256, 512]
-
-
-    self.anchors_sizes = [(20.48, 51.2),
-                          (51.2, 133.12),
-                          (133.12, 215.04),
-                          (215.04, 296.96),
-                          (296.96, 378.88),
-                          (378.88, 460.8),
-                          (460.8, 542.72)]
-
     self.num_anchors = []
-    self.anchors_aspect_ratios = [((1.0, 2.0, 0.5), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
-                                  ((1.0, 2.0, 0.5, 3.0, 1. / 3.0), (1.0,)),
-                                  ((1.0, 2.0, 0.5), (1.0,)),
-                                  ((1.0, 2.0, 0.5), (1.0,))]
     self.anchors_map = None
-
+    self.anchors_stride = [8, 16, 32, 64, 128, 256, 512]
+    self.anchors_aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
+    # control the size of the default square priorboxes
+    # REF: https://github.com/weiliu89/caffe/blob/ssd/src/caffe/layers/prior_box_layer.cpp#L164
+    self.min_ratio = 10
+    self.max_ratio = 90
+    self.min_dim = 512
+    
     # Has to be more than num_gpu * batch_size_per_gpu
     # Otherwise no valid batch will be produced
     # self.TRAIN_NUM_SAMPLES = 2048
@@ -78,7 +65,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     
     self.TRAIN_NUM_SAMPLES = 117266 # train2014 + valminusminival2014
     self.EVAL_NUM_SAMPLES = 4952 # val2017 (same as test-dev2015)
-    # self.EVAL_NUM_SAMPLES = 2
 
     self.TRAIN_FG_IOU = 0.5
     self.TRAIN_BG_IOU = 0.5
@@ -146,25 +132,33 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         self.num_samples = self.TRAIN_NUM_SAMPLES
     return self.num_samples
 
+
   def get_anchors(self):
-    if self.anchors is None:
 
-      # TODO: match official SSD results
-      self.anchors = []
-      for stride, ratio, sz in zip(
-        self.anchors_stride, self.anchors_aspect_ratios, self.anchors_sizes):
-       anchors_per_layer = detection_common.generate_anchors(stride, ratio, sz)
-       self.anchors.append(anchors_per_layer)
-       self.num_anchors.append(len(anchors_per_layer))
+    if self.anchors_map is None:
 
-      priorbox_data = pickle.load(open(self.priorbox_path, "rb"))
-      priorbox = []
-      for k, v in priorbox_data.items():
-          priorbox.append(np.reshape(v[0][0], (-1, 4)))
-      priorbox = np.concatenate(priorbox, axis=0)
-      self.anchors_map = priorbox
+      step = int(math.floor((self.max_ratio - self.min_ratio) / (len(self.anchors_aspect_ratios) - 2)))
+      min_sizes = []
+      max_sizes = []
+      for ratio in xrange(self.min_ratio, self.max_ratio + 1, step):
+        min_sizes.append(self.min_dim * ratio / 100.)
+        max_sizes.append(self.min_dim * (ratio + step) / 100.)
+      min_sizes = [self.min_dim * 4 / 100.] + min_sizes
+      max_sizes = [self.min_dim * 10 / 100.] + max_sizes
+      min_sizes = [math.floor(x) for x in min_sizes]
+      max_sizes = [math.floor(x) for x in max_sizes]
 
-      return self.anchors, self.anchors_map, self.num_anchors
+      list_priorbox, list_num_anchors = detection_common.ssd_create_priorbox(
+        self.min_dim,
+        self.anchors_aspect_ratios,
+        self.anchors_stride,
+        min_sizes,
+        max_sizes)
+      self.anchors_map = np.concatenate(list_priorbox, axis=0)
+      self.num_anchors = list_num_anchors
+
+      return self.anchors_map, self.num_anchors
+
 
   def get_samples_fn(self):
     # Args:

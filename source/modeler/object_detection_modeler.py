@@ -40,7 +40,7 @@ class ObjectDetectionModeler(Modeler):
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
-    self.anchors, self.anchors_map, self.num_anchors = inputter.get_anchors()
+    self.anchors_map, self.num_anchors = inputter.get_anchors()
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()

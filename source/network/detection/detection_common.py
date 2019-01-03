@@ -1,10 +1,76 @@
 import numpy as np
+import math
 
 from pycocotools.mask import iou
 
 import tensorflow as tf
 
 NUM_CLASSES = 81
+
+def ssd_priorbox_layer(min_dim, aspect_ratio, step, min_size, max_size):
+  feat_map_size = min_dim / step
+  num_boxes = len(aspect_ratio) * 2 + 2
+
+  # create tensors for x_min, y_min, x_max, y_max
+  x_min = np.zeros((feat_map_size, feat_map_size, num_boxes), dtype=np.float32)
+  y_min = np.zeros_like(x_min, dtype=np.float32)
+  x_max = np.zeros_like(x_min, dtype=np.float32)
+  y_max = np.zeros_like(x_max, dtype=np.float32)
+
+  # The bigger priorbox has size of sqrt(min_size * max_size)
+  list_w = [min_size, math.sqrt(min_size * max_size)]
+  list_h =[min_size, math.sqrt(min_size * max_size)]
+
+  for r in aspect_ratio:
+    l_s = min_size * math.sqrt(r)
+    s_s = min_size / math.sqrt(r)
+    list_w.append(l_s)
+    list_h.append(s_s)
+    list_w.append(s_s)
+    list_h.append(l_s)
+
+  num_anchors = len(list_w)
+
+  list_x = np.arange(0, min_dim, step) + step / 2
+  list_y = list_x
+  x_cen_v, y_cen_v = np.meshgrid(list_x, list_y)
+
+
+  for i in range(len(list_w)):
+    x_min[:, :, i] = x_cen_v - list_w[i] / 2
+    x_max[:, :, i] = x_cen_v + list_w[i] / 2
+    y_min[:, :, i] = y_cen_v - list_h[i] / 2
+    y_max[:, :, i] = y_cen_v + list_h[i] / 2
+
+
+  x_min = x_min.reshape((-1, 1))
+  x_max = x_max.reshape((-1, 1))
+  y_min = y_min.reshape((-1, 1))
+  y_max = y_max.reshape((-1, 1))
+
+  priorbox = np.concatenate((x_min, y_min, x_max, y_max), axis=1)
+  priorbox = priorbox / min_dim
+
+  return priorbox, num_anchors
+
+
+def ssd_create_priorbox(min_dim, aspect_ratios, steps, min_sizes, max_sizes):
+  list_priorbox = []
+  list_num_anchors = []
+  for i_layer in range(len(aspect_ratios)):
+    aspect_ratio = aspect_ratios[i_layer]
+    step = steps[i_layer]
+    min_size = min_sizes[i_layer]
+    max_size = max_sizes[i_layer]
+    priorbox, num_anchors = ssd_priorbox_layer(
+      min_dim,
+      aspect_ratio,
+      step,
+      min_size,
+      max_size)
+    list_priorbox.append(priorbox)
+    list_num_anchors.append(num_anchors)
+  return list_priorbox, list_num_anchors
 
 def _mkanchors(ws, hs, x_ctr, y_ctr):
     """Given a vector of widths (ws) and heights (hs) around a center

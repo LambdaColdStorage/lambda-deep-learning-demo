@@ -187,6 +187,8 @@ class Runner(object):
     # image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name
     batch = self.inputter.input_fn()
 
+    sys.exit()
+
     results = self.modeler.model_fn(batch)
 
     print(results)
