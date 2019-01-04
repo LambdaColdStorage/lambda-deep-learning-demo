@@ -36,38 +36,10 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     self.class_id_to_category_id = None
     self.cat_names = None
 
-    # self.priorbox_path = os.path.join(os.path.expanduser("~"), "git/caffe_ssd/SSD_512x512_priorbox.p")
-    self.priorvariance = [0.1, 0.1, 0.2, 0.2]
-
-    self.num_anchors = []
-    self.anchors_map = None
-    self.anchors_stride = [8, 16, 32, 64, 128, 256, 512]
-    self.anchors_aspect_ratios = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
-    # control the size of the default square priorboxes
-    # REF: https://github.com/weiliu89/caffe/blob/ssd/src/caffe/layers/prior_box_layer.cpp#L164
-    self.min_ratio = 10
-    self.max_ratio = 90
-    self.min_dim = 512
-    
     # Has to be more than num_gpu * batch_size_per_gpu
-    # Otherwise no valid batch will be produced
-    # self.TRAIN_NUM_SAMPLES = 2048
-    # self.EVAL_NUM_SAMPLES = 2048
-
-    # self.TRAIN_NUM_SAMPLES = 82784
-    # self.EVAL_NUM_SAMPLES = 2048
-
-    # self.TRAIN_NUM_SAMPLES = 117266 # train2017
-    # self.EVAL_NUM_SAMPLES = 2048
-
-    # self.TRAIN_NUM_SAMPLES = 82081 # train2014
-    # self.TRAIN_NUM_SAMPLES = 35185 # valminusminival2014
-    
+    # Otherwise no valid batch will be produced    
     self.TRAIN_NUM_SAMPLES = 117266 # train2014 + valminusminival2014
     self.EVAL_NUM_SAMPLES = 4952 # val2017 (same as test-dev2015)
-
-    self.TRAIN_FG_IOU = 0.5
-    self.TRAIN_BG_IOU = 0.5
 
     if self.config.mode == "infer":
       self.test_samples = self.config.test_samples
@@ -131,34 +103,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
       elif self.config.mode == "train":
         self.num_samples = self.TRAIN_NUM_SAMPLES
     return self.num_samples
-
-
-  def get_anchors(self):
-
-    if self.anchors_map is None:
-
-      step = int(math.floor((self.max_ratio - self.min_ratio) / (len(self.anchors_aspect_ratios) - 2)))
-      min_sizes = []
-      max_sizes = []
-      for ratio in xrange(self.min_ratio, self.max_ratio + 1, step):
-        min_sizes.append(self.min_dim * ratio / 100.)
-        max_sizes.append(self.min_dim * (ratio + step) / 100.)
-      min_sizes = [self.min_dim * 4 / 100.] + min_sizes
-      max_sizes = [self.min_dim * 10 / 100.] + max_sizes
-      min_sizes = [math.floor(x) for x in min_sizes]
-      max_sizes = [math.floor(x) for x in max_sizes]
-
-      list_priorbox, list_num_anchors = detection_common.ssd_create_priorbox(
-        self.min_dim,
-        self.anchors_aspect_ratios,
-        self.anchors_stride,
-        min_sizes,
-        max_sizes)
-      self.anchors_map = np.concatenate(list_priorbox, axis=0)
-      self.num_anchors = list_num_anchors
-
-      return self.anchors_map, self.num_anchors
-
 
   def get_samples_fn(self):
     # Args:
@@ -245,49 +189,6 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     tf.constant(max_step, name="max_step")
 
-  def compute_gt(self, classes, boxes):
-    # Input:
-    #     classes: num_obj
-    #     boxes: num_obj x 4
-    # Output:
-    #     gt_labels: num_anchors
-    #     gt_bboxes: num_anchors x 4
-    #     gt_mask: num_anchors
-
-    # Check there is at least one object in the image
-    assert len(boxes) > 0
-
-    # Compute IoU between anchors and boxes
-    ret_iou = detection_common.np_iou(self.anchors_map, boxes)
-
-    # Create mask:
-    # foreground = 1
-    # background = -1
-    # neutral = 0
-
-    # Forward selection
-    max_idx = np.argmax(ret_iou, axis=1)
-    max_iou = ret_iou[np.arange(ret_iou.shape[0]), max_idx]
-    gt_labels = classes[max_idx]
-    gt_bboxes = boxes[max_idx, :]
-    gt_mask = np.zeros(ret_iou.shape[0], dtype=np.int32)
-
-    fg_idx = np.where(max_iou > self.TRAIN_FG_IOU)[0]
-    bg_idx = np.where(max_iou < self.TRAIN_BG_IOU)[0]
-    gt_mask[fg_idx] = 1
-    gt_mask[bg_idx] = -1
-    # Set the bg object to class 0
-    gt_labels[bg_idx] = 0
-
-    # Reverse selection
-    # Make sure every gt object is matched to at least one anchor
-    max_idx_reverse = np.argmax(ret_iou, axis=0)
-    gt_labels[max_idx_reverse] = classes
-    gt_bboxes[max_idx_reverse] = boxes
-    gt_mask[max_idx_reverse] = 1
-
-    return gt_labels, gt_bboxes, gt_mask
-
   def parse_fn(self, image_id, file_name, classes, boxes):
     """Parse a single input sample
     """
@@ -307,35 +208,7 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         is_training=is_training,
         speed_mode=False)
 
-    if self.config.mode == "infer":
-      gt_labels = tf.zeros([1], dtype=tf.int64)
-      gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
-      gt_mask = tf.zeros([1], dtype=tf.int32)
-    elif self.config.mode == "eval":
-      # For object detection use external library for evaluation
-      # Skip gt here
-      gt_labels = tf.zeros([1], dtype=tf.int64)
-      gt_bboxes = tf.zeros([1, 4], dtype=tf.float32)
-      gt_mask = tf.zeros([1], dtype=tf.int32)
-    elif self.config.mode == "train":
-      gt_labels, gt_bboxes, gt_mask = tf.py_func(
-        self.compute_gt, [classes, boxes], (tf.int64, tf.float32, tf.int32))
-      # Encode the shift between gt_bboxes and anchors_map
-      gt_bboxes = detection_common.encode_bbox_target(
-        gt_bboxes, self.anchors_map)
-
-      # scale with variance 
-      cx, cy, w, h = tf.unstack(gt_bboxes, 4, axis=1)
-      cx = tf.scalar_mul(1.0 / self.priorvariance[0], cx)
-      cy = tf.scalar_mul(1.0 / self.priorvariance[1], cy)
-      w = tf.scalar_mul(1.0 / self.priorvariance[2], w)
-      h = tf.scalar_mul(1.0 / self.priorvariance[3], h)
-      gt_bboxes = tf.concat([tf.expand_dims(cx, -1),
-                             tf.expand_dims(cy, -1),
-                             tf.expand_dims(w, -1),
-                             tf.expand_dims(h, -1)], axis=1)
-
-    return (image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name)
+    return ([image_id], image, classes, boxes, scale, translation, [file_name])
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
@@ -358,8 +231,9 @@ class ObjectDetectionMSCOCOInputter(Inputter):
         image_id, file_name, classes, boxes),
       num_parallel_calls=12)
 
-    dataset = dataset.apply(
-        tf.contrib.data.batch_and_drop_remainder(batch_size))
+    dataset = dataset.padded_batch(
+      batch_size,
+      padded_shapes=([None], [None, None, 3], [None], [None, 4], [None], [None], [None]))
 
     dataset = dataset.prefetch(2)
 

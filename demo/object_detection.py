@@ -21,7 +21,7 @@ python demo/object_detection.py \
 --dataset_dir=/mnt/data/data/mscoco \
 eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
-CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py --mode=infer --model_dir=~/ssd512_mscoco \
+CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py --mode=infer --model_dir=~/demo/model/ssd512_mscoco \
 --network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=1 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
 infer_args --callbacks=infer_basic,infer_display_object_detection \

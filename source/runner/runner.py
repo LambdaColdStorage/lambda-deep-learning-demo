@@ -187,15 +187,9 @@ class Runner(object):
     # image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name
     batch = self.inputter.input_fn()
 
-    sys.exit()
-
     results = self.modeler.model_fn(batch)
 
-    print(results)
-
-    self.print_trainable_variables()
-
-    sys.exit()
+    # self.print_trainable_variables()
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
@@ -204,65 +198,15 @@ class Runner(object):
 
       # Test input_fn
       for i in range(num_batch):
-        if i == 1:
-          total_start_time = time.time()
-        start_time = time.time()
         # _batch = self.sess.run(batch)
         _results = self.sess.run(results)
-        end_time = time.time()
-        print(_results.shape)
-        #print(end_time - start_time)
+        # print(_results)
+        # print(type(_results))
+        # print(_results[0].shape)
+        # print(_results[1].shape)
+        # print(_results[2].shape)
+        print(_results)
 
-
-        # import matplotlib.pyplot as plt
-        # import numpy as np
-        # import cv2
-        # image = _batch[0][0]
-        # classes = batch[1][0]
-        # boxes = _batch[2][0]
-        # scale = _batch[3][0]
-        # translation = _batch[4][0]
-
-        # _R_MEAN = 123.68
-        # _G_MEAN = 116.78
-        # _B_MEAN = 103.94
-        # image[:, :, 0] = image[:, :, 0] + _R_MEAN
-        # image[:, :, 1] = image[:, :, 1] + _G_MEAN
-        # image[:, :, 2] = image[:, :, 2] + _B_MEAN
-        # image = image / 255.0
-
-        # plt.rcParams['figure.figsize'] = (10, 10)
-        # plt.rcParams['image.interpolation'] = 'nearest'
-        # plt.rcParams['image.cmap'] = 'gray'
-        # colors = plt.cm.hsv(np.linspace(0, 1, 121)).tolist()
-        # plt.imshow(image)
-        # currentAxis = plt.gca()
-
-        # for i in xrange(boxes.shape[0]):
-        #     xmin = int(round(boxes[i, 0] * image.shape[1]))
-        #     ymin = int(round(boxes[i, 1] * image.shape[0]))
-        #     xmax = int(round(boxes[i, 2] * image.shape[1]))
-        #     ymax = int(round(boxes[i, 3] * image.shape[0]))
-
-        #     score = 1.0
-        #     label = 1
-        #     label_name = "object"
-        #     display_txt = '%s: %.2f'%(label_name, score)
-        #     coords = (xmin, ymin), xmax-xmin+1, ymax-ymin+1
-        #     color = colors[label]
-        #     currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
-        #     currentAxis.text(xmin, ymin, display_txt, bbox={'facecolor':color, 'alpha':0.5})
-
-        # plt.show()
-
-      total_end_time = time.time()
-      #print("average time: " +
-      #      str((total_end_time - total_start_time) / (num_batch - 1)))
-
-      # # Test model_fn
-      # for i in range(num_batch):
-      #   _results = self.sess.run(results)
-      #   print(_results)
 
 
 def build(config, inputter, modeler, callbacks):
