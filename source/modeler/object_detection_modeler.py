@@ -18,10 +18,7 @@ class ObjectDetectionModeler(Modeler):
     self.loss = net.loss
     self.encode_gt = net.encode_gt
     self.detect = net.detect
-    self.anchors_map, self.num_anchors = net.build_anchor()  
 
-    self.config.CLASS_WEIGHTS = 1.0
-    self.config.BBOXES_WEIGHTS = 1.0
     self.config.L2_REGULARIZATION = 0.00025
 
   def get_dataset_info(self, inputter):
@@ -48,8 +45,6 @@ class ObjectDetectionModeler(Modeler):
     is_training = (self.config.mode == "train")
     return self.net(inputs,
                     self.config.num_classes,
-                    self.anchors_map,
-                    self.num_anchors,
                     is_training=is_training,
                     data_format=self.config.data_format)
 
@@ -60,7 +55,7 @@ class ObjectDetectionModeler(Modeler):
   def create_loss_fn(self, gt, outputs):
     self.gether_train_vars()
 
-    return self.loss(gt, outputs, self.config.CLASS_WEIGHTS, self.config.BBOXES_WEIGHTS)
+    return self.loss(gt, outputs)
 
   def create_detect_fn(self, feat_classes, feat_bboxes):
     # Args:
@@ -70,17 +65,21 @@ class ObjectDetectionModeler(Modeler):
     #     detection_topk_scores: batch_size x (num_detections,), list of arrays
     #     detection_topk_bboxes: batch_size x (num_detections, 4), list of arrays
 
-    return self.detect(feat_classes, feat_bboxes, self.config.batch_size_per_gpu, self.anchors_map)
+    return self.detect(feat_classes,
+                       feat_bboxes,
+                       self.config.batch_size_per_gpu,
+                       self.config.num_classes)
 
   def model_fn(self, inputs):
 
     outputs = self.create_graph_fn(inputs)
 
     if self.config.mode == 'train':
-      gt = self.encode_gt(inputs, self.config.batch_size_per_gpu, self.anchors_map)
+      gt = self.encode_gt(inputs,
+                          self.config.batch_size_per_gpu,
+                          )
       
-      class_losses, bboxes_losses = self.create_loss_fn(gt,
-                                                        outputs)
+      class_losses, bboxes_losses = self.create_loss_fn(gt, outputs)
 
       loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
 

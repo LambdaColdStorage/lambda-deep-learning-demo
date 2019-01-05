@@ -6,10 +6,30 @@ import tensorflow as tf
 
 from source.network.detection import ssd_common
 
-TRAIN_SAMPLES_PER_IMAGE = 512
-TRAIN_FG_RATIO = 0.5
+NAME_FEATURE_NET = "vgg_16_reduced"
 
-name_feature_net = "vgg_16_reduced"
+CLASS_WEIGHTS = 1.0
+BBOXES_WEIGHTS = 1.0
+
+# Priorboxes
+ANCHORS_STRIDE = [8, 16, 32, 64, 128, 256, 512]
+ANCHORS_ASPECT_RATIOS = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
+# control the size of the default square priorboxes
+# REF: https://github.com/weiliu89/caffe/blob/ssd/src/caffe/layers/prior_box_layer.cpp#L164
+MIN_SIZE_RATIO = 10
+MAX_SIZE_RATIO = 90
+INPUT_DIM = 512
+
+ANCHORS_MAP, NUM_ANCHORS = ssd_common.get_anchors(ANCHORS_STRIDE,
+                                                  ANCHORS_ASPECT_RATIOS,
+                                                  MIN_SIZE_RATIO,
+                                                  MAX_SIZE_RATIO,
+                                                  INPUT_DIM)
+
+def encode_gt(inputs, batch_size):
+  image_id, image, labels, boxes, scale, translation, file_name = inputs
+  gt_labels, gt_bboxes, gt_masks = ssd_common.encode_gt(labels, boxes, ANCHORS_MAP, batch_size)
+  return gt_labels, gt_bboxes, gt_masks
 
 
 def ssd_feature(outputs, data_format):
@@ -20,44 +40,16 @@ def ssd_feature(outputs, data_format):
     outputs_conv10_2 = ssd_common.ssd_block(outputs_conv9_2, "conv10", data_format, [1, 1], [1, 4], [128, 256])
     return outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2
 
-def create_loss_classes_fn(logits_classes, gt_labels, fg_index, bg_index):
-
-  fg_labels = tf.gather(gt_labels, fg_index)
-  bg_labels = tf.gather(gt_labels, bg_index)
-
-  fg_logits = tf.gather(logits_classes, fg_index)
-  bg_logits = tf.gather(logits_classes, bg_index)
-
-  fg_loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(
-    logits=fg_logits,
-    labels=fg_labels))
-  bg_loss = tf.reduce_mean(tf.losses.sparse_softmax_cross_entropy(
-    logits=bg_logits,
-    labels=bg_labels))  
-
-  return fg_loss + bg_loss
-
-
-def create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index):
-  pred = tf.gather(logits_bboxes, fg_index)
-  gt = tf.gather(gt_bboxes, fg_index)
-
-  loss = tf.losses.huber_loss(gt, pred, delta=0.5)
-
-  return loss
 
 def net(inputs,
         num_classes,
-        anchors_map,
-        num_anchors,
         is_training, 
         data_format="channels_last"):
 
   image_id, image, labels, boxes, scale, translation, file_name = inputs
-  # anchors_map, num_anchors = ssd_common.get_anchors()
   
   feature_net = getattr(
-    importlib.import_module("source.network." + name_feature_net),
+    importlib.import_module("source.network." + NAME_FEATURE_NET),
     "net")
 
   outputs = feature_net(image, data_format)
@@ -77,7 +69,7 @@ def net(inputs,
     feature_layers = (outputs_conv4_3, outputs_fc7, outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2)
     name_layers = ("VGG/conv4_3", "VGG/fc7", "SSD/conv6_2", "SSD/conv7_2", "SSD/conv8_2", "SSD/conv9_2", "SSD/conv10_2")
 
-    for name, feat, num in zip(name_layers, feature_layers, num_anchors):      
+    for name, feat, num in zip(name_layers, feature_layers, NUM_ANCHORS):      
       # According to the original SSD paper, normalize conv4_3 with learnable scale
       # In pratice doing so indeed reduce the classification loss significantly
       if name == "VGG/conv4_3":
@@ -96,85 +88,17 @@ def net(inputs,
 
     return classes, bboxes
 
-def hard_negative_mining(logits_classes, gt_mask):
-  # compute mask and index for foregound objects
-  fg_mask = tf.to_float(tf.math.equal(gt_mask, 1))
-  fg_index = tf.where(tf.math.equal(gt_mask, 1))
 
-  # decide number of samples
-  fg_num = tf.to_int32(tf.reduce_sum(fg_mask))
-  bg_num = tf.math.minimum(tf.shape(fg_mask)[0] - fg_num, fg_num * 3)
-
-  # compute index for background object (class = 0)
-  bg_score = tf.nn.softmax(logits_classes)[:, 0]
-  bg_score = tf.multiply(bg_score, 1 - fg_mask) + fg_mask
-  bg_score = tf.multiply(-1.0, bg_score)
-  bg_v, bg_index = tf.math.top_k(bg_score, k=bg_num)
-
-  return fg_index, bg_index
-
-def heuristic_sampling(gt_mask):
-  # Balance & Sub-sample fg and bg objects
-  fg_ids = np.where(gt_mask == 1)[0]
-  fg_extra = (len(fg_ids) -
-              int(math.floor(TRAIN_SAMPLES_PER_IMAGE * TRAIN_FG_RATIO)))
-  if fg_extra > 0:
-    random_fg_ids = np.random.choice(fg_ids, fg_extra, replace=False)
-    gt_mask[random_fg_ids] = 0
-
-  bg_ids = np.where(gt_mask == -1)[0]
-  bg_extra = len(bg_ids) - (TRAIN_SAMPLES_PER_IMAGE - np.sum(gt_mask == 1))
-  if bg_extra > 0:
-    random_bg_ids = np.random.choice(bg_ids, bg_extra, replace=False)
-    gt_mask[random_bg_ids] = 0
-
-  fg_index = np.where(gt_mask == 1)[0]
-  bg_index = np.where(gt_mask == -1)[0]
-  return fg_index, bg_index
-
-def loss(gt, outputs, class_weights, bboxes_weights):
-  gt_classes, gt_bboxes, gt_mask = gt
-  feat_classes = outputs[0]
-  feat_bboxes = outputs[1]
-
-  gt_mask = tf.reshape(gt_mask, [-1])
-  logits_classes = tf.reshape(feat_classes, [-1, tf.shape(feat_classes)[2]])
-  gt_classes = tf.reshape(gt_classes, [-1, 1])
-  logits_bboxes = tf.reshape(feat_bboxes, [-1, 4])
-  gt_bboxes = tf.reshape(gt_bboxes, [-1, 4])
-
-  # # heuristic sampling
-  # fg_index, bg_index = tf.py_func(
-  #   heuristic_sampling, [gt_mask], (tf.int64, tf.int64))
-
-  # hard negative mining
-  fg_index, bg_index = hard_negative_mining(logits_classes, gt_mask)
-
-  loss_classes = class_weights * create_loss_classes_fn(logits_classes, gt_classes, fg_index, bg_index)
-
-  loss_bboxes = bboxes_weights * create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index)
-
-  return loss_classes, loss_bboxes
-
-def encode_gt(inputs, batch_size, anchors_map):
-  image_id, image, labels, boxes, scale, translation, file_name = inputs
-  # anchors_map, num_anchors = ssd_common.get_anchors()  
-  gt_labels, gt_bboxes, gt_masks = ssd_common.encode_gt(labels, boxes, anchors_map, batch_size)
-
-  return gt_labels, gt_bboxes, gt_masks
+def loss(gt, outputs):
+  return ssd_common.loss(gt, outputs, CLASS_WEIGHTS, BBOXES_WEIGHTS)
 
 
-def detect(feat_classes, feat_bboxes, batch_size, anchors_map):
+def detect(feat_classes, feat_bboxes, batch_size, num_classes):
   score_classes = tf.nn.softmax(feat_classes)
 
-  # anchors_map, num_anchors = ssd_common.get_anchors()  
-  feat_bboxes = ssd_common.decode_bboxes_batch(feat_bboxes, anchors_map, batch_size)
+  feat_bboxes = ssd_common.decode_bboxes_batch(feat_bboxes, ANCHORS_MAP, batch_size)
 
   detection_topk_scores, detection_topk_labels, detection_topk_bboxes, detection_topk_anchors = ssd_common.detect_batch(
-    score_classes, feat_bboxes, anchors_map, batch_size)
+    score_classes, feat_bboxes, ANCHORS_MAP, batch_size, num_classes)
 
   return detection_topk_scores, detection_topk_labels, detection_topk_bboxes,detection_topk_anchors
-
-
-def build_anchor():
-  return ssd_common.get_anchors()
