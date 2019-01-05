@@ -69,7 +69,7 @@ class EvalMSCOCO(Callback):
     # print(num_images)
     # print('----------------------')
     for i in range(num_images):
-      file_name = outputs_dict["file_name"][i]
+      file_name = outputs_dict["file_name"][i][0]
       # print(file_name)
       num_detections = len(outputs_dict["labels"][i])
       translation = outputs_dict["translations"][i]
@@ -89,13 +89,13 @@ class EvalMSCOCO(Callback):
         box[2] = box[2] - box[0]
         box[3] = box[3] - box[1]
         result = {
-          "image_id": outputs_dict["image_id"][i],
+          "image_id": outputs_dict["image_id"][i][0],
           "category_id": COCO_ID_MAP[outputs_dict["labels"][i][d]],
           "bbox": box,
           "score": outputs_dict["scores"][i][d]
         }
         self.detection.append(result)
-        self.image_ids.append(outputs_dict["image_id"][i])
+        self.image_ids.append(outputs_dict["image_id"][i][0])
 
 
 def build(config):

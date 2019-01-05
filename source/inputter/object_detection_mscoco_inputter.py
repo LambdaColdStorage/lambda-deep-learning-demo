@@ -13,7 +13,6 @@ import tensorflow as tf
 
 from .inputter import Inputter
 from pycocotools.coco import COCO
-from source.network.detection import detection_common
 
 
 JSON_TO_IMAGE = {

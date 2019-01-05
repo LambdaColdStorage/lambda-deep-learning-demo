@@ -1,95 +1,24 @@
 import numpy as np
 import math
+import importlib
 
 import tensorflow as tf
 
+from source.network.detection import ssd_common
+
 TRAIN_SAMPLES_PER_IMAGE = 512
 TRAIN_FG_RATIO = 0.5
-KERNEL_INIT = tf.contrib.layers.xavier_initializer()
 
+name_feature_net = "vgg_16_reduced"
 
-def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters):
-
-    num_conv = len(conv_strides)
-    for i in range(num_conv):
-        stride = conv_strides[i]
-        w = filter_size[i]
-        num_filter = num_filters[i]
-
-        if stride == 2:
-            # Use customized padding when stride == 2
-            # https://stackoverflow.com/questions/42924324/tensorflows-asymmetric-padding-assumptions
-            if data_format == "channels_last":
-              outputs = tf.pad(outputs, [[0, 0], [1, 0], [1, 0], [0, 0]], "CONSTANT")
-            else:
-              outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 0], [1, 0]], "CONSTANT")
-            padding_strategy = "VALID"
-        elif w == 4:
-            # Use customized padding when for the last ssd feature layer (filter_size == 4)
-            if data_format == "channels_last":
-              outputs = tf.pad(outputs, [[0, 0], [1, 1], [1, 1], [0, 0]], "CONSTANT")
-            else:
-              outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 1], [1, 1]], "CONSTANT")
-            padding_strategy = "VALID"
-        else:
-            padding_strategy = "SAME"
-        outputs = tf.layers.conv2d(
-                outputs,
-          filters=num_filter,
-          kernel_size=(w, w),
-          strides=(stride, stride),
-          padding=(padding_strategy),
-          data_format=data_format,
-          kernel_initializer=KERNEL_INIT,
-          activation=tf.nn.relu,
-          name=name + "_" + str(i + 1))
-    return outputs
 
 def ssd_feature(outputs, data_format):
-    outputs_conv6_2 = ssd_block(outputs, "conv6", data_format, [1, 2], [1, 3], [256, 512])
-    outputs_conv7_2 = ssd_block(outputs_conv6_2, "conv7", data_format, [1, 2], [1, 3], [128, 256])
-    outputs_conv8_2 = ssd_block(outputs_conv7_2, "conv8", data_format, [1, 2], [1, 3], [128, 256])
-    outputs_conv9_2 = ssd_block(outputs_conv8_2, "conv9", data_format, [1, 2], [1, 3], [128, 256])
-    outputs_conv10_2 = ssd_block(outputs_conv9_2, "conv10", data_format, [1, 1], [1, 4], [128, 256])
+    outputs_conv6_2 = ssd_common.ssd_block(outputs, "conv6", data_format, [1, 2], [1, 3], [256, 512])
+    outputs_conv7_2 = ssd_common.ssd_block(outputs_conv6_2, "conv7", data_format, [1, 2], [1, 3], [128, 256])
+    outputs_conv8_2 = ssd_common.ssd_block(outputs_conv7_2, "conv8", data_format, [1, 2], [1, 3], [128, 256])
+    outputs_conv9_2 = ssd_common.ssd_block(outputs_conv8_2, "conv9", data_format, [1, 2], [1, 3], [128, 256])
+    outputs_conv10_2 = ssd_common.ssd_block(outputs_conv9_2, "conv10", data_format, [1, 1], [1, 4], [128, 256])
     return outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2
-
-def class_graph_fn(feat, num_classes, num_anchors, layer):
-  data_format = 'channels_last'
-  output = tf.layers.conv2d(inputs=feat,
-                            filters=num_anchors * num_classes,
-                            kernel_size=[3, 3],
-                            strides=(1, 1),
-                            padding=('SAME'),
-                            data_format=data_format,
-                            kernel_initializer=KERNEL_INIT,
-                            activation=None,
-                            name="class/" + layer)
-  output = tf.reshape(output,
-                      [tf.shape(output)[0],
-                       -1,
-                       num_classes],
-                      name='feat_classes' + layer)
-  return output
-
-
-def bbox_graph_fn(feat, num_anchors, layer):
-  data_format = 'channels_last'
-  output = tf.layers.conv2d(inputs=feat,
-                            filters=num_anchors * 4,
-                            kernel_size=[3, 3],
-                            strides=(1, 1),
-                            padding=('SAME'),
-                            data_format=data_format,
-                            kernel_initializer=KERNEL_INIT,
-                            activation=None,
-                            name="bbox/" + layer)
-  output = tf.reshape(output,
-                      [tf.shape(output)[0],
-                       -1,
-                       4],
-                      name='feat_bboxes' + layer)
-  return output
-
 
 def create_loss_classes_fn(logits_classes, gt_labels, fg_index, bg_index):
 
@@ -117,10 +46,21 @@ def create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index):
 
   return loss
 
+def net(inputs,
+        num_classes,
+        anchors_map,
+        num_anchors,
+        is_training, 
+        data_format="channels_last"):
 
-def net(outputs,
-        num_classes, num_anchors,
-        is_training, data_format="channels_last"):
+  image_id, image, labels, boxes, scale, translation, file_name = inputs
+  # anchors_map, num_anchors = ssd_common.get_anchors()
+  
+  feature_net = getattr(
+    importlib.import_module("source.network." + name_feature_net),
+    "net")
+
+  outputs = feature_net(image, data_format)
 
   with tf.variable_scope(name_or_scope='SSD',
                          values=[outputs],
@@ -129,7 +69,7 @@ def net(outputs,
     outputs_conv4_3 = outputs[0]
     outputs_fc7 = outputs[1]
 
-    # Add shared features
+    # # Add shared features
     outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2 = ssd_feature(outputs_fc7, data_format)
 
     classes = []
@@ -148,8 +88,8 @@ def net(outputs,
         feat = tf.multiply(weight_scale,
                            tf.math.l2_normalize(feat, axis=-1, epsilon=1e-12))
 
-      classes.append(class_graph_fn(feat, num_classes, num, name))
-      bboxes.append(bbox_graph_fn(feat, num, name))
+      classes.append(ssd_common.class_graph_fn(feat, num_classes, num, name))
+      bboxes.append(ssd_common.bbox_graph_fn(feat, num, name))
 
     classes = tf.concat(classes, axis=1)
     bboxes = tf.concat(bboxes, axis=1)
@@ -192,10 +132,8 @@ def heuristic_sampling(gt_mask):
   bg_index = np.where(gt_mask == -1)[0]
   return fg_index, bg_index
 
-def loss(inputs, outputs, class_weights, bboxes_weights):
-  gt_classes = inputs[2]
-  gt_bboxes = inputs[3]
-  gt_mask = inputs[4]
+def loss(gt, outputs, class_weights, bboxes_weights):
+  gt_classes, gt_bboxes, gt_mask = gt
   feat_classes = outputs[0]
   feat_bboxes = outputs[1]
 
@@ -217,3 +155,26 @@ def loss(inputs, outputs, class_weights, bboxes_weights):
   loss_bboxes = bboxes_weights * create_loss_bboxes_fn(logits_bboxes, gt_bboxes, fg_index)
 
   return loss_classes, loss_bboxes
+
+def encode_gt(inputs, batch_size, anchors_map):
+  image_id, image, labels, boxes, scale, translation, file_name = inputs
+  # anchors_map, num_anchors = ssd_common.get_anchors()  
+  gt_labels, gt_bboxes, gt_masks = ssd_common.encode_gt(labels, boxes, anchors_map, batch_size)
+
+  return gt_labels, gt_bboxes, gt_masks
+
+
+def detect(feat_classes, feat_bboxes, batch_size, anchors_map):
+  score_classes = tf.nn.softmax(feat_classes)
+
+  # anchors_map, num_anchors = ssd_common.get_anchors()  
+  feat_bboxes = ssd_common.decode_bboxes_batch(feat_bboxes, anchors_map, batch_size)
+
+  detection_topk_scores, detection_topk_labels, detection_topk_bboxes, detection_topk_anchors = ssd_common.detect_batch(
+    score_classes, feat_bboxes, anchors_map, batch_size)
+
+  return detection_topk_scores, detection_topk_labels, detection_topk_bboxes,detection_topk_anchors
+
+
+def build_anchor():
+  return ssd_common.get_anchors()

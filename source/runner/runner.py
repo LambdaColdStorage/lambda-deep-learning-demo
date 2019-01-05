@@ -200,12 +200,14 @@ class Runner(object):
       for i in range(num_batch):
         # _batch = self.sess.run(batch)
         _results = self.sess.run(results)
-        # print(_results)
+        print(_results['file_name'])
         # print(type(_results))
         # print(_results[0].shape)
         # print(_results[1].shape)
         # print(_results[2].shape)
-        print(_results)
+        # print(type(_results))
+        # print(_results[0].shape)
+        # print(_results[1].shape)
 
 
 
