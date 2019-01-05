@@ -38,7 +38,7 @@ def default_parser():
                                             "fcn", "unet",
                                             "fns",
                                             "char_rnn",
-                                            "ssd512", "ssd512_ref"],
+                                            "ssd512", "ssd300"],
                       type=str,
                       help="Choose a network architecture",
                       default=None)

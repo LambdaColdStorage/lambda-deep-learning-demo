@@ -4,7 +4,6 @@ import pickle
 
 import tensorflow as tf
 
-VGG_PARAMS_FILE = os.path.join(os.path.expanduser("~"), "git/caffe_ssd/SSD_512x512.p")
 
 def vgg_block(outputs, params, name, data_format, num_conv):
 
@@ -71,7 +70,7 @@ def vgg(outputs, params, data_format):
 	return [outputs_conv4_3, outputs_fc7]
 
 
-def net(inputs, data_format):
+def net(inputs, data_format, VGG_PARAMS_FILE):
 
     params = pickle.load(open(VGG_PARAMS_FILE, "rb"))
 

@@ -13,13 +13,13 @@ CLASS_WEIGHTS = 1.0
 BBOXES_WEIGHTS = 1.0
 
 # Priorboxes
-ANCHORS_STRIDE = [8, 16, 32, 64, 128, 256, 512]
-ANCHORS_ASPECT_RATIOS = [[2], [2, 3], [2, 3], [2, 3], [2, 3], [2], [2]]
+ANCHORS_STRIDE = [8, 16, 32, 64, 100, 300]
+ANCHORS_ASPECT_RATIOS = [[2], [2, 3], [2, 3], [2, 3], [2], [2]]
 # control the size of the default square priorboxes
 # REF: https://github.com/weiliu89/caffe/blob/ssd/src/caffe/layers/prior_box_layer.cpp#L164
-MIN_SIZE_RATIO = 10
+MIN_SIZE_RATIO = 15
 MAX_SIZE_RATIO = 90
-INPUT_DIM = 512
+INPUT_DIM = 300
 
 ANCHORS_MAP, NUM_ANCHORS = ssd_common.get_anchors(ANCHORS_STRIDE,
                                                   ANCHORS_ASPECT_RATIOS,
@@ -39,9 +39,8 @@ def ssd_feature(outputs, data_format):
     outputs_conv6_2 = ssd_common.ssd_block(outputs, "conv6", data_format, [1, 2], [1, 3], [256, 512], ["SAME", "SAME"])
     outputs_conv7_2 = ssd_common.ssd_block(outputs_conv6_2, "conv7", data_format, [1, 2], [1, 3], [128, 256], ["SAME", "SAME"])
     outputs_conv8_2 = ssd_common.ssd_block(outputs_conv7_2, "conv8", data_format, [1, 2], [1, 3], [128, 256], ["SAME", "SAME"])
-    outputs_conv9_2 = ssd_common.ssd_block(outputs_conv8_2, "conv9", data_format, [1, 2], [1, 3], [128, 256], ["SAME", "SAME"])
-    outputs_conv10_2 = ssd_common.ssd_block(outputs_conv9_2, "conv10", data_format, [1, 1], [1, 2], [128, 256], ["SAME", "VALID"])
-    return outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2
+    outputs_conv9_2 = ssd_common.ssd_block(outputs_conv8_2, "conv9", data_format, [1, 2], [1, 3], [128, 256], ["SAME", "VALID"])
+    return outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2
 
 
 def net(inputs,
@@ -57,6 +56,7 @@ def net(inputs,
 
   outputs = feature_net(image, data_format, VGG_PARAMS_FILE)
 
+
   with tf.variable_scope(name_or_scope='SSD',
                          values=[outputs],
                          reuse=tf.AUTO_REUSE):
@@ -65,12 +65,12 @@ def net(inputs,
     outputs_fc7 = outputs[1]
 
     # # Add shared features
-    outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2 = ssd_feature(outputs_fc7, data_format)
+    outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2 = ssd_feature(outputs_fc7, data_format)
 
     classes = []
     bboxes = []
-    feature_layers = (outputs_conv4_3, outputs_fc7, outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2, outputs_conv10_2)
-    name_layers = ("VGG/conv4_3", "VGG/fc7", "SSD/conv6_2", "SSD/conv7_2", "SSD/conv8_2", "SSD/conv9_2", "SSD/conv10_2")
+    feature_layers = (outputs_conv4_3, outputs_fc7, outputs_conv6_2, outputs_conv7_2, outputs_conv8_2, outputs_conv9_2)
+    name_layers = ("VGG/conv4_3", "VGG/fc7", "SSD/conv6_2", "SSD/conv7_2", "SSD/conv8_2", "SSD/conv9_2")
 
     for name, feat, num in zip(name_layers, feature_layers, NUM_ANCHORS):      
       # According to the original SSD paper, normalize conv4_3 with learnable scale

@@ -26,7 +26,8 @@ HEURISTIC_MINING_FG_RATIO = 0.5
 # Priorbox
 # ------------------------------------------------------------------------
 def ssd_priorbox_layer(min_dim, aspect_ratio, step, min_size, max_size):
-  feat_map_size = min_dim / step
+  # Match official SSD feature map size
+  feat_map_size = int(math.ceil(float(min_dim) / step))
   num_boxes = len(aspect_ratio) * 2 + 2
 
   # create tensors for x_min, y_min, x_max, y_max
@@ -310,37 +311,59 @@ def bbox_graph_fn(feat, num_anchors, layer):
   return output
 
 
-def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters):
+# def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters):
+
+#     num_conv = len(conv_strides)
+#     for i in range(num_conv):
+#         stride = conv_strides[i]
+#         w = filter_size[i]
+#         num_filter = num_filters[i]
+
+#         if stride == 2:
+#             # Use customized padding when stride == 2
+#             # https://stackoverflow.com/questions/42924324/tensorflows-asymmetric-padding-assumptions
+#             if data_format == "channels_last":
+#               outputs = tf.pad(outputs, [[0, 0], [1, 0], [1, 0], [0, 0]], "CONSTANT")
+#             else:
+#               outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 0], [1, 0]], "CONSTANT")
+#             padding_strategy = "VALID"
+#         elif w == 4:
+#             # Use customized padding when for the last ssd feature layer (filter_size == 4)
+#             if data_format == "channels_last":
+#               outputs = tf.pad(outputs, [[0, 0], [1, 1], [1, 1], [0, 0]], "CONSTANT")
+#             else:
+#               outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 1], [1, 1]], "CONSTANT")
+#             padding_strategy = "VALID"
+#         else:
+#             padding_strategy = "SAME"
+#         outputs = tf.layers.conv2d(
+#                 outputs,
+#           filters=num_filter,
+#           kernel_size=(w, w),
+#           strides=(stride, stride),
+#           padding=(padding_strategy),
+#           data_format=data_format,
+#           kernel_initializer=KERNEL_INIT,
+#           activation=tf.nn.relu,
+#           name=name + "_" + str(i + 1))
+#     return outputs
+
+
+def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters, padding):
+  # Result will be slightly different to caffe due to TF's asymmetric padding
+  # https://stackoverflow.com/questions/42924324/tensorflows-asymmetric-padding-assumptions
 
     num_conv = len(conv_strides)
     for i in range(num_conv):
         stride = conv_strides[i]
         w = filter_size[i]
         num_filter = num_filters[i]
-
-        if stride == 2:
-            # Use customized padding when stride == 2
-            # https://stackoverflow.com/questions/42924324/tensorflows-asymmetric-padding-assumptions
-            if data_format == "channels_last":
-              outputs = tf.pad(outputs, [[0, 0], [1, 0], [1, 0], [0, 0]], "CONSTANT")
-            else:
-              outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 0], [1, 0]], "CONSTANT")
-            padding_strategy = "VALID"
-        elif w == 4:
-            # Use customized padding when for the last ssd feature layer (filter_size == 4)
-            if data_format == "channels_last":
-              outputs = tf.pad(outputs, [[0, 0], [1, 1], [1, 1], [0, 0]], "CONSTANT")
-            else:
-              outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 1], [1, 1]], "CONSTANT")
-            padding_strategy = "VALID"
-        else:
-            padding_strategy = "SAME"
         outputs = tf.layers.conv2d(
                 outputs,
           filters=num_filter,
           kernel_size=(w, w),
           strides=(stride, stride),
-          padding=(padding_strategy),
+          padding=(padding[i]),
           data_format=data_format,
           kernel_initializer=KERNEL_INIT,
           activation=tf.nn.relu,
