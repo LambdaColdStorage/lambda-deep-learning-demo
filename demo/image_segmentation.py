@@ -62,26 +62,6 @@ def main():
 
   config = config_parser.prepare(config)
 
-  # Download data if necessary
-  if config.mode != "infer":
-    if hasattr(config, "dataset_meta"):
-      if not os.path.exists(config.dataset_meta):
-        downloader.download_and_extract(config.dataset_meta,
-                                        config.dataset_url,
-                                        False)
-      else:
-        print("Found " + config.dataset_meta + ".")
-    elif hasattr(config, "train_dataset_meta"):
-      if not os.path.exists(config.train_dataset_meta):
-        print(config.train_dataset_meta)
-        downloader.download_and_extract(config.train_dataset_meta,
-                                        config.dataset_url,
-                                        False)
-      else:
-        print("Found " + config.train_dataset_meta + ".")
-    else:
-      assert False, "A meta data must be provided."
-
   # Generate config
   runner_config, callback_config, inputter_config, modeler_config = \
       config_parser.default_config(config)
@@ -105,6 +85,9 @@ def main():
     modeler_config,
     num_classes=config.num_classes,
     data_format=config.data_format)
+
+  # Download data if necessary
+  downloader.check_and_download(inputter_config)
 
   if config.mode == "tune":
 

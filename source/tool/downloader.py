@@ -28,3 +28,28 @@ def download_and_extract(data_file, data_url, create_parent_folder=True):
 
   print("\nExtracting dataset to " + data_dirname)
   tarfile.open(local_tar_name, 'r:gz').extractall(untar_dirname)
+
+
+def check_and_download(config):
+
+  def check_meta_and_download(name_meta, flag_has_meta):
+    if hasattr(config, name_meta):
+      path_meta = getattr(config, name_meta)
+      if path_meta:
+        if not os.path.exists(path_meta):
+          download_and_extract(path_meta,
+                               config.dataset_url,
+                               False)
+        else:
+          print("Found " + path_meta + ".")
+        flag_has_meta = True
+    return flag_has_meta
+
+  flag_has_meta = False
+
+  flag_has_meta = check_meta_and_download('dataset_meta', flag_has_meta)
+  flag_has_meta = check_meta_and_download('train_dataset_meta', flag_has_meta)
+  flag_has_meta = check_meta_and_download('eval_dataset_meta', flag_has_meta)
+
+  if not flag_has_meta and config.mode != "infer":
+    assert False, "A meta data must be provided in non-inference mode." 

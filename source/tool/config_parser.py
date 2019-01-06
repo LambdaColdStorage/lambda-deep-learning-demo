@@ -349,13 +349,17 @@ def prepare(config):
   return config
 
 
-def default_config(config):
+def default_config(parser):
 
   import sys
   sys.path.append('.')
 
   from source.config.config import (RunnerConfig, CallbackConfig,
                                     InputterConfig, ModelerConfig)
+
+  args = parser.parse_args()
+
+  config = prepare(args)
 
   # Create configs
   runner_config = RunnerConfig(
@@ -365,7 +369,11 @@ def default_config(config):
     summary_names=(None if not hasattr(config, "summary_names")
                    else config.summary_names),
     reduce_ops=(True if not hasattr(config, "reduce_ops")
-                else config.reduce_ops))
+                else config.reduce_ops),
+    train_reduce_ops=(True if not hasattr(config, "train_reduce_ops")
+                else config.train_reduce_ops),
+    eval_reduce_ops=(True if not hasattr(config, "eval_reduce_ops")
+                else config.eval_reduce_ops))
 
   callback_config = CallbackConfig(
     mode=config.mode,
@@ -383,13 +391,21 @@ def default_config(config):
     save_checkpoints_steps=(None if not hasattr(config, "save_checkpoints_steps")
                             else config.save_checkpoints_steps),
     keep_checkpoint_max=(None if not hasattr(config, "keep_checkpoint_max")
-                         else config.keep_checkpoint_max))
+                         else config.keep_checkpoint_max),
+    callbacks=(None if not hasattr(config, "callbacks")
+                         else config.callbacks),
+    train_callbacks=(None if not hasattr(config, "train_callbacks")
+                         else config.train_callbacks),
+    eval_callbacks=(None if not hasattr(config, "eval_callbacks")
+                         else config.eval_callbacks))
 
   inputter_config = InputterConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
     gpu_count=config.gpu_count,
     epochs=config.epochs,
+    dataset_url=(None if not hasattr(config, "dataset_url")
+                  else config.dataset_url),
     dataset_meta=(None if not hasattr(config, "dataset_meta")
                   else config.dataset_meta),
     train_dataset_meta=(None if not hasattr(config, "train_dataset_meta")
@@ -398,6 +414,8 @@ def default_config(config):
                        else config.eval_dataset_meta),
     test_samples=(None if not hasattr(config, "test_samples")
                   else config.test_samples),
+    augmenter=(None if not hasattr(config, "augmenter")
+               else config.augmenter),
     augmenter_speed_mode=(None if not hasattr(config, "augmenter_speed_mode")
                           else config.augmenter_speed_mode))
 
@@ -418,6 +436,16 @@ def default_config(config):
     skip_l2_loss_vars=(None if not hasattr(config, "skip_l2_loss_vars")
                        else config.skip_l2_loss_vars),
     l2_weight_decay=(None if not hasattr(config, "l2_weight_decay")
-                     else config.l2_weight_decay))
+                     else config.l2_weight_decay),
+    network=(None if not hasattr(config, "network")
+                     else config.network),
+    tune_config_path=(None if not hasattr(config, "tune_config_path")
+                     else config.tune_config_path))
 
-  return runner_config, callback_config, inputter_config, modeler_config
+  arg_groups={}
+  for group in parser._action_groups:
+      group_dict={a.dest:getattr(args,a.dest,None) for a in group._group_actions}
+      arg_groups[group.title]=argparse.Namespace(**group_dict)
+  app_config = arg_groups['app']
+
+  return runner_config, callback_config, inputter_config, modeler_config, app_config

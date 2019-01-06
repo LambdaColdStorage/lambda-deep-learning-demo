@@ -21,12 +21,16 @@ class RunnerConfig(Config):
                batch_size_per_gpu,
                gpu_count,
                summary_names,
-               reduce_ops):
+               reduce_ops,
+               train_reduce_ops,
+               eval_reduce_ops):
     super(RunnerConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
 
     self.summary_names = summary_names
     self.reduce_ops = reduce_ops
+    self.train_reduce_ops = train_reduce_ops
+    self.eval_reduce_ops = eval_reduce_ops
 
 
 class CallbackConfig(Config):
@@ -40,7 +44,10 @@ class CallbackConfig(Config):
                pretrained_model,
                skip_pretrained_var,
                save_checkpoints_steps,
-               keep_checkpoint_max):
+               keep_checkpoint_max,
+               callbacks,
+               train_callbacks,
+               eval_callbacks):
 
     super(CallbackConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
@@ -52,6 +59,10 @@ class CallbackConfig(Config):
     self.skip_pretrained_var = skip_pretrained_var
     self.save_checkpoints_steps = save_checkpoints_steps
     self.keep_checkpoint_max = keep_checkpoint_max
+    self.callbacks = callbacks
+    self.train_callbacks = train_callbacks
+    self.eval_callbacks = eval_callbacks
+
 
 
 class InputterConfig(Config):
@@ -60,20 +71,24 @@ class InputterConfig(Config):
                batch_size_per_gpu,
                gpu_count,
                epochs,
+               dataset_url,
                dataset_meta,
                train_dataset_meta,
                eval_dataset_meta,
                test_samples,
+               augmenter,
                augmenter_speed_mode):
 
     super(InputterConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
 
     self.epochs = epochs
+    self.dataset_url = dataset_url
     self.dataset_meta = dataset_meta
     self.train_dataset_meta = train_dataset_meta
     self.eval_dataset_meta = eval_dataset_meta
     self.test_samples = test_samples
+    self.augmenter = augmenter
     self.augmenter_speed_mode = augmenter_speed_mode
 
 
@@ -88,7 +103,9 @@ class ModelerConfig(Config):
                piecewise_boundaries,
                piecewise_lr_decay,
                skip_l2_loss_vars,
-               l2_weight_decay):
+               l2_weight_decay,
+               network,
+               tune_config_path):
 
     super(ModelerConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
@@ -100,3 +117,5 @@ class ModelerConfig(Config):
     self.piecewise_lr_decay = piecewise_lr_decay
     self.skip_l2_loss_vars = skip_l2_loss_vars
     self.l2_weight_decay = l2_weight_decay
+    self.network = network
+    self.tune_config_path = tune_config_path
