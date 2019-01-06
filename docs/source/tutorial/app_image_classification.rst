@@ -65,7 +65,7 @@ Image Classification
 .. _resnet32tune:
 
 **Hyper-Parameter Tuning**
------------------------
+---------------------------
 
 ::
 

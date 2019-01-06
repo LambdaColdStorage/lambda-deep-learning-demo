@@ -1,12 +1,34 @@
 Object Detection
 ========================================
 
-
+* :ref:`prepare`
 * :ref:`ssdtrain`
 * :ref:`ssdeval`
 * :ref:`ssdinfer`
 * :ref:`ssdtune`
 * :ref:`ssdpretrain`
+
+
+.. _prepare:
+
+**Prepare**
+----------------------------------------------
+Install cocoapi_. 
+
+::
+
+  git clone https://github.com/cocodataset/cocoapi.git
+  cd cocoapi/PythonAPI
+  make install
+
+
+Download coco dataset_.
+
+* Download train2014, val2014, val2017 data and annotations.
+* Uncompress them into your local machine. We use "/mnt/data/data/mscoco" as the data path in the following examples.
+
+.. _cocoapi: https://github.com/cocodataset/cocoapi
+.. _dataset: http://cocodataset.org/#download
 
 .. _ssdtrain:
 
@@ -41,7 +63,7 @@ Object Detection
 .. _ssdeval:
 
 **Evaluate SSD on MSCOCO**
------------------------
+--------------------------------
 
 ::
 
@@ -92,7 +114,7 @@ Object Detection
 .. _ssdtune:
 
 **Hyper-Parameter Tuning**
------------------------
+--------------------------------
 
 ::
 
@@ -134,7 +156,7 @@ Object Detection
 .. _ssdpretrain:
 
 **Evaluate Pre-trained model**
-------------------------------
+---------------------------------------
 
 ::
 

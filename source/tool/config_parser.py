@@ -276,19 +276,6 @@ def yaml_parse(config_path):
 
 def prepare(config):
 
-  # if hasattr(config, "dataset_meta"):
-  #   config.dataset_meta = ("" if not config.dataset_meta else
-  #                          os.path.expanduser(config.dataset_meta))
-
-  # if hasattr(config, "train_dataset_meta"):
-  #   config.train_dataset_meta = ("" if not config.train_dataset_meta else
-  #                                os.path.expanduser(config.train_dataset_meta))
-
-  # if hasattr(config, "eval_dataset_meta"):
-  #   config.eval_dataset_meta = ("" if not config.eval_dataset_meta else
-  #                               os.path.expanduser(config.eval_dataset_meta))
-
-
   if hasattr(config, 'dataset_meta'):
     config.dataset_meta = (
       None if not config.dataset_meta
