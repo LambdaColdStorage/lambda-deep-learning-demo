@@ -7,6 +7,10 @@ import sys
 import os
 import importlib
 
+"""
+Image Segmentation Demo
+"""
+
 
 def main():
 
@@ -22,74 +26,73 @@ def main():
 
   parser = config_parser.default_parser()
 
-  parser.add_argument("--num_classes",
-                      help="Number of classes.",
-                      type=int,
-                      default=12)
-  parser.add_argument("--image_height",
-                      help="Image height.",
-                      type=int,
-                      default=360)
-  parser.add_argument("--image_width",
-                      help="Image width.",
-                      type=int,
-                      default=480)
-  parser.add_argument("--image_depth",
-                      help="Number of color channels.",
-                      type=int,
-                      default=3)
-  parser.add_argument("--output_height",
-                      help="Output height.",
-                      type=int,
-                      default=368)
-  parser.add_argument("--output_width",
-                      help="Output width.",
-                      type=int,
-                      default=480)
-  parser.add_argument("--resize_side_min",
-                      help="The minimal image size in augmentation.",
-                      type=int,
-                      default=400)
-  parser.add_argument("--resize_side_max",
-                      help="The maximul image size in augmentation.",
-                      type=int,
-                      default=600)
-  parser.add_argument("--data_format",
-                      help="channels_first or channels_last",
-                      default="channels_first")
+  app_parser = parser.add_argument_group('app')
 
-  config = parser.parse_args()
+  app_parser.add_argument("--num_classes",
+                          help="Number of classes.",
+                          type=int,
+                          default=12)
+  app_parser.add_argument("--image_height",
+                          help="Image height.",
+                          type=int,
+                          default=360)
+  app_parser.add_argument("--image_width",
+                          help="Image width.",
+                          type=int,
+                          default=480)
+  app_parser.add_argument("--image_depth",
+                          help="Number of color channels.",
+                          type=int,
+                          default=3)
+  app_parser.add_argument("--output_height",
+                          help="Output height.",
+                          type=int,
+                          default=368)
+  app_parser.add_argument("--output_width",
+                          help="Output width.",
+                          type=int,
+                          default=480)
+  app_parser.add_argument("--resize_side_min",
+                          help="The minimal image size in augmentation.",
+                          type=int,
+                          default=400)
+  app_parser.add_argument("--resize_side_max",
+                          help="The maximul image size in augmentation.",
+                          type=int,
+                          default=600)
+  app_parser.add_argument("--data_format",
+                          help="channels_first or channels_last",
+                          default="channels_first")
 
-  config = config_parser.prepare(config)
+  # Default configs
+  runner_config, callback_config, inputter_config, modeler_config, app_config = \
+      config_parser.default_config(parser)
 
-  # Generate config
-  runner_config, callback_config, inputter_config, modeler_config = \
-      config_parser.default_config(config)
-
+  # Application dependent configs
   callback_config = ImageSegmentationCallbackConfig(
     callback_config,
-    num_classes=config.num_classes)
+    num_classes=app_config.num_classes)
 
   inputter_config = ImageSegmentationInputterConfig(
     inputter_config,
-    image_height=config.image_height,
-    image_width=config.image_width,
-    image_depth=config.image_depth,
-    output_height=config.output_height,
-    output_width=config.output_width,
-    resize_side_min=config.resize_side_min,
-    resize_side_max=config.resize_side_max,
-    num_classes=config.num_classes)
+    image_height=app_config.image_height,
+    image_width=app_config.image_width,
+    image_depth=app_config.image_depth,
+    output_height=app_config.output_height,
+    output_width=app_config.output_width,
+    resize_side_min=app_config.resize_side_min,
+    resize_side_max=app_config.resize_side_max,
+    num_classes=app_config.num_classes)
 
   modeler_config = ImageSegmentationModelerConfig(
     modeler_config,
-    num_classes=config.num_classes,
-    data_format=config.data_format)
+    num_classes=app_config.num_classes,
+    data_format=app_config.data_format)
 
   # Download data if necessary
   downloader.check_and_download(inputter_config)
 
-  if config.mode == "tune":
+  if runner_config.mode == "tune":
 
     inputter_module = importlib.import_module(
       "source.inputter.image_segmentation_csv_inputter")
@@ -98,7 +101,7 @@ def main():
     runner_module = importlib.import_module(
       "source.runner.parameter_server_runner")
 
-    tuner.tune(config,
+    tuner.tune(app_config,
                runner_config,
                callback_config,
                inputter_config,
@@ -117,15 +120,15 @@ def main():
     Modeler: Creates functions for network, loss, optimization and evaluation.
              It owns a network and a list of callbacks as inputs.
     """
-    augmenter = (None if not config.augmenter else
+    augmenter = (None if not inputter_config.augmenter else
                  importlib.import_module(
-                  "source.augmenter." + config.augmenter))
+                  "source.augmenter." + inputter_config.augmenter))
 
     net = importlib.import_module(
-      "source.network." + config.network)
+      "source.network." + modeler_config.network)
 
     callbacks = []
-    for name in config.callbacks:
+    for name in callback_config.callbacks:
       callback = importlib.import_module(
         "source.callback." + name).build(callback_config)
       callbacks.append(callback)

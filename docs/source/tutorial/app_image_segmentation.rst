@@ -71,19 +71,6 @@ Hyper-Parameter Tuning
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
   --tune_config=source/tool/fcn_camvid_tune_coarse.yaml
 
-::
-
-  python demo/image_segmentation.py \
-  --mode=tune \
-  --model_dir=~/demo/model/fcn_camvid \
-  --network=fcn \
-  --augmenter=fcn_augmenter \
-  --batch_size_per_gpu=16  --gpu_count=1 \
-  tune_args \
-  --train_dataset_meta=~/demo/data/camvid/train.csv \
-  --eval_dataset_meta=~/demo/data/camvid/val.csv \
-  --tune_config=source/tool/fcn_camvid_tune_fine.yaml
-
 .. _unet:
 
 **U-Net**
@@ -149,16 +136,3 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
   --tune_config=source/tool/unet_camvid_tune_coarse.yaml
-
-::
-
-  python demo/image_segmentation.py \
-  --mode=tune \
-  --model_dir=~/demo/model/unet_camvid \
-  --network=unet \
-  --augmenter=unet_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=16 \
-  tune_args \
-  --train_dataset_meta=~/demo/data/camvid/train.csv \
-  --eval_dataset_meta=~/demo/data/camvid/val.csv \
-  --tune_config=source/tool/unet_camvid_tune_fine.yaml

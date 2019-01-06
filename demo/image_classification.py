@@ -6,10 +6,9 @@ Licensed under
 import sys
 import os
 import importlib
-import argparse
 
 """
-Image classification Demo
+Image Classification Demo
 """
 
 
@@ -46,11 +45,11 @@ def main():
                       type=int,
                       default=3)
 
-  # Generate default config for individual modules
+  # Default configs
   runner_config, callback_config, inputter_config, modeler_config, app_config = \
       config_parser.default_config(parser)
 
-  # Add application dependent attributes to individual modules
+  # Application dependent configs
   inputter_config = ImageClassificationInputterConfig(
     inputter_config,
     image_height=app_config.image_height,
@@ -96,7 +95,8 @@ def main():
                  importlib.import_module(
                   "source.augmenter." + inputter_config.augmenter))
 
-    net = importlib.import_module("source.network." + modeler_config.network)
+    net = importlib.import_module(
+      "source.network." + modeler_config.network)
 
     callbacks = []
     for name in callback_config.callbacks:

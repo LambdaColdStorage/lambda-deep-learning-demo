@@ -30,6 +30,7 @@ python demo/object_detection.py \
 --augmenter=ssd_augmenter \
 --batch_size_per_gpu=8 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco \
+--num_classes=81 --resolution=512 \
 eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
 
@@ -40,6 +41,7 @@ python demo/object_detection.py \
 --augmenter=ssd_augmenter \
 --batch_size_per_gpu=8 --epochs=1 \
 --dataset_dir=/mnt/data/data/mscoco \
+--num_classes=81 --resolution=300 \
 eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
 
@@ -48,6 +50,14 @@ CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py --mode=infer --model_dir=
 --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
 infer_args --callbacks=infer_basic,infer_display_object_detection \
 --test_samples=/mnt/data/data/mscoco/val2014/COCO_val2014_000000000042.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000073.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000074.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000133.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000136.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000143.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000164.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000192.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000196.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000208.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000241.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000257.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000283.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000294.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000328.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000338.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000357.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000359.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000360.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000387.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000395.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000397.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000400.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000415.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000428.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000459.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000472.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000474.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000486.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000488.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000502.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000520.jpg
+
+
+CUDA_VISIBLE_DEVICES=0 python demo/object_detection.py --mode=infer --model_dir=~/demo/model/ssd300_mscoco \
+--network=ssd300 --augmenter=ssd_augmenter --batch_size_per_gpu=1 --epochs=1 \
+--dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=300 \
+infer_args --callbacks=infer_basic,infer_display_object_detection \
+--test_samples=/mnt/data/data/mscoco/val2014/COCO_val2014_000000000042.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000073.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000074.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000133.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000136.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000143.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000164.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000192.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000196.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000208.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000241.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000257.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000283.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000294.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000328.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000338.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000357.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000359.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000360.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000387.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000395.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000397.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000400.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000415.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000428.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000459.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000472.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000474.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000486.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000488.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000502.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000520.jpg
+
 
 python demo/object_detection.py \
 --mode=tune \
