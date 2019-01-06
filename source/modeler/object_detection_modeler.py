@@ -46,6 +46,7 @@ class ObjectDetectionModeler(Modeler):
     return self.net(inputs,
                     self.config.num_classes,
                     is_training=is_training,
+                    feature_net_path=self.config.feature_net_path,
                     data_format=self.config.data_format)
 
 
@@ -68,7 +69,8 @@ class ObjectDetectionModeler(Modeler):
     return self.detect(feat_classes,
                        feat_bboxes,
                        self.config.batch_size_per_gpu,
-                       self.config.num_classes)
+                       self.config.num_classes,
+                       self.config.confidence_threshold)
 
   def model_fn(self, inputs):
 

@@ -26,7 +26,6 @@ ANCHORS_MAP, NUM_ANCHORS = ssd_common.get_anchors(ANCHORS_STRIDE,
                                                   MIN_SIZE_RATIO,
                                                   MAX_SIZE_RATIO,
                                                   INPUT_DIM)
-VGG_PARAMS_FILE = os.path.join(os.path.expanduser("~"), "demo/model/VGG_16_reduce/VGG_16_reduce.p")
 
 
 def encode_gt(inputs, batch_size):
@@ -45,7 +44,8 @@ def ssd_feature(outputs, data_format):
 
 def net(inputs,
         num_classes,
-        is_training, 
+        is_training,
+        feature_net_path,
         data_format="channels_last"):
 
   image_id, image, labels, boxes, scale, translation, file_name = inputs
@@ -54,7 +54,9 @@ def net(inputs,
     importlib.import_module("source.network." + NAME_FEATURE_NET),
     "net")
 
-  outputs = feature_net(image, data_format, VGG_PARAMS_FILE)
+  feature_net_path = os.path.join(os.path.expanduser("~"), feature_net_path)
+
+  outputs = feature_net(image, data_format, feature_net_path)
 
 
   with tf.variable_scope(name_or_scope='SSD',
@@ -96,12 +98,12 @@ def loss(gt, outputs):
   return ssd_common.loss(gt, outputs, CLASS_WEIGHTS, BBOXES_WEIGHTS)
 
 
-def detect(feat_classes, feat_bboxes, batch_size, num_classes):
+def detect(feat_classes, feat_bboxes, batch_size, num_classes, confidence_threshold):
   score_classes = tf.nn.softmax(feat_classes)
 
   feat_bboxes = ssd_common.decode_bboxes_batch(feat_bboxes, ANCHORS_MAP, batch_size)
 
   detection_topk_scores, detection_topk_labels, detection_topk_bboxes, detection_topk_anchors = ssd_common.detect_batch(
-    score_classes, feat_bboxes, ANCHORS_MAP, batch_size, num_classes)
+    score_classes, feat_bboxes, ANCHORS_MAP, batch_size, num_classes, confidence_threshold)
 
   return detection_topk_scores, detection_topk_labels, detection_topk_bboxes,detection_topk_anchors
