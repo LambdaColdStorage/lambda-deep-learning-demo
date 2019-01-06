@@ -26,7 +26,7 @@ ANCHORS_MAP, NUM_ANCHORS = ssd_common.get_anchors(ANCHORS_STRIDE,
                                                   MIN_SIZE_RATIO,
                                                   MAX_SIZE_RATIO,
                                                   INPUT_DIM)
-VGG_PARAMS_FILE = os.path.join(os.path.expanduser("~"), "git/caffe_ssd/SSD_512x512.p")
+VGG_PARAMS_FILE = os.path.join(os.path.expanduser("~"), "demo/model/VGG_16_reduce/VGG_16_reduce.p")
 
 
 def encode_gt(inputs, batch_size):

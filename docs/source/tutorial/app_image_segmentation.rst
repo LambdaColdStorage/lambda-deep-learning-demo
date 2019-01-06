@@ -35,6 +35,7 @@ Evaluation
   python demo/image_segmentation.py \
   --mode=eval \
   --model_dir=~/demo/model/fcn_camvid \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
   --network=fcn \
   --augmenter=fcn_augmenter \
   --batch_size_per_gpu=4 --epochs=1 \
@@ -63,6 +64,7 @@ Hyper-Parameter Tuning
   python demo/image_segmentation.py \
   --mode=tune \
   --model_dir=~/demo/model/fcn_camvid \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
   --network=fcn \
   --augmenter=fcn_augmenter \
   --batch_size_per_gpu=16  --gpu_count=1 \
@@ -100,6 +102,7 @@ Evaluation
   python demo/image_segmentation.py \
   --mode=eval \
   --model_dir=~/demo/model/unet_camvid \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
   --network=unet \
   --augmenter=unet_augmenter \
   --batch_size_per_gpu=4 --epochs=1 \
@@ -129,6 +132,7 @@ Hyper-Parameter Tuning
   python demo/image_segmentation.py \
   --mode=tune \
   --model_dir=~/demo/model/unet_camvid \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
   --network=unet \
   --augmenter=unet_augmenter \
   --gpu_count=1 --batch_size_per_gpu=16 \

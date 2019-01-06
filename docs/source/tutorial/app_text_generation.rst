@@ -34,6 +34,7 @@ Evaluation
   python demo/text_generation.py \
   --mode=eval \
   --model_dir=~/demo/model/char_rnn_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \  
   --network=char_rnn \
   --batch_size_per_gpu=128 --epochs=1 \
   eval_args \
@@ -47,6 +48,7 @@ Infer
   python demo/text_generation.py \
   --mode=infer \
   --model_dir=~/demo/model/char_rnn_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \  
   --network=char_rnn \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
   infer_args \
@@ -61,6 +63,7 @@ Hyper-Parameter Tuning
   python demo/text_generation.py \
   --mode=tune \
   --model_dir=~/demo/model/char_rnn_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \  
   --network=char_rnn \
   --batch_size_per_gpu=128 \
   tune_args \

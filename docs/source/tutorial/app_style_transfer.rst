@@ -9,6 +9,13 @@ Style Transfer
 **Fast Neural Style**
 ----------------------------------------------
 
+Download pre-trained model
+
+::
+
+  (mkdir ~/demo/model/vgg_19_2016_08_28;curl http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz | tar xvz -C ~/demo/model/vgg_19_2016_08_28)
+
+
 Train from scratch
 
 ::
@@ -37,6 +44,7 @@ Evaluation
   python demo/style_transfer.py \
   --mode=eval \
   --model_dir=~/demo/model/fns_gothic \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz \  
   --network=fns \
   --augmenter=fns_augmenter \
   --batch_size_per_gpu=4 --epochs=1 \
@@ -67,6 +75,7 @@ Hyper-Parameter Tuning
   python demo/style_transfer.py \
   --mode=tune \
   --model_dir=~/demo/model/fns_gothic \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/mscoco_fns.tar.gz \  
   --network=fns \
   --augmenter=fns_augmenter \
   --batch_size_per_gpu=4 \

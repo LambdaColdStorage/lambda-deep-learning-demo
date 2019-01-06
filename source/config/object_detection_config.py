@@ -17,14 +17,14 @@ class ObjectDetectionInputterConfig(Config):
                num_classes=81,
                resolution=512):
 
-    default_inputter_config.dataset_meta = (
-      None if not default_inputter_config.dataset_meta
-      else default_inputter_config.dataset_meta.split(","))
+    # default_inputter_config.dataset_meta = (
+    #   None if not default_inputter_config.dataset_meta
+    #   else default_inputter_config.dataset_meta.split(","))
 
-    if not isinstance(
-      default_inputter_config.dataset_meta, (list, tuple)):
-        default_inputter_config.dataset_meta = \
-          [default_inputter_config.dataset_meta]
+    # if not isinstance(
+    #   default_inputter_config.dataset_meta, (list, tuple)):
+    #     default_inputter_config.dataset_meta = \
+    #       [default_inputter_config.dataset_meta]
 
     self.copy_props(default_inputter_config)
     self.dataset_dir = dataset_dir

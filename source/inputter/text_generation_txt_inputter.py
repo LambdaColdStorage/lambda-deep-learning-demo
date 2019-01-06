@@ -35,11 +35,14 @@ class TextGenerationTXTInputter(Inputter):
 
   def initial_seq(self):
 
-    with open(self.config.dataset_meta, 'rb') as f:
-      data = f.read()
-    if six.PY2:
-      data = bytearray(data)
-    data = [chr(c) for c in data if c < 128]
+    data = []
+    for meta in self.config.dataset_meta:
+      with open(meta, 'rb') as f:
+        d = f.read()
+      if six.PY2:
+        d = bytearray(d)
+      data.extend([chr(c) for c in d if c < 128])
+
 
     counter = Counter(data)
     char_cnt = sorted(counter.items(),

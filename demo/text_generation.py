@@ -7,6 +7,10 @@ import sys
 import os
 import importlib
 
+"""
+Text Generation Demo
+"""
+
 
 def main():
 
@@ -17,19 +21,16 @@ def main():
   from source.tool import config_parser
 
   parser = config_parser.default_parser()
+  app_parser = parser.add_argument_group('app')
 
-  config = parser.parse_args()
-
-  config = config_parser.prepare(config)
-
-  # Generate config
-  runner_config, callback_config, inputter_config, modeler_config = \
-      config_parser.default_config(config)
+  # Default configs
+  runner_config, callback_config, inputter_config, modeler_config, app_config = \
+      config_parser.default_config(parser)
 
   # Download data if necessary
   downloader.check_and_download(inputter_config)
 
-  if config.mode == "tune":
+  if runner_config.mode == "tune":
 
     inputter_module = importlib.import_module(
       "source.inputter.text_generation_txt_inputter")
@@ -38,7 +39,7 @@ def main():
     runner_module = importlib.import_module(
       "source.runner.parameter_server_runner")
 
-    tuner.tune(config,
+    tuner.tune(app_config,
                runner_config,
                callback_config,
                inputter_config,
@@ -59,14 +60,15 @@ def main():
 
     """
 
-    augmenter = (None if not config.augmenter else
+    augmenter = (None if not inputter_config.augmenter else
                  importlib.import_module(
-                  "source.augmenter." + config.augmenter))
+                  "source.augmenter." + inputter_config.augmenter))
 
-    net = importlib.import_module("source.network." + config.network)
+    net = importlib.import_module(
+      "source.network." + modeler_config.network)
 
     callbacks = []
-    for name in config.callbacks:
+    for name in callback_config.callbacks:
       callback = importlib.import_module(
         "source.callback." + name).build(callback_config)
       callbacks.append(callback)

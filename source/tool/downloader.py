@@ -34,15 +34,19 @@ def check_and_download(config):
 
   def check_meta_and_download(name_meta, flag_has_meta):
     if hasattr(config, name_meta):
-      path_meta = getattr(config, name_meta)
-      if path_meta:
-        if not os.path.exists(path_meta):
-          download_and_extract(path_meta,
-                               config.dataset_url,
-                               False)
-        else:
-          print("Found " + path_meta + ".")
-        flag_has_meta = True
+      paths_meta = getattr(config, name_meta)
+
+      if paths_meta:
+        for path_meta in paths_meta:
+          if path_meta:
+            if not os.path.isfile(path_meta):
+              download_and_extract(path_meta,
+                                   config.dataset_url,
+                                   False)
+            else:
+              print("Found " + path_meta + ".")
+            flag_has_meta = True
+
     return flag_has_meta
 
   flag_has_meta = False

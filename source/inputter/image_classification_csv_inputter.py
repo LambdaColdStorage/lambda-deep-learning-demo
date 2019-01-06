@@ -27,9 +27,11 @@ class ImageClassificationCSVInputter(Inputter):
       if self.config.mode == "infer":
         self.num_samples = len(self.test_samples)
       else:
-        with open(self.config.dataset_meta) as f:
-          parsed = csv.reader(f, delimiter=",", quotechar="'")
-          self.num_samples = len(list(parsed))
+        self.num_samples = 0
+        for meta in self.config.dataset_meta:
+          with open(meta) as f:
+            parsed = csv.reader(f, delimiter=",", quotechar="'")
+            self.num_samples += len(list(parsed))
     return self.num_samples
 
   def get_samples_fn(self):
@@ -38,17 +40,20 @@ class ImageClassificationCSVInputter(Inputter):
       labels = [-1] * len(self.test_samples)
     elif self.config.mode == "train" or \
             self.config.mode == "eval":
-      assert os.path.exists(self.config.dataset_meta), (
-        "Cannot find dataset_meta file {}.".format(self.config.dataset_meta))
+      for meta in self.config.dataset_meta:
+        assert os.path.exists(meta), (
+          "Cannot find dataset_meta file {}.".format(meta))
 
       images_path = []
       labels = []
-      dirname = os.path.dirname(self.config.dataset_meta)
-      with open(self.config.dataset_meta) as f:
-        parsed = csv.reader(f, delimiter=",", quotechar="'")
-        for row in parsed:
-          images_path.append(os.path.join(dirname, row[0]))
-          labels.append(int(row[1]))
+
+      for meta in self.config.dataset_meta:
+        dirname = os.path.dirname(meta)
+        with open(meta) as f:
+          parsed = csv.reader(f, delimiter=",", quotechar="'")
+          for row in parsed:
+            images_path.append(os.path.join(dirname, row[0]))
+            labels.append(int(row[1]))
 
     return (images_path, labels)
 

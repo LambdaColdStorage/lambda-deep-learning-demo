@@ -14,7 +14,7 @@ Download pre-trained model
 
 ::
 
-(mkdir ~/demo/model/resnet_v2_50_2017_04_14;curl http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz | tar xvz -C ~/demo/model/resnet_v2_50_2017_04_14)
+  (mkdir ~/demo/model/resnet_v2_50_2017_04_14;curl http://download.tensorflow.org/models/resnet_v2_50_2017_04_14.tar.gz | tar xvz -C ~/demo/model/resnet_v2_50_2017_04_14)
 
 
 Train with weights restored from pre-trained model
@@ -65,6 +65,7 @@ Evaluation
   python demo/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/resnet50_StanfordDogs120 \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \  
   --network=resnet50 \
   --augmenter=vgg_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \
@@ -82,7 +83,7 @@ Download pre-trained model
 
 ::
 
-(mkdir ~/demo/model/inception_v4_2016_09_09;curl http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz | tar xvz -C ~/demo/model/inception_v4_2016_09_09)
+  (mkdir ~/demo/model/inception_v4_2016_09_09;curl http://download.tensorflow.org/models/inception_v4_2016_09_09.tar.gz | tar xvz -C ~/demo/model/inception_v4_2016_09_09)
 
 Train with weights restored from pre-trained model
 
@@ -132,6 +133,7 @@ Evaluation
   python demo/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/inceptionv4_StanfordDogs120 \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \  
   --network=inception_v4 \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \
@@ -148,7 +150,7 @@ Download pre-trained model
 
 ::
 
-(mkdir ~/demo/model/nasnet-a_large_04_10_2017;curl https://storage.googleapis.com/download.tensorflow.org/models/nasnet-a_large_04_10_2017.tar.gz | tar xvz -C ~/demo/model/nasnet-a_large_04_10_2017)
+  (mkdir ~/demo/model/nasnet-a_large_04_10_2017;curl https://storage.googleapis.com/download.tensorflow.org/models/nasnet-a_large_04_10_2017.tar.gz | tar xvz -C ~/demo/model/nasnet-a_large_04_10_2017)
 
 Train with weights restored from pre-trained model
 
@@ -198,6 +200,7 @@ Evaluation
   python demo/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/nasnet_A_large_StanfordDogs120 \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \  
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \
