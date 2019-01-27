@@ -21,7 +21,7 @@ Train from scratch
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=fcn \
   --augmenter=fcn_augmenter \
-  --batch_size_per_gpu=16 --epochs=200 --gpu_count=1 \
+  --gpu_count=1 --batch_size_per_gpu=16 --epochs=200 \
   train_args \
   --learning_rate=0.00129 --optimizer=adam \
   --piecewise_boundaries=100 \
@@ -35,7 +35,7 @@ Evaluation
   python demo/image_segmentation.py \
   --mode=eval \
   --model_dir=~/demo/model/fcn_camvid \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=fcn \
   --augmenter=fcn_augmenter \
   --batch_size_per_gpu=4 --epochs=1 \
@@ -64,14 +64,52 @@ Hyper-Parameter Tuning
   python demo/image_segmentation.py \
   --mode=tune \
   --model_dir=~/demo/model/fcn_camvid \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=fcn \
   --augmenter=fcn_augmenter \
-  --batch_size_per_gpu=16  --gpu_count=1 \
+  --batch_size_per_gpu=16 \
   tune_args \
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
   --tune_config=source/tool/fcn_camvid_tune_coarse.yaml
+
+
+**Evaluate Pre-trained model**
+------------------------------
+
+::
+
+  curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/fcn_camvid_20190125.tar.gz | tar xvz -C ~/demo/model
+
+::
+
+  python demo/image_segmentation.py \
+  --mode=eval \
+  --model_dir=~/demo/model/fcn_camvid_20190125 \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
+  --network=fcn \
+  --augmenter=fcn_augmenter \
+  --gpu_count=1 --batch_size_per_gpu=4 --epochs=1 \
+  eval_args \
+  --dataset_meta=~/demo/data/camvid/val.csv
+
+
+  **Export**
+------------
+
+::
+  python demo/image_segmentation.py \
+  --mode=export \
+  --model_dir=~/demo/model/fcn_camvid_20190125 \
+  --network=fcn \
+  --augmenter=fcn_augmenter \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  export_args \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_image \
+  --output_ops=output_classes
+
 
 .. _unet:
 
@@ -88,7 +126,7 @@ Train from scratch
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=unet \
   --augmenter=unet_augmenter \
-  --batch_size_per_gpu=16 --epochs=200 --gpu_count=1 \
+  --gpu_count=1 --batch_size_per_gpu=16 --epochs=200 \
   train_args \
   --learning_rate=0.00129 --optimizer=adam \
   --piecewise_boundaries=100 \
@@ -102,7 +140,7 @@ Evaluation
   python demo/image_segmentation.py \
   --mode=eval \
   --model_dir=~/demo/model/unet_camvid \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=unet \
   --augmenter=unet_augmenter \
   --batch_size_per_gpu=4 --epochs=1 \
@@ -132,11 +170,33 @@ Hyper-Parameter Tuning
   python demo/image_segmentation.py \
   --mode=tune \
   --model_dir=~/demo/model/unet_camvid \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \  
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=unet \
   --augmenter=unet_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=16 \
+  --batch_size_per_gpu=16 \
   tune_args \
   --train_dataset_meta=~/demo/data/camvid/train.csv \
   --eval_dataset_meta=~/demo/data/camvid/val.csv \
   --tune_config=source/tool/unet_camvid_tune_coarse.yaml
+
+
+**Evaluate Pre-trained model**
+------------------------------
+
+::
+
+  curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/unet_camvid_20190125.tar.gz | tar xvz -C ~/demo/model
+
+::
+
+  python demo/image_segmentation.py \
+  --mode=export \
+  --model_dir=~/demo/model/unet_camvid_20190125 \
+  --network=unet \
+  --augmenter=unet_augmenter \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  export_args \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_image \
+  --output_ops=output_classes

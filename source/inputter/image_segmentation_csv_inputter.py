@@ -27,6 +27,8 @@ class ImageSegmentationCSVInputter(Inputter):
     if self.num_samples < 0:
       if self.config.mode == "infer":
         self.num_samples = len(self.test_samples)
+      elif self.config.mode == "export":
+        self.num_samples = 1        
       else:
         self.num_samples = 0
         for meta in self.config.dataset_meta:
@@ -91,29 +93,39 @@ class ImageSegmentationCSVInputter(Inputter):
                                       speed_mode=self.config.augmenter_speed_mode)
 
   def input_fn(self, test_samples=[]):
-    batch_size = (self.config.batch_size_per_gpu *
-                  self.config.gpu_count)
+    if self.config.mode == "export":
+      image = tf.placeholder(tf.float32,
+                             shape=(self.config.image_height,
+                                    self.config.image_width, 3),
+                             name="input_image")
+      image = tf.to_float(image)
+      image = vgg_preprocessing._mean_image_subtraction(image)
+      image = tf.expand_dims(image, 0)
+      return image
+    else:    
+      batch_size = (self.config.batch_size_per_gpu *
+                    self.config.gpu_count)
 
-    samples = self.get_samples_fn()
+      samples = self.get_samples_fn()
 
-    dataset = tf.data.Dataset.from_tensor_slices(samples)
+      dataset = tf.data.Dataset.from_tensor_slices(samples)
 
-    if self.config.mode == "train":
-      dataset = dataset.shuffle(self.get_num_samples())
+      if self.config.mode == "train":
+        dataset = dataset.shuffle(self.get_num_samples())
 
-    dataset = dataset.repeat(self.config.epochs)
+      dataset = dataset.repeat(self.config.epochs)
 
-    dataset = dataset.map(
-      lambda image, label: self.parse_fn(image, label),
-      num_parallel_calls=4)
+      dataset = dataset.map(
+        lambda image, label: self.parse_fn(image, label),
+        num_parallel_calls=4)
 
-    dataset = dataset.apply(
-        tf.contrib.data.batch_and_drop_remainder(batch_size))
+      dataset = dataset.apply(
+          tf.contrib.data.batch_and_drop_remainder(batch_size))
 
-    dataset = dataset.prefetch(2)
+      dataset = dataset.prefetch(2)
 
-    iterator = dataset.make_one_shot_iterator()
-    return iterator.get_next()
+      iterator = dataset.make_one_shot_iterator()
+      return iterator.get_next()
 
 
 def build(config, augmenter):
