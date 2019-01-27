@@ -32,14 +32,14 @@ def main():
                           default=100)
   app_parser.add_argument("--content_weight",
                           help="Weight for content loss",
-                          default=7.5)
+                          default=15)
   app_parser.add_argument("--tv_weight",
                           help="Weight for tv loss",
                           default=200)
   app_parser.add_argument("--image_height",
                           help="Image height.",
                           type=int,
-                          default=256)
+                          default=256)  
   app_parser.add_argument("--image_width",
                           help="Image width.",
                           type=int,

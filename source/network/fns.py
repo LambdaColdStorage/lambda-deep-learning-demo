@@ -33,7 +33,8 @@ def conv_layer(inputs, para, name, data_format):
                              padding='SAME',
                              data_format=data_format,
                              name=name,
-                             reuse=tf.AUTO_REUSE)
+                             reuse=tf.AUTO_REUSE,
+                             use_bias=False)
   return outputs
 
 
@@ -45,7 +46,8 @@ def deconv_layer(inputs, para, name, data_format):
                                        padding='SAME',
                                        data_format=data_format,
                                        name=name,
-                                       reuse=tf.AUTO_REUSE)
+                                       reuse=tf.AUTO_REUSE,
+                                       use_bias=False)
   return outputs
 
 

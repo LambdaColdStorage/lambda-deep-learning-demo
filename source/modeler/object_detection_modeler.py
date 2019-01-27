@@ -81,7 +81,10 @@ class ObjectDetectionModeler(Modeler):
       
       class_losses, bboxes_losses = self.create_loss_fn(gt, outputs)
 
-      loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
+      # weight on L2 regularization has already been implemented as self.config.l2_weight_decay
+      # loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
+
+      loss_l2 = self.l2_regularization()
 
       loss = tf.identity(class_losses + bboxes_losses + loss_l2, "total_loss")
 

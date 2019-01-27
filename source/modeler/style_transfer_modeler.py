@@ -194,7 +194,10 @@ class StyleTransferModeler(Modeler):
     return loss
 
   def model_fn(self, x):
-    images = x[0]
+    if self.config.mode == "export":
+      images = x
+    else:
+      images = x[0]
 
     stylized_images = self.create_graph_fn(images)
 
@@ -212,7 +215,9 @@ class StyleTransferModeler(Modeler):
     elif self.config.mode == "infer":
       return {"output": stylized_images,
               "input": images}
-
+    elif self.config.mode == "export":
+      output_image = tf.identity(stylized_images, name="output_image")
+      return output_image
 
 def build(config, net):
   return StyleTransferModeler(config, net)
