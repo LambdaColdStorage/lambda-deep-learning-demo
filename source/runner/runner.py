@@ -7,6 +7,7 @@ Licensed under
 from __future__ import print_function
 import sys
 import time
+import os
 
 import matplotlib.pyplot as plt
 
@@ -143,33 +144,39 @@ class Runner(object):
     print(len(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)))
 
   def run(self):
-    self.create_graph()
 
-    # self.print_global_variables()
+    if self.config.mode == "export":
+      outputs = self.modeler.model_fn(self.inputter.input_fn())
+      with tf.Session(config=self.session_config) as self.sess:
+        self.before_run()
+    else:
+      self.create_graph()
 
-    with tf.Session(config=self.session_config) as self.sess:
+      # self.print_global_variables()
 
-      # Before run
-      self.before_run()
+      with tf.Session(config=self.session_config) as self.sess:
 
-      self.prepare_feed_dict()
+        # Before run
+        self.before_run()
 
-      global_step = 0
-      if self.config.mode == "train":
-        global_step = self.sess.run(self.global_step_op)
+        self.prepare_feed_dict()
 
-      max_step = self.sess.run(self.max_step_op)
+        global_step = 0
+        if self.config.mode == "train":
+          global_step = self.sess.run(self.global_step_op)
 
-      while global_step < max_step:
-        self.before_step()
+        max_step = self.sess.run(self.max_step_op)
 
-        self.outputs = self.sess.run(self.run_ops,
-                                     feed_dict=self.feed_dict)
-        self.after_step()
+        while global_step < max_step:
+          self.before_step()
 
-        global_step = global_step + 1
+          self.outputs = self.sess.run(self.run_ops,
+                                       feed_dict=self.feed_dict)
+          self.after_step()
 
-      self.after_run()
+          global_step = global_step + 1
+
+        self.after_run()
 
   def dev2(self):
     self.create_graph()
@@ -207,7 +214,6 @@ class Runner(object):
         print(_results[4].shape)
         print(_results[5].shape)
         print(_results[6].shape)
-
 
 
 def build(config, inputter, modeler, callbacks):

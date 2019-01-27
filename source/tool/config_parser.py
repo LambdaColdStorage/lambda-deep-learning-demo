@@ -23,9 +23,9 @@ def default_parser():
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-  parser.add_argument("--mode", choices=["train", "eval", "infer", "tune"],
+  parser.add_argument("--mode", choices=["train", "eval", "infer", "tune", "export"],
                       type=str,
-                      help="Choose a job mode from train, eval, and infer.",
+                      help="Choose a job mode from train, eval, infer and export.",
                       default="train")
   parser.add_argument("--model_dir",
                       help="Directory to save mode",
@@ -263,6 +263,28 @@ def default_parser():
                            help="Whether need to do a reduce on the results collected from multiple gpus",
                            type=str2bool,
                            default=True)
+
+  export_parser = subparsers.add_parser("export_args", help="Export help")
+  export_parser.add_argument("--callbacks",
+                             help="List of callbacks in export.",
+                             type=str,
+                             default="export_basic")
+  export_parser.add_argument("--export_dir",
+                      help="Directory to export mode",
+                      type=str,
+                      default=None)
+  export_parser.add_argument("--export_version",
+                      help="Mode version",
+                      type=str,
+                      default="1")
+  export_parser.add_argument("--input_ops",
+                             help="list of input operations for exporting the model",
+                             type=str,
+                             default="")
+  export_parser.add_argument("--output_ops",
+                             help="list of output operations for exporting the model",
+                             type=str,
+                             default="")
   return parser
 
 
@@ -371,6 +393,16 @@ def prepare(config):
       [] if not config.eval_callbacks else
       config.eval_callbacks.split(","))
 
+  if hasattr(config, "input_ops"):
+    config.input_ops = (
+      [] if not config.input_ops else
+      config.input_ops.split(","))
+
+  if hasattr(config, "output_ops"):
+    config.output_ops = (
+      [] if not config.output_ops else
+      config.output_ops.split(","))
+
   return config
 
 
@@ -422,7 +454,17 @@ def default_config(parser):
     train_callbacks=(None if not hasattr(config, "train_callbacks")
                          else config.train_callbacks),
     eval_callbacks=(None if not hasattr(config, "eval_callbacks")
-                         else config.eval_callbacks))
+                         else config.eval_callbacks),
+    export_dir=(None if not hasattr(config, "export_dir")
+                     else config.export_dir),
+    export_version=(None if not hasattr(config, "export_version")
+                         else config.export_version),
+    input_ops=(None if not hasattr(config, "input_ops")
+                    else config.input_ops),
+    output_ops=(None if not hasattr(config, "output_ops")
+                    else config.output_ops)
+    )
+
 
   inputter_config = InputterConfig(
     mode=config.mode,

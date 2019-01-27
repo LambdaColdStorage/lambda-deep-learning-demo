@@ -55,5 +55,5 @@ def check_and_download(config):
   flag_has_meta = check_meta_and_download('train_dataset_meta', flag_has_meta)
   flag_has_meta = check_meta_and_download('eval_dataset_meta', flag_has_meta)
 
-  if not flag_has_meta and config.mode != "infer":
+  if not flag_has_meta and config.mode != "infer" and config.mode != "export":
     assert False, "A meta data must be provided in non-inference mode." 

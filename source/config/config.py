@@ -47,7 +47,11 @@ class CallbackConfig(Config):
                keep_checkpoint_max,
                callbacks,
                train_callbacks,
-               eval_callbacks):
+               eval_callbacks,
+               export_dir,
+               export_version,
+               input_ops,
+               output_ops):
 
     super(CallbackConfig, self).__init__(
       mode, batch_size_per_gpu, gpu_count)
@@ -62,7 +66,10 @@ class CallbackConfig(Config):
     self.callbacks = callbacks
     self.train_callbacks = train_callbacks
     self.eval_callbacks = eval_callbacks
-
+    self.export_dir = export_dir
+    self.export_version = export_version
+    self.input_ops = input_ops
+    self.output_ops = output_ops
 
 
 class InputterConfig(Config):

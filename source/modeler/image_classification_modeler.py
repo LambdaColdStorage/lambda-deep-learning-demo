@@ -48,8 +48,13 @@ class ImageClassificationModeler(Modeler):
     return loss
 
   def model_fn(self, x):
-    images = x[0]
-    labels = x[1]
+
+    if self.config.mode == "export":
+      images = x
+    else:
+      images = x[0]
+      labels = x[1]
+
     logits, predictions = self.create_graph_fn(images)
 
     if self.config.mode == "train":
@@ -70,7 +75,10 @@ class ImageClassificationModeler(Modeler):
     elif self.config.mode == "infer":
       return {"classes": predictions["classes"],
               "probabilities": predictions["probabilities"]}
-
+    elif self.config.mode == "export":
+      output_classes = tf.identity(predictions["classes"], name="output_classes")
+      output_probabilities = tf.identity(predictions["probabilities"], name="output_probabilities")
+      return output_classes, output_probabilities
 
 def build(config, network):
   return ImageClassificationModeler(config, network)

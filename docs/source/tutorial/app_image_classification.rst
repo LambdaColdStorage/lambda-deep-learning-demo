@@ -106,9 +106,26 @@ Image Classification
   python demo/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/cifar10-resnet32-20180824 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \  
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
-  --batch_size_per_gpu=128 --epochs=1 \
+  --gpu_count=1 --batch_size_per_gpu=128 --epochs=1 \
   eval_args \
   --dataset_meta=~/demo/data/cifar10/eval.csv
+
+
+**Export**
+------------
+
+::
+  python demo/image_classification.py \
+  --mode=export \
+  --model_dir=~/demo/model/cifar10-resnet32-20180824 \
+  --network=resnet32 \
+  --augmenter=cifar_augmenter \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  export_args \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_image \
+  --output_ops=output_classes
