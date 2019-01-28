@@ -74,7 +74,6 @@ class StyleTransferCSVInputter(Inputter):
     if self.config.mode == "infer":
       image = tf.to_float(image)
       image = vgg_preprocessing._mean_image_subtraction(image)
-      pass
     else:
       if self.augmenter:
         is_training = (self.config.mode == "train")
@@ -90,10 +89,6 @@ class StyleTransferCSVInputter(Inputter):
 
   def input_fn(self, test_samples=[]):
     if self.config.mode == "export":
-      # image = tf.placeholder(tf.float32,
-      #                        shape=(self.config.image_height,
-      #                               self.config.image_width, 3),
-      #                        name="input_image")
       image = tf.placeholder(tf.float32,
                              shape=(None, None, 3),
                              name="input_image")      

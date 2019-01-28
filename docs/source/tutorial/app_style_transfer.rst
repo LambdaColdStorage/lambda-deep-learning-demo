@@ -107,7 +107,7 @@ Hyper-Parameter Tuning
   --test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000015070.jpg
 
 
-  **Export**
+**Export**
 ------------
 
 ::

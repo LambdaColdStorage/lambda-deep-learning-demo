@@ -46,6 +46,7 @@ class ObjectDetectionModeler(Modeler):
     return self.net(inputs,
                     self.config.num_classes,
                     is_training=is_training,
+                    feature_net_path=self.config.feature_net_path,
                     data_format=self.config.data_format)
 
 
@@ -68,7 +69,8 @@ class ObjectDetectionModeler(Modeler):
     return self.detect(feat_classes,
                        feat_bboxes,
                        self.config.batch_size_per_gpu,
-                       self.config.num_classes)
+                       self.config.num_classes,
+                       self.config.confidence_threshold)
 
   def model_fn(self, inputs):
 
@@ -81,10 +83,7 @@ class ObjectDetectionModeler(Modeler):
       
       class_losses, bboxes_losses = self.create_loss_fn(gt, outputs)
 
-      # weight on L2 regularization has already been implemented as self.config.l2_weight_decay
-      # loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
-
-      loss_l2 = self.l2_regularization()
+      loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
 
       loss = tf.identity(class_losses + bboxes_losses + loss_l2, "total_loss")
 

@@ -13,6 +13,7 @@ import tensorflow as tf
 
 from .inputter import Inputter
 from pycocotools.coco import COCO
+from source.augmenter.external import vgg_preprocessing
 
 
 JSON_TO_IMAGE = {
@@ -42,6 +43,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
 
     if self.config.mode == "infer":
       self.test_samples = self.config.test_samples
+    elif self.config.mode == "export":
+      pass
     else:
       self.parse_coco()
 
@@ -97,6 +100,8 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     if not hasattr(self, 'num_samples'):
       if self.config.mode == "infer":
         self.num_samples = len(self.test_samples)
+      elif self.config.mode == "export":
+        self.num_samples = 1        
       elif self.config.mode == "eval":
         self.num_samples = self.EVAL_NUM_SAMPLES
       elif self.config.mode == "train":
@@ -210,34 +215,44 @@ class ObjectDetectionMSCOCOInputter(Inputter):
     return ([image_id], image, classes, boxes, scale, translation, [file_name])
 
   def input_fn(self, test_samples=[]):
-    batch_size = (self.config.batch_size_per_gpu *
-                  self.config.gpu_count)
+    if self.config.mode == "export":
+      image = tf.placeholder(tf.float32,
+                             shape=(self.config.resolution,
+                                    self.config.resolution, 3),
+                             name="input_image")
+      image = tf.to_float(image)
+      image = vgg_preprocessing._mean_image_subtraction(image)
+      image = tf.expand_dims(image, 0)
+      return image
+    else:    
+      batch_size = (self.config.batch_size_per_gpu *
+                    self.config.gpu_count)
 
-    dataset = tf.data.Dataset.from_generator(
-      generator=lambda: self.get_samples_fn(),
-      output_types=(tf.int64,
-                    tf.string,
-                    tf.int64,
-                    tf.float32))
+      dataset = tf.data.Dataset.from_generator(
+        generator=lambda: self.get_samples_fn(),
+        output_types=(tf.int64,
+                      tf.string,
+                      tf.int64,
+                      tf.float32))
 
-    if self.config.mode == "train":
-      dataset = dataset.shuffle(self.get_num_samples())
+      if self.config.mode == "train":
+        dataset = dataset.shuffle(self.get_num_samples())
 
-    dataset = dataset.repeat(self.config.epochs)
+      dataset = dataset.repeat(self.config.epochs)
 
-    dataset = dataset.map(
-      lambda image_id, file_name, classes, boxes: self.parse_fn(
-        image_id, file_name, classes, boxes),
-      num_parallel_calls=12)
+      dataset = dataset.map(
+        lambda image_id, file_name, classes, boxes: self.parse_fn(
+          image_id, file_name, classes, boxes),
+        num_parallel_calls=12)
 
-    dataset = dataset.padded_batch(
-      batch_size,
-      padded_shapes=([None], [None, None, 3], [None], [None, 4], [None], [None], [None]))
+      dataset = dataset.padded_batch(
+        batch_size,
+        padded_shapes=([None], [None, None, 3], [None], [None, 4], [None], [None], [None]))
 
-    dataset = dataset.prefetch(2)
+      dataset = dataset.prefetch(2)
 
-    iterator = dataset.make_one_shot_iterator()
-    return iterator.get_next()
+      iterator = dataset.make_one_shot_iterator()
+      return iterator.get_next()
 
 
 def build(config, augmenter):
