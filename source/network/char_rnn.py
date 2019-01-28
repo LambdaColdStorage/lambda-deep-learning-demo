@@ -15,10 +15,11 @@ def net(x, feed_dict_seq, seq_length,
         batch_size, vocab_size, mode="train"):
 
   with tf.variable_scope(name_or_scope='CharRNN',
-                         values=[x[0]],
+                         values=[x],
                          reuse=tf.AUTO_REUSE):
 
     if mode == "train" or mode == "eval":
+      inputs = x
       c0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
       h0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
       c1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
@@ -29,6 +30,11 @@ def net(x, feed_dict_seq, seq_length,
       h0 = x[2]
       c1 = x[3]
       h1 = x[4]
+      # inputs = tf.zeros([1, 1], tf.int32)
+      # c0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
+      # h0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
+      # c1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
+      # h1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)      
     else:
       # Use placeholder in inference mode for both input and states
       # This allows taking the previous batch (step)'s output
@@ -72,13 +78,8 @@ def net(x, feed_dict_seq, seq_length,
 
     input_list = tf.unstack(input_feature, axis=1)
 
-    print(cell)
-    print(input_list)
-    print(initial_state)
-    print('------------------------------------')
-    outputs, last_state = rnn.static_rnn(
+    outputs, last_state = tf.nn.static_rnn(
       cell, input_list, initial_state)
-
 
     output = tf.reshape(tf.concat(outputs, 1), [-1, RNN_SIZE])
 

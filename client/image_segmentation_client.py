@@ -37,6 +37,7 @@ from __future__ import print_function
 import requests
 import skimage.io
 from skimage.transform import resize
+from skimage import img_as_ubyte
 import numpy as np
 import json
 import matplotlib.pyplot as plt
@@ -47,7 +48,7 @@ from PIL import Image
 SERVER_URL = 'http://localhost:8501/v1/models/segmentation:predict'
 
 # The image URL is the location of the image we should send to the server
-IMAGE_PATH = '/home/chuan/demo/data/camvid/test/0001TP_008550.png'
+IMAGE_PATH = '/home/ubuntu/demo/data/camvid/test/0001TP_008550.png'
 
 
 NUM_CLASSES = 12
@@ -76,7 +77,7 @@ def render_label(label, num_classes, label_colors):
 def main():
   # Read the image
   image = img_as_ubyte(skimage.io.imread(IMAGE_PATH, plugin='imageio'))
-
+  
   data = json.dumps({"signature_name": "predict", "instances": image.tolist()})
   headers = {"content-type": "application/json"}
 

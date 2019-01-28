@@ -85,7 +85,8 @@ class TextGenerationModeler(Modeler):
       # output_inputs = tf.identity(inputs, name="output_inputs")
       # return output_inputs
       output_logits = tf.identity(logits, name='output_logits')
-      return output_logits
+      return logits
+      # return logits, probabilities, last_state, inputs
 
       # output_chars = tf.identity(inputs, name="output_chars")
       # return output_chars

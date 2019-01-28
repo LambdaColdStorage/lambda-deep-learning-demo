@@ -20,7 +20,7 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textgeneration \
---mount type=bind,source=/home/chuan/demo/model/char_rnn_shakespeare/export,target=/models/textgeneration \
+--mount type=bind,source=/home/ubuntu/demo/model/char_rnn_shakespeare/export,target=/models/textgeneration \
 -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
 
 
@@ -44,22 +44,28 @@ RNN_SIZE = 256
 
 def main():
   input_chars = np.full((1, 1), START_CHAR, dtype=np.int32)
+  # input_chars = np.array([[START_CHAR]], dtype=np.int32)
+  # c0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
+  # h0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
+  # c1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
+  # h1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
+
   c0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
   h0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
   c1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
   h1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
 
-  # print(input_chars.shape)
-  # print(c0.shape)
-  # print(h0.shape)
-  # print(c1.shape)
-  # print(h1.shape)
+  # # print(input_chars.shape)
+  # # print(c0.shape)
+  # # print(h0.shape)
+  # # print(c1.shape)
+  # # print(h1.shape)
 
-  input_chars = input_chars.tolist()
-  c0 = c0.tolist()
-  h0 = h0.tolist()
-  c1 = c1.tolist()
-  h1 = h1.tolist()
+  input_chars = input_chars.tolist()[0]
+  c0 = c0.tolist()[0]
+  h0 = h0.tolist()[0]
+  c1 = c1.tolist()[0]
+  h1 = h1.tolist()[0]
 
   input_dict = {}
   input_dict["input_chars"] = input_chars
@@ -74,11 +80,13 @@ def main():
   headers = {"content-type": "application/json"}
 
   response = requests.post(SERVER_URL, data=data, headers=headers)
+  # print(response.text)
   response.raise_for_status()
 
   predictions = response.json()["predictions"]
 
   print(predictions)
+  print(type(predictions))
   
   # render_image = Image.fromarray(img_as_ubyte(predictions / 255.0), 'RGB')
   # plt.imshow(render_image)
