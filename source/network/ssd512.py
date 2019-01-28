@@ -7,8 +7,6 @@ import tensorflow as tf
 
 from source.network.detection import ssd_common
 
-NAME_FEATURE_NET = "vgg_16_reduced"
-
 CLASS_WEIGHTS = 1.0
 BBOXES_WEIGHTS = 1.0
 
@@ -46,15 +44,14 @@ def ssd_feature(outputs, data_format):
 def net(inputs,
         num_classes,
         is_training,
+        feature_net,
         feature_net_path,
         data_format="channels_last"):
-
-  # image = inputs
 
   image_id, image, labels, boxes, scale, translation, file_name = inputs
   
   feature_net = getattr(
-    importlib.import_module("source.network." + NAME_FEATURE_NET),
+    importlib.import_module("source.network." + feature_net),
     "net")
 
   feature_net_path = os.path.join(os.path.expanduser("~"), feature_net_path)

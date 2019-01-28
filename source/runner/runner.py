@@ -150,8 +150,8 @@ class Runner(object):
 
       outputs = self.modeler.model_fn(self.inputter.input_fn())
 
-      for op in tf.get_default_graph().get_operations():
-          print(str(op.name))
+      # for op in tf.get_default_graph().get_operations():
+      #     print(str(op.name))
 
       with tf.Session(config=self.session_config) as self.sess:
         self.before_run()

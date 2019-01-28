@@ -46,6 +46,7 @@ class ObjectDetectionModeler(Modeler):
     return self.net(inputs,
                     self.config.num_classes,
                     is_training=is_training,
+                    feature_net=self.config.feature_net,
                     feature_net_path=self.config.feature_net_path,
                     data_format=self.config.data_format)
 
