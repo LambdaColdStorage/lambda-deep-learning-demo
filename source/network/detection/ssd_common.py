@@ -10,7 +10,6 @@ KERNEL_INIT = tf.contrib.layers.xavier_initializer()
 PRIOR_VARIANCE = [0.1, 0.1, 0.2, 0.2]
 
 # Non Maximum Supression
-RESULT_SCORE_THRESH = 0.01
 RESULTS_PER_IM = 200
 NMS_THRESH = 0.45
 
@@ -311,44 +310,6 @@ def bbox_graph_fn(feat, num_anchors, layer):
   return output
 
 
-# def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters):
-
-#     num_conv = len(conv_strides)
-#     for i in range(num_conv):
-#         stride = conv_strides[i]
-#         w = filter_size[i]
-#         num_filter = num_filters[i]
-
-#         if stride == 2:
-#             # Use customized padding when stride == 2
-#             # https://stackoverflow.com/questions/42924324/tensorflows-asymmetric-padding-assumptions
-#             if data_format == "channels_last":
-#               outputs = tf.pad(outputs, [[0, 0], [1, 0], [1, 0], [0, 0]], "CONSTANT")
-#             else:
-#               outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 0], [1, 0]], "CONSTANT")
-#             padding_strategy = "VALID"
-#         elif w == 4:
-#             # Use customized padding when for the last ssd feature layer (filter_size == 4)
-#             if data_format == "channels_last":
-#               outputs = tf.pad(outputs, [[0, 0], [1, 1], [1, 1], [0, 0]], "CONSTANT")
-#             else:
-#               outputs = tf.pad(outputs, [[0, 0], [0, 0], [1, 1], [1, 1]], "CONSTANT")
-#             padding_strategy = "VALID"
-#         else:
-#             padding_strategy = "SAME"
-#         outputs = tf.layers.conv2d(
-#                 outputs,
-#           filters=num_filter,
-#           kernel_size=(w, w),
-#           strides=(stride, stride),
-#           padding=(padding_strategy),
-#           data_format=data_format,
-#           kernel_initializer=KERNEL_INIT,
-#           activation=tf.nn.relu,
-#           name=name + "_" + str(i + 1))
-#     return outputs
-
-
 def ssd_block(outputs, name, data_format, conv_strides, filter_size, num_filters, padding):
   # Result will be slightly different to caffe due to TF's asymmetric padding
   # https://stackoverflow.com/questions/42924324/tensorflows-asymmetric-padding-assumptions
@@ -465,7 +426,7 @@ def loss(gt, outputs, class_weights, bboxes_weights):
 # ------------------------------------------------------------------------
 # Detection head
 # ------------------------------------------------------------------------
-def detect_per_class(scores, bboxes, anchors_map, num_classes):
+def detect_per_class(scores, bboxes, anchors_map, num_classes, confidence_threshold):
   # Non-Max Surpression applied to each class separately
   # Background class is not cosidered in detection
 
@@ -479,7 +440,7 @@ def detect_per_class(scores, bboxes, anchors_map, num_classes):
     """
     # filter by score threshold
 
-    ids = tf.reshape(tf.where(tf.reshape(prob, [-1]) > RESULT_SCORE_THRESH), [-1])
+    ids = tf.reshape(tf.where(tf.reshape(prob, [-1]) > confidence_threshold), [-1])
     prob = tf.reshape(tf.gather(prob, ids), [-1])
     box = tf.gather(box, ids)
     idx = tf.reshape(tf.gather(idx, ids), [-1])
@@ -523,7 +484,7 @@ def detect_per_class(scores, bboxes, anchors_map, num_classes):
   return topk_scores, topk_labels, topk_bboxes, topk_anchors
 
 
-def detect_joint_classes(scores, bboxes, anchors_map, num_classes):
+def detect_joint_classes(scores, bboxes, anchors_map, num_classes, confidence_threshold):
   # Non-Max surpression is applied to all classes together
   # Also remove the background classes for better mAP
 
@@ -537,7 +498,7 @@ def detect_joint_classes(scores, bboxes, anchors_map, num_classes):
     """
 
     # filter by score threshold
-    ids = tf.reshape(tf.where(prob > RESULT_SCORE_THRESH), [-1])
+    ids = tf.reshape(tf.where(prob > confidence_threshold), [-1])
     prob = tf.gather(prob, ids)
     box = tf.gather(box, ids)
     idx = tf.gather(idx, ids)
@@ -582,7 +543,7 @@ def detect_joint_classes(scores, bboxes, anchors_map, num_classes):
   return topk_scores, topk_labels, topk_bboxes, topk_anchors
 
 
-def detect_batch(scores, bboxes, anchors_map, batch_size, num_classes):
+def detect_batch(scores, bboxes, anchors_map, batch_size, num_classes, confidence_threshold):
   scores = tf.unstack(scores, batch_size)
   bboxes = tf.unstack(bboxes, batch_size)
 
@@ -590,7 +551,7 @@ def detect_batch(scores, bboxes, anchors_map, batch_size, num_classes):
 
   for scores_per_image, bboxes_per_image in zip(scores, bboxes):
     detection_topk_scores_per_image, detection_topk_labels_per_image, detection_topk_bboxes_per_image, detection_topk_anchors_per_image = detect_per_class(
-      scores_per_image, bboxes_per_image, anchors_map, num_classes)
+      scores_per_image, bboxes_per_image, anchors_map, num_classes, confidence_threshold)
     detection_topk_scores.append(detection_topk_scores_per_image)
     detection_topk_labels.append(detection_topk_labels_per_image)
     detection_topk_bboxes.append(detection_topk_bboxes_per_image)

@@ -38,10 +38,12 @@ class ObjectDetectionModelerConfig(Config):
                data_format="channels_first",
                feature_net="vgg_16_ssd512",
                feature_net_path=None,
-               num_classes=81):
+               num_classes=81,
+               confidence_threshold=0.5):
 
     self.copy_props(default_modeler_config)
     self.data_format = data_format
     self.feature_net = feature_net
     self.feature_net_path = feature_net_path
     self.num_classes = num_classes
+    self.confidence_threshold = confidence_threshold

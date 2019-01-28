@@ -36,6 +36,7 @@ MSCOCO_CAT_NAME = [u'person', u'bicycle', u'car', u'motorcycle', u'airplane',
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 FONT_SCALE = 0.7
 
+COLORS = plt.cm.hsv(np.linspace(0, 1, 121)).tolist()
 
 class InferDisplayObjectDetection(Callback):
   def __init__(self, config):
@@ -58,40 +59,29 @@ class InferDisplayObjectDetection(Callback):
       input_image = misc.imread(file_name).astype(np.float32) / 255.0
       h, w = input_image.shape[:2]
 
-      plt.figure()
-      plt.axis('off')
-
-      for label, box in zip(l, b):
-        # Compute the location to draw annotation
-        box = box * [float(w), float(h), float(w), float(h)]
-        box[0] = np.clip(box[0], 0, w)
-        box[1] = np.clip(box[1], 0, h)
-        box[2] = np.clip(box[2], 0, w)
-        box[3] = np.clip(box[3], 0, h)
-        label = MSCOCO_CAT_NAME[label - 1]
-        ((linew, lineh), _) = cv2.getTextSize(label, FONT, FONT_SCALE, 1)
-        top_left = [box[0] + 1, box[1] - 1.3 * lineh]
-        if top_left[1] < 0:     # out of image
-            top_left[1] = box[3] - 1.3 * lineh
-
-        # Draw twice to make detections more visually noticable
-        box = box.astype(int)
-        cv2.rectangle(input_image, (box[0], box[1]), (box[2], box[3]),
-                      color=(0, 0, 0), thickness=5)
-        cv2.rectangle(input_image, (box[0], box[1]), (box[2], box[3]),
-                      color=(1, 0, 0), thickness=2)
-
-        cv2.putText(input_image, label,
-                    (int(top_left[0]), int(top_left[1] + lineh)),
-                    FONT, FONT_SCALE, color=(0, 0, 0),
-                    lineType=cv2.LINE_AA, thickness=3)
-        cv2.putText(input_image, label,
-                    (int(top_left[0]), int(top_left[1] + lineh)),
-                    FONT, FONT_SCALE, color=(1, 1, 0),
-                    lineType=cv2.LINE_AA, thickness=1)
-
+      
       plt.imshow(input_image)
+      currentAxis = plt.gca()
+
+      for score, label, box in zip(s, l, b):
+        box = box * [float(w), float(h), float(w), float(h)]
+        xmin = np.clip(box[0], 0, w)
+        ymin = np.clip(box[1], 0, h)
+        xmax = np.clip(box[2], 0, w)
+        ymax = np.clip(box[3], 0, h)
+        label_name = MSCOCO_CAT_NAME[label - 1]
+
+        display_txt = '%s: %.2f'%(label_name, score)
+
+        coords = (xmin, ymin), xmax-xmin+1, ymax-ymin+1
+        color = COLORS[label]
+
+        currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=2))
+        currentAxis.text(xmin, ymin, display_txt, bbox={'facecolor':color, 'alpha':0.5})
+
+      plt.axis('off')
       plt.show()
+
 
   def display_normalized(self, outputs_dict):
     for input_image, s, l, b, a, scale, translation, file_name in zip(

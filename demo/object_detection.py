@@ -46,11 +46,15 @@ def main():
                           help="Path to pre-trained vgg model.",
                           default=os.path.join(
                           os.environ['HOME'],
-                          "demo/model/vgg_16_2016_08_28/vgg_16.ckpt"))
+                          "demo/model/VGG_16_reduce/VGG_16_reduce.p"))
   app_parser.add_argument("--data_format",
                           help="channels_first or channels_last",
                           choices=["channels_first", "channels_last"],
                           default="channels_last")
+  app_parser.add_argument("--confidence_threshold",
+                          help="threshold to remove weak detection",
+                          type=float,
+                          default=0.5)
 
   # Default configs
   runner_config, callback_config, inputter_config, modeler_config, app_config = \
@@ -67,7 +71,8 @@ def main():
     num_classes=app_config.num_classes,
     data_format=app_config.data_format,
     feature_net=app_config.feature_net,
-    feature_net_path=app_config.feature_net_path)
+    feature_net_path=app_config.feature_net_path,
+    confidence_threshold=app_config.confidence_threshold)
 
   if runner_config.mode == "tune":
     inputter_module = importlib.import_module(
