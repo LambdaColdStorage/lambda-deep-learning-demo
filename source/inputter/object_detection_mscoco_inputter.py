@@ -221,9 +221,12 @@ class ObjectDetectionMSCOCOInputter(Inputter):
                                     self.config.resolution, 3),
                              name="input_image")
       image = tf.to_float(image)
-      image = vgg_preprocessing._mean_image_subtraction(image)
+
+      image = self.augmenter.preprocess_for_export(image, self.config.resolution)
+
       image = tf.expand_dims(image, 0)
-      return image
+
+      return ([None], image, None, None, None, None, [None]) 
     else:    
       batch_size = (self.config.batch_size_per_gpu *
                     self.config.gpu_count)

@@ -24,7 +24,7 @@ docker run --runtime=nvidia -p 8501:8501 \
 -e MODEL_NAME=styletransfer -t tensorflow/serving:latest-gpu &
 
 
-python client/image_segmentation_client.py
+python client/object_detection_client.py
 """
 
 from __future__ import print_function

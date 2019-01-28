@@ -198,6 +198,7 @@ Download coco dataset_.
   --augmenter=ssd_augmenter \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
   --num_classes=81 --resolution=512 \
+  --confidence_threshold 0.01 \
   export_args \
   --export_dir=export \
   --export_version=1 \

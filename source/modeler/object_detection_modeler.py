@@ -19,7 +19,7 @@ class ObjectDetectionModeler(Modeler):
     self.encode_gt = net.encode_gt
     self.detect = net.detect
 
-    self.config.L2_REGULARIZATION = 0.00025
+    # self.config.L2_REGULARIZATION = 0.00025
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
@@ -83,7 +83,9 @@ class ObjectDetectionModeler(Modeler):
       
       class_losses, bboxes_losses = self.create_loss_fn(gt, outputs)
 
-      loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
+      # loss_l2 = self.config.L2_REGULARIZATION * self.l2_regularization()
+
+      loss_l2 = self.l2_regularization()
 
       loss = tf.identity(class_losses + bboxes_losses + loss_l2, "total_loss")
 
@@ -118,7 +120,13 @@ class ObjectDetectionModeler(Modeler):
               "scales": inputs[4],
               "translations": inputs[5],
               "file_name": inputs[6][0]}
-
+    elif self.config.mode == "export":
+      feat_classes, feat_bboxes = outputs
+      detection_scores, detection_labels, detection_bboxes, detection_anchors = self.create_detect_fn(feat_classes, feat_bboxes)      
+      output_scores = tf.identity(detection_scores, name="output_scores")
+      output_labels = tf.identity(detection_labels, name="output_labels")
+      output_bboxes = tf.identity(detection_bboxes, name="output_bboxes")
+      return output_scores, output_labels, output_bboxes
 
 def build(args, network):
   return ObjectDetectionModeler(args, network)

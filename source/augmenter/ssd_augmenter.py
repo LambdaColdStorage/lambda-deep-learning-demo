@@ -537,3 +537,20 @@ def augment(image, classes, boxes, resolution,
                                resolution,
                                speed_mode=speed_mode)
 
+def preprocess_for_export(image, resolution):
+  # mean subtraction   
+  means = [_R_MEAN, _G_MEAN, _B_MEAN]
+
+  channels = tf.split(axis=2, num_or_size_splits=3, value=image)
+  for i in range(3):
+    channels[i] -= means[i]
+
+  # caffe swaps color channels
+  image = tf.concat(axis=2, values=[channels[2], channels[1], channels[0]]) 
+
+  image, scale, translation = bilinear_resize(image, resolution, depth=3, resize_mode="bilinear")
+
+  # Need this to make later tensor unstack working
+  image.set_shape([resolution, resolution, 3])
+
+  return image

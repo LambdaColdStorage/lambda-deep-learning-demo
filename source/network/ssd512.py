@@ -49,6 +49,8 @@ def net(inputs,
         feature_net_path,
         data_format="channels_last"):
 
+  # image = inputs
+
   image_id, image, labels, boxes, scale, translation, file_name = inputs
   
   feature_net = getattr(
