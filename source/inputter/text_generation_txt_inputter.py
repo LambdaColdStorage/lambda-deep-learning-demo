@@ -15,6 +15,8 @@ import tensorflow as tf
 from .inputter import Inputter
 
 
+RNN_SIZE = 256
+
 class TextGenerationTXTInputter(Inputter):
   def __init__(self, config, augmenter):
     super(TextGenerationTXTInputter, self).__init__(config, augmenter)
@@ -28,6 +30,9 @@ class TextGenerationTXTInputter(Inputter):
     elif self.config.mode == "eval":
       self.num_samples = 10000
       self.seq_length = 50
+    elif self.config.mode == "export":
+      self.num_samples = 1
+      self.seq_length = 1
 
     self.vocab_size = None
 
@@ -92,29 +97,47 @@ class TextGenerationTXTInputter(Inputter):
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
-                  self.config.gpu_count)
-    if self.config.mode == "train" or self.config.mode == "eval":
-
-      dataset = tf.data.Dataset.from_generator(
-        generator=lambda: self.get_samples_fn(),
-        output_types=(tf.int32, tf.int32))
-
-      dataset = dataset.repeat(self.config.epochs)
-
-      dataset = dataset.map(
-        lambda inputs, outputs: self.parse_fn(inputs, outputs),
-        num_parallel_calls=4)
-
-      dataset = dataset.apply(
-          tf.contrib.data.batch_and_drop_remainder(batch_size))
-
-      dataset = dataset.prefetch(2)
-
-      iterator = dataset.make_one_shot_iterator()
-      return iterator.get_next()
+                  self.config.gpu_count) 
+    if self.config.mode == "export":
+      input_chars = tf.placeholder(tf.int32,
+                             shape=(batch_size, self.seq_length),
+                             name="input_chars")
+      c0 = tf.placeholder(
+        tf.float32,
+        shape=(batch_size, RNN_SIZE), name="c0")
+      h0 = tf.placeholder(
+        tf.float32,
+        shape=(batch_size, RNN_SIZE), name="h0")
+      c1 = tf.placeholder(
+        tf.float32,
+        shape=(batch_size, RNN_SIZE), name="c1")
+      h1 = tf.placeholder(
+        tf.float32,
+        shape=(batch_size, RNN_SIZE), name="h1")      
+      return (input_chars, c0, h0, c1, h1)
     else:
-      return (tf.zeros([batch_size, self.seq_length], tf.int32),
-              tf.zeros([batch_size, self.seq_length], tf.int32))
+      if self.config.mode == "train" or self.config.mode == "eval":
+
+        dataset = tf.data.Dataset.from_generator(
+          generator=lambda: self.get_samples_fn(),
+          output_types=(tf.int32, tf.int32))
+
+        dataset = dataset.repeat(self.config.epochs)
+
+        dataset = dataset.map(
+          lambda inputs, outputs: self.parse_fn(inputs, outputs),
+          num_parallel_calls=4)
+
+        dataset = dataset.apply(
+            tf.contrib.data.batch_and_drop_remainder(batch_size))
+
+        dataset = dataset.prefetch(2)
+
+        iterator = dataset.make_one_shot_iterator()
+        return iterator.get_next()
+      else:
+        return (tf.zeros([batch_size, self.seq_length], tf.int32),
+                tf.zeros([batch_size, self.seq_length], tf.int32))
 
 
 def build(config, augmenter):

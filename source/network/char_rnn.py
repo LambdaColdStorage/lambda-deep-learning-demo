@@ -11,11 +11,11 @@ NUM_RNN_LAYER = 2
 SOFTMAX_TEMPRATURE = 1.0
 
 
-def net(inputs, feed_dict_seq, seq_length,
+def net(x, feed_dict_seq, seq_length,
         batch_size, vocab_size, mode="train"):
 
   with tf.variable_scope(name_or_scope='CharRNN',
-                         values=[inputs],
+                         values=[x[0]],
                          reuse=tf.AUTO_REUSE):
 
     if mode == "train" or mode == "eval":
@@ -23,6 +23,12 @@ def net(inputs, feed_dict_seq, seq_length,
       h0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
       c1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
       h1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
+    elif mode == "export":
+      inputs = x[0]
+      c0 = x[1]
+      h0 = x[2]
+      c1 = x[3]
+      h1 = x[4]
     else:
       # Use placeholder in inference mode for both input and states
       # This allows taking the previous batch (step)'s output
@@ -66,8 +72,13 @@ def net(inputs, feed_dict_seq, seq_length,
 
     input_list = tf.unstack(input_feature, axis=1)
 
+    print(cell)
+    print(input_list)
+    print(initial_state)
+    print('------------------------------------')
     outputs, last_state = rnn.static_rnn(
       cell, input_list, initial_state)
+
 
     output = tf.reshape(tf.concat(outputs, 1), [-1, RNN_SIZE])
 

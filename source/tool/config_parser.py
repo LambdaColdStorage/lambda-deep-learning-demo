@@ -285,6 +285,10 @@ def default_parser():
                              help="list of output operations for exporting the model",
                              type=str,
                              default="")
+  export_parser.add_argument("--dataset_meta", type=str,
+                             help="Path to dataset's meta file",
+                             default="")
+  
   return parser
 
 

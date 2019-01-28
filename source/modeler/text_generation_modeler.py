@@ -52,8 +52,11 @@ class TextGenerationModeler(Modeler):
 
   def model_fn(self, x):
 
-    inputs = x[0]
-    labels = x[1]
+    if self.config.mode == "export":
+      inputs = x     
+    else:
+      inputs = x[0]
+      labels = x[1]
 
     logits, probabilities, last_state, inputs = \
         self.create_graph_fn(inputs)
@@ -78,7 +81,20 @@ class TextGenerationModeler(Modeler):
               "probabilities": probabilities,
               "chars": tf.convert_to_tensor(self.chars),
               "last_state": last_state}
+    elif self.config.mode == "export":
+      # output_inputs = tf.identity(inputs, name="output_inputs")
+      # return output_inputs
+      output_logits = tf.identity(logits, name='output_logits')
+      return output_logits
 
+      # output_chars = tf.identity(inputs, name="output_chars")
+      # return output_chars
+      # output_prob = tf.identity(probabilities, name="output_prob")
+      # return output_prob
+
+      # output_last_state = tf.identity(last_state, name='output_last_state')
+      # dictionary = tf.identity(tf.convert_to_tensor(self.chars), name="dictionary")
+      # return output_prob, output_last_state, dictionary
 
 def build(config, net):
   return TextGenerationModeler(config, net)

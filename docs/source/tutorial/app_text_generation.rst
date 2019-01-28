@@ -48,7 +48,7 @@ Infer
   python demo/text_generation.py \
   --mode=infer \
   --model_dir=~/demo/model/char_rnn_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \  
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=char_rnn \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
   infer_args \
@@ -70,3 +70,33 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --tune_config=source/tool/char_rnn_shakespeare_tune_coarse.yaml
+
+
+**Export**
+------------
+
+::
+  python demo/text_generation.py \
+  --mode=export \
+  --model_dir=~/demo/model/char_rnn_shakespeare \
+  --network=char_rnn \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  export_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_chars,c0,h0,c1,h1 \
+  --output_ops=output_logits
+
+  --output_ops=output_last_state
+
+
+  --input_ops=input_chars,CharRNN/c0,CharRNN/h0,CharRNN/c1,CharRNN/h1 \
+  --output_ops=output_last_state
+
+  --output_ops=output_prob
+
+
+  --output_ops=output_prob,output_last_state,dictionary
+
+  --output_ops=output_prob,dictionary
