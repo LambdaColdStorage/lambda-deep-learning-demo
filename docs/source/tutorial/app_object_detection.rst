@@ -46,7 +46,6 @@ Download coco dataset_.
   --mode=train --model_dir=~/demo/model/ssd300_mscoco \
   --network=ssd300 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=100 \
   --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=300 \
-  --feature_net=vgg_16_reduced --feature_net_path=demo/model/VGG_16_reduce/VGG_16_reduce.p \
   train_args --learning_rate=0.001 --optimizer=momentum --piecewise_boundaries=60,80 \
   --piecewise_lr_decay=1.0,0.1,0.01 --dataset_meta=train2014,valminusminival2014 \
   --callbacks=train_basic,train_loss,train_speed,train_summary \
@@ -56,7 +55,6 @@ Download coco dataset_.
   --mode=train --model_dir=~/demo/model/ssd512_mscoco \
   --network=ssd512 --augmenter=ssd_augmenter --batch_size_per_gpu=16 --epochs=100 \
   --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
-  --feature_net=vgg_16_reduced --feature_net_path=demo/model/VGG_16_reduce/VGG_16_reduce.p \
   train_args --learning_rate=0.001 --optimizer=momentum --piecewise_boundaries=60,80 \
   --piecewise_lr_decay=1.0,0.1,0.01 --dataset_meta=train2014,valminusminival2014 \
   --callbacks=train_basic,train_loss,train_speed,train_summary \
@@ -76,7 +74,7 @@ Download coco dataset_.
   --augmenter=ssd_augmenter \
   --batch_size_per_gpu=8 --epochs=1 \
   --dataset_dir=/mnt/data/data/mscoco \
-  --num_classes=81 --resolution=300 --confidence_threshold=0.01 \
+  --num_classes=81 --resolution=300 \
   eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
   python demo/object_detection.py \
@@ -86,7 +84,7 @@ Download coco dataset_.
   --augmenter=ssd_augmenter \
   --batch_size_per_gpu=8 --epochs=1 \
   --dataset_dir=/mnt/data/data/mscoco \
-  --num_classes=81 --resolution=512 --confidence_threshold=0.01 \
+  --num_classes=81 --resolution=512 \
   eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
 .. _ssdinfer:
@@ -100,7 +98,7 @@ Download coco dataset_.
   --mode=infer --model_dir=~/demo/model/ssd300_mscoco \
   --network=ssd300 --augmenter=ssd_augmenter \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
-  --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=300 --confidence_threshold=0.5 \
+  --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=300 \
   infer_args --callbacks=infer_basic,infer_display_object_detection \
   --test_samples=/mnt/data/data/mscoco/val2014/COCO_val2014_000000000042.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000073.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000074.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000133.jpg
 
@@ -108,7 +106,7 @@ Download coco dataset_.
   --mode=infer --model_dir=~/demo/model/ssd512_mscoco \
   --network=ssd512 --augmenter=ssd_augmenter \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
-  --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 --confidence_threshold=0.5 \
+  --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512 \
   infer_args --callbacks=infer_basic,infer_display_object_detection \
   --test_samples=/mnt/data/data/mscoco/val2014/COCO_val2014_000000000042.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000073.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000074.jpg,/mnt/data/data/mscoco/val2014/COCO_val2014_000000000133.jpg
 
@@ -127,7 +125,6 @@ Download coco dataset_.
   --augmenter=ssd_augmenter \
   --batch_size_per_gpu=16 \
   --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=300 \
-  --feature_net=vgg_16_reduced --feature_net_path=demo/model/VGG_16_reduce/VGG_16_reduce.p \
   tune_args \
   --train_callbacks=train_basic,train_loss,train_speed,train_summary \
   --eval_callbacks=eval_basic,eval_speed,eval_mscoco \
@@ -146,7 +143,6 @@ Download coco dataset_.
   --augmenter=ssd_augmenter \
   --batch_size_per_gpu=16 \
   --dataset_dir=/mnt/data/data/mscoco --num_classes=81 --resolution=512\
-  --feature_net=vgg_16_reduced --feature_net_path=demo/model/VGG_16_reduce/VGG_16_reduce.p \
   tune_args \
   --train_callbacks=train_basic,train_loss,train_speed,train_summary \
   --eval_callbacks=eval_basic,eval_speed,eval_mscoco \
@@ -177,7 +173,7 @@ Download coco dataset_.
   --augmenter=ssd_augmenter \
   --batch_size_per_gpu=8 --epochs=1 \
   --dataset_dir=/mnt/data/data/mscoco \
-  --num_classes=81 --resolution=300 --confidence_threshold=0.01 \
+  --num_classes=81 --resolution=300 \
   eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
 
   python demo/object_detection.py \
@@ -187,5 +183,23 @@ Download coco dataset_.
   --augmenter=ssd_augmenter \
   --batch_size_per_gpu=8 --epochs=1 \
   --dataset_dir=/mnt/data/data/mscoco \
-  --num_classes=81 --resolution=512 --confidence_threshold=0.01 \
+  --num_classes=81 --resolution=512 \
   eval_args --dataset_meta=val2017 --reduce_ops=False --callbacks=eval_basic,eval_speed,eval_mscoco
+
+
+**Export**
+------------
+
+::
+  python demo/object_detection.py \
+  --mode=export \
+  --model_dir=~/demo/model/ssd512_mscoco_20190105 \
+  --network=ssd512 \
+  --augmenter=ssd_augmenter \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --num_classes=81 --resolution=512 \
+  export_args \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_image \
+  --output_ops=output_scores,output_labels,output_bboxes
