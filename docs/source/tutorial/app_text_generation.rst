@@ -76,7 +76,8 @@ Hyper-Parameter Tuning
 ------------
 
 ::
-  python demo/text_generation.py \
+
+  CUDA_VISIBLE_DEVICES=3 python demo/text_generation.py \
   --mode=export \
   --model_dir=~/demo/model/char_rnn_shakespeare \
   --network=char_rnn \
@@ -86,17 +87,7 @@ Hyper-Parameter Tuning
   --export_dir=export \
   --export_version=1 \
   --input_ops=input_chars,c0,h0,c1,h1 \
-  --output_ops=output_logits
-
-  --output_ops=output_last_state
+  --output_ops=output_probabilities,output_last_state,output_chars
 
 
-  --input_ops=input_chars,CharRNN/c0,CharRNN/h0,CharRNN/c1,CharRNN/h1 \
-  --output_ops=output_last_state
-
-  --output_ops=output_prob
-
-
-  --output_ops=output_prob,output_last_state,dictionary
-
-  --output_ops=output_prob,dictionary
+  --output_ops=output_chars,output_probabilities,output_last_state

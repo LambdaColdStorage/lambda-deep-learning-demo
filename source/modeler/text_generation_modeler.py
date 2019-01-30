@@ -53,7 +53,8 @@ class TextGenerationModeler(Modeler):
   def model_fn(self, x):
 
     if self.config.mode == "export":
-      inputs = x     
+      inputs = x
+      input_chars, c0, h0, c1, h1 = inputs
     else:
       inputs = x[0]
       labels = x[1]
@@ -61,7 +62,7 @@ class TextGenerationModeler(Modeler):
     logits, probabilities, last_state, inputs = \
         self.create_graph_fn(inputs)
 
-    if self.config.mode == "train":      
+    if self.config.mode == "train":
       loss = self.create_loss_fn(logits, labels)
       grads = self.create_grad_fn(loss, self.grad_clip)
       accuracy = self.create_eval_metrics_fn(logits, labels)
@@ -82,10 +83,27 @@ class TextGenerationModeler(Modeler):
               "chars": tf.convert_to_tensor(self.chars),
               "last_state": last_state}
     elif self.config.mode == "export":
+
+      # The vocabulary (TODO: store this on client side?)
+      output_chars = tf.identity(
+        tf.expand_dims(tf.convert_to_tensor(self.chars), axis=0), name="output_chars")
+
+      # The prediction
+      output_probabilities = tf.identity(
+        tf.expand_dims(probabilities, axis=0), name="output_probabilities")
+
+      # The state of memory cells
+      output_last_state = tf.identity(
+        tf.expand_dims(last_state, axis=0), name="output_last_state")
+
+      return output_probabilities, output_last_state,output_chars
+
+      # return output_chars, output_probabilities, output_last_state
+
       # output_inputs = tf.identity(inputs, name="output_inputs")
       # return output_inputs
-      output_logits = tf.identity(logits, name='output_logits')
-      return logits
+      # output_logits = tf.identity(logits, name='output_logits')
+      # return logits
       # return logits, probabilities, last_state, inputs
 
       # output_chars = tf.identity(inputs, name="output_chars")
@@ -96,6 +114,20 @@ class TextGenerationModeler(Modeler):
       # output_last_state = tf.identity(last_state, name='output_last_state')
       # dictionary = tf.identity(tf.convert_to_tensor(self.chars), name="dictionary")
       # return output_prob, output_last_state, dictionary
+
+      # # Get the placeholder for inputs and states
+      # inputs_place_holder = self.graph.get_tensor_by_name("CharRNN/inputs:0")
+      # c0_place_holder = self.graph.get_tensor_by_name("CharRNN/c0:0")
+      # h0_place_holder = self.graph.get_tensor_by_name("CharRNN/h0:0")
+      # c1_place_holder = self.graph.get_tensor_by_name("CharRNN/c1:0")
+      # h1_place_holder = self.graph.get_tensor_by_name("CharRNN/h1:0")
+
+      # # Python passes dictionary by reference
+      # feed_dict[inputs_place_holder] = np.array([[pick_id]], dtype=np.int32)
+      # feed_dict[c0_place_holder] = outputs_dict["last_state"][0][0]
+      # feed_dict[h0_place_holder] = outputs_dict["last_state"][0][1]
+      # feed_dict[c1_place_holder] = outputs_dict["last_state"][1][0]
+      # feed_dict[h1_place_holder] = outputs_dict["last_state"][1][1]
 
 def build(config, net):
   return TextGenerationModeler(config, net)
