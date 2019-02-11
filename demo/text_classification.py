@@ -8,7 +8,7 @@ import os
 import importlib
 
 """
-Text Generation Demo
+Text Classification Demo
 """
 
 
@@ -33,9 +33,9 @@ def main():
   if runner_config.mode == "tune":
 
     inputter_module = importlib.import_module(
-      "source.inputter.text_generation_word2vec_inputter")
+      "source.inputter.text_classification_inputter")
     modeler_module = importlib.import_module(
-      "source.modeler.text_generation_word2vec_modeler")
+      "source.modeler.text_classification_modeler")
     runner_module = importlib.import_module(
       "source.runner.parameter_server_runner")
 
@@ -74,11 +74,11 @@ def main():
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter.text_generation_word2vec_inputter").build(
+      "source.inputter.text_classification_inputter").build(
       inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler.text_generation_word2vec_modeler").build(
+      "source.modeler.text_classification_modeler").build(
       modeler_config, net)
 
     runner = importlib.import_module(
@@ -86,7 +86,7 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.run()
+    runner.dev()
 
 
 if __name__ == "__main__":

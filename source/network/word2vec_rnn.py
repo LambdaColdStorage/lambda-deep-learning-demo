@@ -4,16 +4,15 @@ import tensorflow as tf
 
 rnn = tf.contrib.rnn
 
-# 28 is "T"
-# START_CHAR = 28
-START_CHAR = 33
+START_CHAR = 9
 RNN_SIZE = 256
 NUM_RNN_LAYER = 2
-SOFTMAX_TEMPRATURE = 0.5
+SOFTMAX_TEMPRATURE = 1.0
 
 
 def net(x, feed_dict_seq, seq_length,
-        batch_size, vocab_size, mode="train"):
+        batch_size, vocab_size, embedding,
+        mode="train"):
 
   with tf.variable_scope(name_or_scope='CharRNN',
                          values=[x],
@@ -73,7 +72,12 @@ def net(x, feed_dict_seq, seq_length,
     cell = rnn.MultiRNNCell([rnn.LSTMBlockCell(num_units=RNN_SIZE)
                             for _ in range(NUM_RNN_LAYER)])
 
-    embeddingW = tf.get_variable('embedding', [vocab_size, RNN_SIZE])
+    # embeddingW = tf.get_variable('embedding', [vocab_size, RNN_SIZE])
+
+    embeddingW = tf.get_variable(
+      'embedding',
+      initializer=tf.constant(embedding),
+      trainable=False)
 
     input_feature = tf.nn.embedding_lookup(embeddingW, inputs)
 

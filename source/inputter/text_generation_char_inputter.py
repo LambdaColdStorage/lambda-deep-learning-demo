@@ -17,9 +17,9 @@ from .inputter import Inputter
 
 RNN_SIZE = 256
 
-class TextGenerationTXTInputter(Inputter):
+class TextGenerationCharInputter(Inputter):
   def __init__(self, config, augmenter):
-    super(TextGenerationTXTInputter, self).__init__(config, augmenter)
+    super(TextGenerationCharInputter, self).__init__(config, augmenter)
 
     if self.config.mode == "train":
       self.num_samples = 100000
@@ -46,7 +46,8 @@ class TextGenerationTXTInputter(Inputter):
         d = f.read()
       if six.PY2:
         d = bytearray(d)
-      data.extend([chr(c) for c in d if c < 128])
+      # data.extend([chr(c) for c in d if c < 128])
+        data.extend([chr(c) for c in d])
 
 
     counter = Counter(data)
@@ -141,4 +142,4 @@ class TextGenerationTXTInputter(Inputter):
 
 
 def build(config, augmenter):
-  return TextGenerationTXTInputter(config, augmenter)
+  return TextGenerationCharInputter(config, augmenter)

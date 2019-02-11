@@ -37,7 +37,7 @@ def default_parser():
   parser.add_argument("--network", choices=["resnet32", "resnet50", "inception_v4", "nasnet_A_large",
                                             "fcn", "unet",
                                             "fns",
-                                            "char_rnn",
+                                            "char_rnn", "word_rnn", "word2vec_rnn",
                                             "ssd512", "ssd300"],
                       type=str,
                       help="Choose a network architecture",

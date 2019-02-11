@@ -200,52 +200,20 @@ class Runner(object):
     # image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name
     batch = self.inputter.input_fn()
 
+    # print(batch)
 
-    results = self.modeler.model_fn(batch)
+    # results = self.modeler.model_fn(batch)
 
-    # # self.print_trainable_variables()
-    graph = tf.get_default_graph()
-    inputs_place_holder = graph.get_tensor_by_name("input_chars:0")
-    c0_place_holder = graph.get_tensor_by_name("c0:0")
-    h0_place_holder = graph.get_tensor_by_name("h0:0")
-    c1_place_holder = graph.get_tensor_by_name("c1:0")
-    h1_place_holder = graph.get_tensor_by_name("h1:0")
-
-    import numpy as np
-    START_CHAR = 28
-    RNN_SIZE = 256
-    input_chars = np.full((1, 1), START_CHAR, dtype=np.int32)
-    c0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
-    h0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
-    c1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
-    h1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
-
-    with tf.Session(config=self.session_config) as self.sess:
-      self.sess.run(tf.global_variables_initializer())
-
-      _results = self.sess.run(
-        results,
-        feed_dict={inputs_place_holder: input_chars,
-                   c0_place_holder: c0,
-                   h0_place_holder: h0,
-                   c1_place_holder: c1,
-                   h1_place_holder: h1})
-
-      print(type(_results[0]))
-      print(type(_results[1]))
-      print(type(_results[2]))
-      print(type(_results[3]))
-
-      # print(_results[0].shape)
-      # print(_results[1].shape)
-      # print(_results[2].shape)
-      # print(_results[3].shape)
+    # with tf.Session(config=self.session_config) as self.sess:
+    #   self.sess.run(tf.global_variables_initializer())
 
     #   num_batch = 1
 
     #   # Test input_fn
     #   for i in range(num_batch):
-    #     # _batch = self.sess.run(batch)
+    #     _batch = self.sess.run(batch)
+    #     print(_batch)
+
     #     _results = self.sess.run(results)
     #     print(_results[0].shape)
     #     print(_results[1].shape)

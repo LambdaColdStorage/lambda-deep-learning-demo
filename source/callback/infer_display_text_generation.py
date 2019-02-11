@@ -7,6 +7,7 @@ Licensed under
 from __future__ import print_function
 
 import numpy as np
+import math
 
 import tensorflow as tf
 
@@ -16,7 +17,7 @@ from .callback import Callback
 def pick(prob):
     t = np.cumsum(prob)
     s = np.sum(prob)
-    return(int(np.searchsorted(t, np.random.rand(1) * s)))
+    return(int(math.floor(np.searchsorted(t, 0.9999 * np.random.rand(1) * s))))
 
 
 class InferDisplayTextGeneration(Callback):
@@ -41,7 +42,7 @@ class InferDisplayTextGeneration(Callback):
 
       pick_id = pick(p)
 
-      self.output += chars[pick_id]
+      self.output += " " + chars[pick_id]
 
       # Get the placeholder for inputs and states
       inputs_place_holder = self.graph.get_tensor_by_name("CharRNN/inputs:0")
