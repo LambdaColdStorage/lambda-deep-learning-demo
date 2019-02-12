@@ -43,6 +43,7 @@ def loadSentences_from_list(list_sentences):
   labels = []
   for s in list_sentences:
     sentences.append(re.findall(r"[\w']+|[.,!?;]", s))
+    print(re.findall(r"[\w']+|[.,!?;]", s))
     labels.append([int(-1)])
   return sentences, labels     
 
@@ -129,7 +130,8 @@ class TextClassificationInputter(Inputter):
         # Pad all sentences in the same batch to the same length
         dataset = dataset.padded_batch(
           batch_size,
-          padded_shapes=([None], [None]))
+          padded_shapes=([None], [None]),
+          padding_values=(-1, -1))
 
         dataset = dataset.prefetch(2)
 

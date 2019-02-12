@@ -22,7 +22,7 @@ Train from scratch
   --batch_size_per_gpu=128 --epochs=100 \
   --vocab_file=/home/ubuntu/demo/data/CoLA/vocab.pkl \
   train_args \
-  --learning_rate=0.0002 --optimizer=adam \
+  --learning_rate=0.002 --optimizer=adam \
   --piecewise_boundaries=50 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/CoLA/in_domain_train.tsv
@@ -40,7 +40,7 @@ Evaluation
   --batch_size_per_gpu=128 --epochs=1 \
   --vocab_file=/home/ubuntu/demo/data/CoLA/vocab.pkl \
   eval_args \
-  --dataset_meta=~/demo/data/CoLA/dev.tsv
+  --dataset_meta=~/demo/data/CoLA/in_domain_train.tsv
 
 Infer
 
@@ -51,23 +51,11 @@ Infer
   --model_dir=~/demo/model/seq2label_CoLA \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
   --network=seq2label \
-  --batch_size_per_gpu=1 --epochs=1 \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
   --vocab_file=/home/ubuntu/demo/data/CoLA/vocab.pkl \
   infer_args \
   --callbacks=infer_basic,infer_display_text_classification \
-  --test_samples='this is not my fault . '
-
-
-  python demo/text_classification.py \
-  --mode=infer \
-  --model_dir=~/demo/model/seq2label_CoLA \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
-  --network=seq2label \
-  --batch_size_per_gpu=1 --epochs=1 \
-  --vocab_file=/home/ubuntu/demo/data/CoLA/vocab.pkl \
-  infer_args \
-  --callbacks=infer_basic,infer_display_text_classification \
-  --test_samples='the gardener watered the flowers flat.'
+  --test_samples='anson left before jenny saw himself .','they drank the pub .','the professor talked us .','the dog barked out of the room .','the more we study verbs , the crazier they get .','day by day the facts are getting murkier .'
 
 Hyper-Parameter Tuning
 

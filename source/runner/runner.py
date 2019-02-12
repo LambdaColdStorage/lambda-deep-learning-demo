@@ -146,7 +146,6 @@ class Runner(object):
   def run(self):
 
     if self.config.mode == "export":
-      # inputs = self.inputter.input_fn()
 
       outputs = self.modeler.model_fn(self.inputter.input_fn())
 
@@ -215,9 +214,15 @@ class Runner(object):
         # print(_batch[0].shape)
         # print(_batch[1].shape)
         _results = self.sess.run(results)
-        print(_results)
+        print(_results.shape)
+        
         # print(_results[0].shape)
         # print(_results[1].shape)
+
+        # _batch, _results = self.sess.run([batch, results])
+
+        # print(_batch)
+        # print(_results)
 
 def build(config, inputter, modeler, callbacks):
   return Runner(config, inputter, modeler, callbacks)
