@@ -4,8 +4,9 @@ import tensorflow as tf
 
 rnn = tf.contrib.rnn
 
-RNN_SIZE = 256
-NUM_RNN_LAYER = 2
+EMBEDDING_SIZE = 4
+NUM_RNN_LAYER = 1
+RNN_SIZE = [4]
 
 
 def length(sequence):
@@ -24,24 +25,20 @@ def net(x, batch_size, vocab_size, mode="train"):
 
     if mode == "train" or mode == "eval" or mode == 'infer':
       inputs = x
-      c0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
-      h0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
-      c1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
-      h1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
     elif mode == "export":
-      inputs = x[0]
-      c0 = x[1]
-      h0 = x[2]
-      c1 = x[3]
-      h1 = x[4]
+      pass
 
-    initial_state = (rnn.LSTMStateTuple(c0, h0),
-                     rnn.LSTMStateTuple(c1, h1))
+    initial_state = ()
+    for i_layer in range(NUM_RNN_LAYER):
+      initial_state = initial_state + \
+        (rnn.LSTMStateTuple(tf.zeros([batch_size, RNN_SIZE[i_layer]], tf.float32),
+                            tf.zeros([batch_size, RNN_SIZE[i_layer]], tf.float32)),)
 
-    cell = rnn.MultiRNNCell([rnn.LSTMCell(num_units=RNN_SIZE)
-                            for _ in range(NUM_RNN_LAYER)])
+    cell = rnn.MultiRNNCell([rnn.LSTMCell(num_units=RNN_SIZE[i_layer])
+                            for i_layer in range(NUM_RNN_LAYER)])
 
-    embeddingW = tf.get_variable('embedding', [vocab_size, RNN_SIZE])
+    embeddingW = tf.get_variable(
+      'embedding', [vocab_size, EMBEDDING_SIZE])
 
     # Hack: use only the non-padded words
     sequence_length = length(inputs)

@@ -40,7 +40,7 @@ Evaluation
   --batch_size_per_gpu=128 --epochs=1 \
   --vocab_file=/home/ubuntu/demo/data/CoLA/vocab.pkl \
   eval_args \
-  --dataset_meta=~/demo/data/CoLA/in_domain_train.tsv
+  --dataset_meta=~/demo/data/CoLA/in_domain_dev.tsv
 
 Infer
 

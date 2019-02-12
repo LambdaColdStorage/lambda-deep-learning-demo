@@ -20,9 +20,6 @@ import tensorflow as tf
 from .inputter import Inputter
 
 
-RNN_SIZE = 256
-
-
 def loadSentences(dataset_meta):
   sentences = []
   labels = []
@@ -102,19 +99,6 @@ class TextClassificationInputter(Inputter):
     #   input_chars = tf.placeholder(tf.int32,
     #                          shape=(batch_size, self.seq_length),
     #                          name="input_chars")
-    #   c0 = tf.placeholder(
-    #     tf.float32,
-    #     shape=(batch_size, RNN_SIZE), name="c0")
-    #   h0 = tf.placeholder(
-    #     tf.float32,
-    #     shape=(batch_size, RNN_SIZE), name="h0")
-    #   c1 = tf.placeholder(
-    #     tf.float32,
-    #     shape=(batch_size, RNN_SIZE), name="c1")
-    #   h1 = tf.placeholder(
-    #     tf.float32,
-    #     shape=(batch_size, RNN_SIZE), name="h1")      
-    #   return (input_chars, c0, h0, c1, h1)
     else:
       if self.config.mode == "train" or self.config.mode == "eval" or self.config.mode == 'infer':
 
