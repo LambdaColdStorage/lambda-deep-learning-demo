@@ -17,21 +17,19 @@ class TextClassificationModeler(Modeler):
     self.grad_clip = 5.
 
   def get_dataset_info(self, inputter):
-    pass
-    # self.seq_length = inputter.get_seq_length()
-    # self.num_samples = inputter.get_num_samples()
-    # self.vocab_size = inputter.get_vocab_size()
-    # self.chars = inputter.get_chars()
+    self.num_samples = inputter.get_num_samples()
+    self.vocab_size = inputter.get_vocab_size()
+    self.words = inputter.get_words()
 
   def create_nonreplicated_fn(self):
-    # self.global_step = tf.train.get_or_create_global_step()
-    # if self.config.mode == "train":
-    #   self.learning_rate = self.create_learning_rate_fn(self.global_step)
-    pass
+    self.global_step = tf.train.get_or_create_global_step()
+    if self.config.mode == "train":
+      self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, inputs):
-    return self.net(inputs, self.feed_dict_seq, self.seq_length,
-                    self.config.batch_size_per_gpu, self.vocab_size,
+    return self.net(inputs,
+                    self.config.batch_size_per_gpu,
+                    self.vocab_size,
                     mode=self.config.mode)
 
   def create_eval_metrics_fn(self, logits, labels):
@@ -61,8 +59,7 @@ class TextClassificationModeler(Modeler):
       inputs = x[0]
       labels = x[1]
 
-    logits, probabilities, last_state, inputs = \
-        self.create_graph_fn(inputs)
+    logits, probabilities = self.create_graph_fn(inputs)
 
     if self.config.mode == "train":
       loss = self.create_loss_fn(logits, labels)
@@ -79,26 +76,25 @@ class TextClassificationModeler(Modeler):
       return {"loss": loss,
               "accuracy": accuracy}
     elif self.config.mode == "infer":
-      return {"inputs": inputs,
-              "logits": logits,
-              "probabilities": probabilities,
-              "chars": tf.convert_to_tensor(self.chars),
-              "last_state": last_state}
+      pass
+      return {"classes": tf.argmax(logits, axis=1, output_type=tf.int32),
+              "probabilities": probabilities}
     elif self.config.mode == "export":
+      pass
 
-      # The vocabulary (TODO: store this on client side?)
-      output_chars = tf.identity(
-        tf.expand_dims(tf.convert_to_tensor(self.chars), axis=0), name="output_chars")
+      # # The vocabulary (TODO: store this on client side?)
+      # output_chars = tf.identity(
+      #   tf.expand_dims(tf.convert_to_tensor(self.chars), axis=0), name="output_chars")
 
-      # The prediction
-      output_probabilities = tf.identity(
-        tf.expand_dims(probabilities, axis=0), name="output_probabilities")
+      # # The prediction
+      # output_probabilities = tf.identity(
+      #   tf.expand_dims(probabilities, axis=0), name="output_probabilities")
 
-      # The state of memory cells
-      output_last_state = tf.identity(
-        tf.expand_dims(last_state, axis=0), name="output_last_state")
+      # # The state of memory cells
+      # output_last_state = tf.identity(
+      #   tf.expand_dims(last_state, axis=0), name="output_last_state")
 
-      return output_probabilities, output_last_state,output_chars
+      # return output_probabilities, output_last_state,output_chars
 
 def build(config, net):
   return TextClassificationModeler(config, net)

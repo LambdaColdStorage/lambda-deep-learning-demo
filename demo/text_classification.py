@@ -20,12 +20,22 @@ def main():
   from source.tool import tuner
   from source.tool import config_parser
 
+  from source.config.text_classification_config import \
+      TextClassificationInputterConfig
+
   parser = config_parser.default_parser()
   app_parser = parser.add_argument_group('app')
-
+  app_parser.add_argument("--vocab_file",
+                          help="Path of the vocabulary file.",
+                          type=str,
+                          default="")
   # Default configs
   runner_config, callback_config, inputter_config, modeler_config, app_config = \
       config_parser.default_config(parser)
+
+  inputter_config = TextClassificationInputterConfig(
+    inputter_config,
+    vocab_file=app_config.vocab_file)
 
   # Download data if necessary
   downloader.check_and_download(inputter_config)
@@ -86,7 +96,7 @@ def main():
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.dev()
+    runner.run()
 
 
 if __name__ == "__main__":

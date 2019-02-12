@@ -102,9 +102,6 @@ class Modeler(object):
     bs_per_gpu = self.config.batch_size_per_gpu
     gpu_count = self.config.gpu_count
 
-    print(bs_per_gpu)
-    print(gpu_count)
-
     batches_per_epoch = (self.num_samples / (bs_per_gpu * gpu_count))
     boundaries = self.config.piecewise_boundaries
     boundaries = [int(batches_per_epoch * boundary) for boundary in boundaries]

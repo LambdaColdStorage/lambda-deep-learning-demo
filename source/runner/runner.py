@@ -197,32 +197,27 @@ class Runner(object):
     for fn in nonreplicated_fns:
       fn()
 
-    # image_id, image, gt_labels, gt_bboxes, gt_mask, scale, translation, file_name
     batch = self.inputter.input_fn()
 
-    # print(batch)
+    results = self.modeler.model_fn(batch)
 
-    # results = self.modeler.model_fn(batch)
 
-    # with tf.Session(config=self.session_config) as self.sess:
-    #   self.sess.run(tf.global_variables_initializer())
+    with tf.Session(config=self.session_config) as self.sess:
+      self.sess.run(tf.global_variables_initializer())
 
-    #   num_batch = 1
+      num_batch = 1
 
-    #   # Test input_fn
-    #   for i in range(num_batch):
-    #     _batch = self.sess.run(batch)
-    #     print(_batch)
-
-    #     _results = self.sess.run(results)
-    #     print(_results[0].shape)
-    #     print(_results[1].shape)
-    #     print(_results[2].shape)
-    #     print(_results[3].shape)
-    #     print(_results[4].shape)
-    #     print(_results[5].shape)
-    #     print(_results[6].shape)
-
+      # Test input_fn
+      for i in range(num_batch):
+        # _batch = self.sess.run(batch)
+        # print(_batch[0])
+        # print(_batch[1])
+        # print(_batch[0].shape)
+        # print(_batch[1].shape)
+        _results = self.sess.run(results)
+        print(_results)
+        # print(_results[0].shape)
+        # print(_results[1].shape)
 
 def build(config, inputter, modeler, callbacks):
   return Runner(config, inputter, modeler, callbacks)
