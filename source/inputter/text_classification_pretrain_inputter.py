@@ -46,13 +46,51 @@ def encodeSetences(sentences, words2idx):
   return encode_sentences
 
 
-class TextClassificationInputter(Inputter):
+def loadGloVe(filename):
+    vocab = []
+    embd = []
+    file = open(filename,'r')
+    for line in file.readlines():
+        row = line.strip().split(' ')
+        vocab.append(row[0])
+        embd.append(row[1:])
+    file.close()
+    return vocab,embd
+
+
+def fetchPretrain(embedding_filename, words2idx, words):
+
+  words_from_pretrain, embd = loadGloVe(embedding_filename)
+
+  embedding = np.asarray(embd).astype(np.float32)
+
+  words2idx_pretrain = {}
+  for i, v in enumerate(words_from_pretrain):
+    words2idx_pretrain[v] = i
+
+  idx = np.array([words2idx_pretrain[item] if item in words2idx_pretrain else -1 for item in words], dtype='int32')
+  mask = idx >= 0
+  idx = idx[mask]
+  words = [words[i] for i, m in enumerate(mask) if m]
+  embedding = embedding[idx, :]
+
+  words2idx = {}
+  for i, v in enumerate(words):
+    words2idx[v] = i
+
+  return embedding, words2idx, words
+
+class TextClassificationPretrainInputter(Inputter):
   def __init__(self, config, augmenter):
-    super(TextClassificationInputter, self).__init__(config, augmenter)
+    super(TextClassificationPretrainInputter, self).__init__(config, augmenter)
 
     f = open(self.config.vocab_file, 'rb')
     self.words2idx, self.words = pickle.load(f)
     f.close()
+
+    self.embedding_filename = '/home/ubuntu/demo/model/glove.6B/glove.6B.50d.txt'
+
+    self.embedding, self.words2idx, self.words = fetchPretrain(self.embedding_filename, self.words2idx, self.words)
 
     if self.config.mode == 'train' or self.config.mode == 'eval':
       for meta in self.config.dataset_meta:
@@ -81,6 +119,9 @@ class TextClassificationInputter(Inputter):
   def get_words(self):
     return self.words
 
+  def get_embedding(self):
+    return self.embedding
+
   def get_seq_length(self):
     return self.seq_length
 
@@ -106,6 +147,8 @@ class TextClassificationInputter(Inputter):
         if self.config.mode == "train":
           dataset = dataset.shuffle(self.get_num_samples())
 
+        # dataset = dataset.shuffle(self.get_num_samples())
+
         dataset = dataset.repeat(self.config.epochs)
 
         # Pad all sentences in the same batch to the same length
@@ -121,4 +164,4 @@ class TextClassificationInputter(Inputter):
 
 
 def build(config, augmenter):
-  return TextClassificationInputter(config, augmenter)
+  return TextClassificationPretrainInputter(config, augmenter)

@@ -4,7 +4,6 @@ import tensorflow as tf
 
 rnn = tf.contrib.rnn
 
-EMBEDDING_SIZE = 50
 NUM_RNN_LAYER = 1
 RNN_SIZE = [64]
 
@@ -17,7 +16,7 @@ def length(sequence):
   return length
 
 
-def net(x, batch_size, vocab_size, mode="train"):
+def net(x, batch_size, vocab_size, embedding, mode="train"):
 
   with tf.variable_scope(name_or_scope='seq2label',
                          values=[x],
@@ -34,11 +33,17 @@ def net(x, batch_size, vocab_size, mode="train"):
         (rnn.LSTMStateTuple(tf.zeros([batch_size, RNN_SIZE[i_layer]], tf.float32),
                             tf.zeros([batch_size, RNN_SIZE[i_layer]], tf.float32)),)
 
-    cell = rnn.MultiRNNCell([rnn.LSTMCell(num_units=RNN_SIZE[i_layer])
+    cell = rnn.MultiRNNCell([rnn.DropoutWrapper(rnn.LSTMCell(num_units=RNN_SIZE[i_layer]),
+                                                     output_keep_prob = 0.5)
                             for i_layer in range(NUM_RNN_LAYER)])
 
+    # cell = rnn.MultiRNNCell([rnn.LSTMCell(num_units=RNN_SIZE[i_layer])
+    #                         for i_layer in range(NUM_RNN_LAYER)])
+
     embeddingW = tf.get_variable(
-      'embedding', [vocab_size, EMBEDDING_SIZE])
+      'embedding',
+      initializer=tf.constant(embedding),
+      trainable=False)
 
     # Hack: use only the non-padded words
     sequence_length = length(inputs)

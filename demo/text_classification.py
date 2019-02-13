@@ -84,19 +84,27 @@ def main():
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter.text_classification_inputter").build(
+      "source.inputter.text_classification_pretrain_inputter").build(
       inputter_config, augmenter)
 
     modeler = importlib.import_module(
-      "source.modeler.text_classification_modeler").build(
+      "source.modeler.text_classification_pretrain_modeler").build(
       modeler_config, net)
+
+    # inputter = importlib.import_module(
+    #   "source.inputter.text_classification_inputter").build(
+    #   inputter_config, augmenter)
+
+    # modeler = importlib.import_module(
+    #   "source.modeler.text_classification_modeler").build(
+    #   modeler_config, net)
 
     runner = importlib.import_module(
       "source.runner.parameter_server_runner").build(
       runner_config, inputter, modeler, callbacks)
 
     # Run application
-    runner.run()
+    runner.dev()
 
 
 if __name__ == "__main__":
