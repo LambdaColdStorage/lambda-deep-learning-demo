@@ -200,20 +200,19 @@ class Runner(object):
 
     # results = self.modeler.model_fn(batch)
 
-
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
-      num_batch = 1
+      num_batch = 2
 
       # Test input_fn
       for i in range(num_batch):
         _batch = self.sess.run(batch)
-    #     # print(_batch[0])
-        print(_batch[1])
+        print(_batch)
+        # print(_batch)
     #     # print(_batch[0].shape)
     #     # print(_batch[1].shape)
-    #     _results = self.sess.run(results)
+        # _results = self.sess.run(results)
     #     # print(_results.shape)
         
     #     # print(_results[0].shape)

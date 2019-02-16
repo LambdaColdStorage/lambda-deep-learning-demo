@@ -57,9 +57,15 @@ class TrainBasic(Callback):
             self.config.pretrained_model)
           print("Try to initialize weights from pre-trained model.")
           if tf.train.checkpoint_exists(self.config.pretrained_model):
+            # Need this for batchnorm
+            # variables_to_restore = {v.name.split(":")[0]: v
+            #                         for v in tf.get_collection(
+            #                             tf.GraphKeys.GLOBAL_VARIABLES)}
+
+            # This will work for restoring models trained with a different optimizer
             variables_to_restore = {v.name.split(":")[0]: v
                                     for v in tf.get_collection(
-                                        tf.GraphKeys.GLOBAL_VARIABLES)}
+                                        tf.GraphKeys.TRAINABLE_VARIABLES)}            
             if self.config.skip_pretrained_var:
               variables_to_restore = {
                 v: variables_to_restore[v] for
@@ -95,6 +101,7 @@ class TrainBasic(Callback):
       print("Checkpoint " + save_path + " has been saved.")
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
+
 
     global_step_op = self.graph.get_tensor_by_name("global_step:0")
     global_step = sess.run(global_step_op)

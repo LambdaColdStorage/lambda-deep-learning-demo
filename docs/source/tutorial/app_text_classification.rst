@@ -55,6 +55,21 @@ Train from scratch
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=/home/ubuntu/demo/data/aclImdb_v1/train_clean.csv
 
+
+  python demo/text_classification.py \
+  --mode=train \
+  --model_dir=~/demo/model/seq2label_bert_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_bert \
+  --batch_size_per_gpu=16 --epochs=2 \
+  train_args \
+  --learning_rate=0.002 --optimizer=adam \
+  --piecewise_boundaries=1 \
+  --piecewise_lr_decay=1.0,0.1 \
+  --dataset_meta=/home/chuan/demo/data/IMDB/train.tf_record \
+  --pretrained_model=/home/chuan/demo/model/uncased_L-12_H-768_A-12/bert_model.ckpt \
+  --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power
+
 Evaluation
 
 ::
