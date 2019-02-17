@@ -61,9 +61,9 @@ Train from scratch
   --model_dir=~/demo/model/seq2label_bert_Imdb \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
   --network=seq2label_bert \
-  --batch_size_per_gpu=16 --epochs=2 \
+  --batch_size_per_gpu=16 --epochs=4 \
   train_args \
-  --learning_rate=0.002 --optimizer=adam \
+  --learning_rate=0.00002 --optimizer=adam \
   --piecewise_boundaries=1 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=/home/chuan/demo/data/IMDB/train.tf_record \
@@ -105,6 +105,16 @@ Evaluation
   --vocab_file=/home/ubuntu/demo/data/aclImdb_v1/vocab.pkl \
   eval_args \
   --dataset_meta=/home/ubuntu/demo/data/aclImdb_v1/test_clean.csv
+
+
+  python demo/text_classification.py \
+  --mode=eval \
+  --model_dir=~/demo/model/seq2label_bert_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_bert \
+  --batch_size_per_gpu=16 --epochs=1 \
+  eval_args \
+  --dataset_meta=/home/chuan/demo/data/IMDB/eval.tf_record
 
 Infer
 

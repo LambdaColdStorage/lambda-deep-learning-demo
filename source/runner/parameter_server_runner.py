@@ -21,10 +21,17 @@ class ParameterServerRunner(Runner):
       def _assign(op):
           node_def = op if isinstance(op, tf.NodeDef) else op.node_def
           if node_def.op in self.ps_ops:
-              return "/" + ps_device
+              device_name =  ps_device
           else:
-              return device
+              device_name =  device
+
+          # if device_name == "/cpu:0":
+          #   print(op.name)
+          #   print(device_name)
+          #   print('-----------------------------------')
+          return device_name
       return _assign
+
 
   def batch_split(self, batch, idx):
     bs_per_gpu = self.config.batch_size_per_gpu
@@ -85,10 +92,11 @@ class ParameterServerRunner(Runner):
         # Map
         for i in range(self.config.gpu_count):
           with tf.device(self.assign_to_device("/gpu:{}".format(i),
-                         ps_device="/cpu:0")):
+                         ps_device="/cpu:0")):          
+          # with tf.device("/device:GPU:{}".format(i)):
             # Split input data across multiple devices
             x = self.batch_split(batch, i)
-            y = self.modeler.model_fn(x)
+            y = self.modeler.model_fn(x, i)
 
             # Gather output across multiple devices
             if i == 0:
@@ -129,13 +137,21 @@ class ParameterServerRunner(Runner):
       for fn in nonreplicated_fns:
         fn()
 
-      reduced_ops = self.replicate_graph()
+      # reduced_ops = self.replicate_graph()
 
-      self.run_ops, self.run_ops_names = self.collect_ops(reduced_ops)
+      # self.run_ops, self.run_ops_names = self.collect_ops(reduced_ops)
 
-      self.graph = tf.get_default_graph()
-      self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
-      self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
+      # self.graph = tf.get_default_graph()
+      # self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
+      # self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
+
+    reduced_ops = self.replicate_graph()
+
+    self.run_ops, self.run_ops_names = self.collect_ops(reduced_ops)
+
+    self.graph = tf.get_default_graph()
+    self.global_step_op = self.graph.get_tensor_by_name("global_step:0")
+    self.max_step_op = self.graph.get_tensor_by_name("max_step:0")
 
 
 def build(config, inputter, modeler, callbacks):

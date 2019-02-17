@@ -99,13 +99,6 @@ class TextClassificationBertInputter(Inputter):
 
         dataset = dataset.repeat(self.config.epochs)
 
-        # dataset = dataset.map(
-        #   lambda record: self.parse_fn(record),
-        #   num_parallel_calls=12)
-
-        # dataset = dataset.apply(
-        #     tf.contrib.data.batch_and_drop_remainder(batch_size))
-
         dataset = dataset.apply(
             tf.contrib.data.map_and_batch(
                 lambda record: self.parse_fn(record),

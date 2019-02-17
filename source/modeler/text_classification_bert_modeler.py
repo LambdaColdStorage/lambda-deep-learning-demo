@@ -124,19 +124,27 @@ class TextClassificationBertModeler(Modeler):
 
     return learning_rate
 
-  def create_grad_fn(self, loss, clipping=None):
+  def create_grad_fn(self, loss, device_id=None, clipping=None):
 
-    op_update_global_step = self.global_step.assign(self.global_step + 1)
+    # Only update global step for the first GPU
+    if device_id == 0:
 
-    with tf.control_dependencies([op_update_global_step]):
-      self.optimizer = self.create_optimizer(self.learning_rate)
-      grads = self.optimizer.compute_gradients(loss, var_list=self.train_vars)
-      if clipping:
-        grads = [(tf.clip_by_value(g, -clipping, clipping), v) for g, v in grads]
+      op_update_global_step = self.global_step.assign(self.global_step + 1)
+
+      with tf.control_dependencies([op_update_global_step]):
+        self.optimizer = self.create_optimizer(self.learning_rate)
+        grads = self.optimizer.compute_gradients(loss, var_list=self.train_vars)
+        if clipping:
+          grads = [(tf.clip_by_value(g, -clipping, clipping), v) for g, v in grads]
+    else:
+        self.optimizer = self.create_optimizer(self.learning_rate)
+        grads = self.optimizer.compute_gradients(loss, var_list=self.train_vars)
+        if clipping:
+          grads = [(tf.clip_by_value(g, -clipping, clipping), v) for g, v in grads]      
 
     return grads
 
-  def model_fn(self, x): 
+  def model_fn(self, x, device_id=None): 
     # input_ids = x["input_ids"]
     # input_mask = x["input_mask"]
     # segment_ids = x["segment_ids"]
@@ -154,19 +162,17 @@ class TextClassificationBertModeler(Modeler):
 
     if self.config.mode == "train":
       loss = self.create_loss_fn(logits, label_ids)
-      grads = self.create_grad_fn(loss)
+      grads = self.create_grad_fn(loss, device_id)
       accuracy = self.create_eval_metrics_fn(logits, label_ids)
       return {"loss": loss,
               "grads": grads,
               "accuracy": accuracy,
               "learning_rate": self.learning_rate}
     elif self.config.mode == "eval":
-      pass
-    #   loss = self.create_loss_fn(logits, labels)
-    #   accuracy = self.create_eval_metrics_fn(
-    #     logits, labels)
-    #   return {"loss": loss,
-    #           "accuracy": accuracy}
+      loss = self.create_loss_fn(logits, label_ids)
+      accuracy = self.create_eval_metrics_fn(logits, label_ids)
+      return {"loss": loss,
+              "accuracy": accuracy}
     elif self.config.mode == "infer":
       pass
     #   pass

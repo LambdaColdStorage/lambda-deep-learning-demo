@@ -186,7 +186,7 @@ class Runner(object):
   def dev2(self):
     self.create_graph()
 
-    self.print_trainable_variables()
+    # self.print_trainable_variables()
 
 
   def dev(self):
@@ -198,7 +198,9 @@ class Runner(object):
 
     batch = self.inputter.input_fn()
 
-    # results = self.modeler.model_fn(batch)
+    results = self.modeler.model_fn(batch)
+
+    sys.exit()
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
