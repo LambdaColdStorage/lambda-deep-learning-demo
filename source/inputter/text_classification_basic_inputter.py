@@ -7,14 +7,20 @@ Licensed under
 from __future__ import print_function
 import os
 import csv
+import re
+
+import six
+from collections import Counter
+import operator
+import numpy as np
+import pickle
 
 import tensorflow as tf
 
 from .inputter import Inputter
-from source.network.encoder import sentence
+
 
 def loadSentences(dataset_meta):
-  # Read sentences and labels from csv files
   sentences = []
   labels = []
   for meta in dataset_meta:
@@ -23,34 +29,42 @@ def loadSentences(dataset_meta):
       parsed = csv.reader(f, delimiter="\t")
       for row in parsed:
         sentences.append(row[0].split(" "))
+        # sentences.append(re.findall(r"[\w']+|[.,!?;]", row[3]))
         labels.append([int(row[1])])
-  return sentences, labels 
+  return sentences, labels    
+
+def loadSentences_from_list(list_sentences):
+  sentences = []
+  labels = []
+  for s in list_sentences:
+    sentences.append(re.findall(r"[\w']+|[.,!?;]", s))
+    labels.append([int(-1)])
+  return sentences, labels     
+
+def encodeSetences(sentences, words2idx):
+  encode_sentences = [np.array([words2idx[w] for w in s if w in words2idx], dtype='int32') for s in sentences]
+  return encode_sentences
 
 
 class TextClassificationInputter(Inputter):
   def __init__(self, config, augmenter):
     super(TextClassificationInputter, self).__init__(config, augmenter)
 
-    self.max_length = 128
-
-    # Load data
-    if self.config.mode == "train" or self.config.mode == "eval":
-      for meta in self.config.dataset_meta:
-        assert os.path.exists(meta), ("Cannot find dataset_meta file {}.".format(meta))
-      self.sentences, self.labels = loadSentences(self.config.dataset_meta)
-    elif self.config.mode == "infer":
-      pass
-
-    # Load vacabulary
-    f = open(self.config.vocab_file, "r")
-    words = f.read().splitlines()
-    self.vocab = { w : i for i, w in enumerate(words)}
+    f = open(self.config.vocab_file, 'rb')
+    self.words2idx, self.words = pickle.load(f)
     f.close()
 
-    # encode data
-    self.encode_sentences, self.encode_masks = sentence.basic(self.sentences, self.vocab, self.max_length)
+    if self.config.mode == 'train' or self.config.mode == 'eval':
+      for meta in self.config.dataset_meta:
+        assert os.path.exists(meta), ("Cannot find dataset_meta file {}.".format(meta))      
+      self.sentences, self.labels = loadSentences(self.config.dataset_meta)
+    else:
+      self.sentences, self.labels = loadSentences_from_list(self.config.test_samples)
+
+    self.encode_sentences = encodeSetences(self.sentences, self.words2idx)
 
     self.num_samples = len(self.encode_sentences)
+    self.vocab_size = len(self.words2idx)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
@@ -62,31 +76,43 @@ class TextClassificationInputter(Inputter):
     return self.num_samples
 
   def get_vocab_size(self):
-    return len(self.vocab)
+    return self.vocab_size
+
+  def get_words(self):
+    return self.words
+
+  def get_seq_length(self):
+    return self.seq_length
 
   def get_samples_fn(self):
-    for encode_sentence, label, mask in zip(self.encode_sentences, self.labels, self.encode_masks):
-      yield encode_sentence, label, mask
+    for sentence, label in zip(self.encode_sentences, self.labels):
+      yield sentence, label 
 
   def input_fn(self, test_samples=[]):
     batch_size = (self.config.batch_size_per_gpu *
                   self.config.gpu_count) 
     if self.config.mode == "export":
       pass
+    #   input_chars = tf.placeholder(tf.int32,
+    #                          shape=(batch_size, self.seq_length),
+    #                          name="input_chars")
     else:
       if self.config.mode == "train" or self.config.mode == "eval" or self.config.mode == 'infer':
 
         dataset = tf.data.Dataset.from_generator(
           generator=lambda: self.get_samples_fn(),
-          output_types=(tf.int32, tf.int32, tf.int32))
+          output_types=(tf.int32, tf.int32))
 
         if self.config.mode == "train":
           dataset = dataset.shuffle(self.get_num_samples())
 
         dataset = dataset.repeat(self.config.epochs)
 
-        dataset = dataset.apply(
-            tf.contrib.data.batch_and_drop_remainder(batch_size))
+        # Pad all sentences in the same batch to the same length
+        dataset = dataset.padded_batch(
+          batch_size,
+          padded_shapes=([None], [None]),
+          padding_values=(-1, -1))
 
         dataset = dataset.prefetch(2)
 

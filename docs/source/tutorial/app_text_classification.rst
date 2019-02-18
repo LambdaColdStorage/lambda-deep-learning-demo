@@ -70,6 +70,21 @@ Train from scratch
   --pretrained_model=/home/chuan/demo/model/uncased_L-12_H-768_A-12/bert_model.ckpt \
   --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power
 
+
+  python demo/text_classification.py \
+  --mode=train \
+  --model_dir=~/demo/model/seq2label_basic_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_basic \
+  --batch_size_per_gpu=16 --epochs=2 \
+  --vocab_file=/home/chuan/demo/data/IMDB/vocab_basic.txt \
+  train_args \
+  --learning_rate=0.00002 --optimizer=adam \
+  --piecewise_boundaries=1 \
+  --piecewise_lr_decay=1.0,0.1 \
+  --dataset_meta=/home/chuan/demo/data/IMDB/train_clean.csv
+
+
 Evaluation
 
 ::

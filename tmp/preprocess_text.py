@@ -1,10 +1,12 @@
 import pandas as pd
 import re
+from collections import Counter
+import operator
+
+
 from tqdm import tqdm
 from nltk.tokenize import WordPunctTokenizer
 
-raw_csv = "/home/ubuntu/Downloads/aclImdb_v1/test.csv"
-clean_csv = "/home/ubuntu/Downloads/aclImdb_v1/test_clean.csv"
 
 def ingest_data(csv_path):
     data = pd.read_csv(csv_path,
@@ -43,8 +45,13 @@ def data_cleaner(text):
       cleantags = re.sub(html_tag, '', stripped)
       lower_case = cleantags.lower()
       neg_handled = negation_pattern.sub(lambda x: negations_[x.group()], lower_case)
-      letters_only = re.sub("[^a-zA-Z]", " ", neg_handled)
-      tokens = tokenizer.tokenize(letters_only)
+      
+      if remove_punctuation:
+        letters_only = re.sub("[^a-zA-Z]", " ", neg_handled)
+        tokens = tokenizer.tokenize(letters_only)
+      else:
+        tokens = tokenizer.tokenize(neg_handled)
+
       return (" ".join(tokens)).strip()
   except:
       return 'NC'
@@ -64,7 +71,6 @@ def visualize_wordcloud(data):
 
   from wordcloud import WordCloud, STOPWORDS
 
-
   neg_tweets = data[data.label == 0]
   neg_string = []
   for t in neg_tweets.sentence:
@@ -78,18 +84,41 @@ def visualize_wordcloud(data):
   plt.axis("off")
   plt.show()
 
-data = ingest_data(raw_csv)
 
-tqdm.pandas(desc="progress-bar")
+def buildVocab(sentences, top_k):
+  list_words = [w for l in sentences for w in l.split(" ")]
+  counter = Counter(list_words)
+  word_cnt = sorted(counter.items(),
+                    key=operator.itemgetter(1), reverse=True)
+  top_k = min(top_k, len(word_cnt))
+  words = [x[0] for x in word_cnt[:top_k]]
+  words2idx = { w : i for i, w in enumerate(words)}
+  return words2idx, words
 
-data = post_process(data)
 
-data.to_csv(clean_csv, sep='\t', header=False, index=False)
+names_raw_csv = ["/home/chuan/demo/data/IMDB/train.csv", "/home/chuan/demo/data/IMDB/test.csv"]
+names_clean_csv = ["/home/chuan/demo/data/IMDB/train_clean.csv", "/home/chuan/demo/data/IMDB/test_clean.csv"]
+create_vocab = [True, False]
+names_vocab = ["/home/chuan/demo/data/IMDB/vocab_basic.txt", ""]
+flags_visualization = [False, False]
+remove_punctuation = False
+top_k = 100000
 
-# visualize_wordcloud(data)
+for name_raw_csv, name_clean_csv, flag_vocab, name_vocab, flag_visualization in zip(names_raw_csv, names_clean_csv, create_vocab, names_vocab, flags_visualization):
+  data = ingest_data(name_raw_csv)
 
-# for index, row in data.iterrows():
-#   print(type(row['sentence']))
-#   print(row['sentence'])
-#   print(type(row['label']))
-#   break
+  tqdm.pandas(desc="progress-bar")
+
+  data = post_process(data)
+
+  data.to_csv(name_clean_csv, sep='\t', header=False, index=False)
+
+  if flag_vocab:
+    words2idx, words = buildVocab(data['sentence'], top_k)
+    f = open(name_vocab, "w")
+    for w in words:
+      f.write("%s\n" % w)
+    f.close()
+
+  if flag_visualization:
+    visualize_wordcloud(data)

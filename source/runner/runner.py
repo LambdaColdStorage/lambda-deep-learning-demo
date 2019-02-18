@@ -197,33 +197,21 @@ class Runner(object):
       fn()
 
     batch = self.inputter.input_fn()
-
-    results = self.modeler.model_fn(batch)
-
-    sys.exit()
+    # print(batch)
 
     with tf.Session(config=self.session_config) as self.sess:
       self.sess.run(tf.global_variables_initializer())
 
       num_batch = 2
 
-      # Test input_fn
       for i in range(num_batch):
         _batch = self.sess.run(batch)
-        print(_batch)
-        # print(_batch)
-    #     # print(_batch[0].shape)
-    #     # print(_batch[1].shape)
-        # _results = self.sess.run(results)
-    #     # print(_results.shape)
-        
-    #     # print(_results[0].shape)
-    #     # print(_results[1].shape)
+        print(_batch[0])
+        print(_batch[2])
+        # print(_batch[0].shape)
+        # print(_batch[1].shape)
+        # print(_batch[2].shape)
 
-    #     # _batch, _results = self.sess.run([batch, results])
-
-    #     # print(_batch)
-    #     # print(_results)
 
 def build(config, inputter, modeler, callbacks):
   return Runner(config, inputter, modeler, callbacks)
