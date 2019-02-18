@@ -63,7 +63,7 @@ Train from scratch
   --network=seq2label_bert \
   --batch_size_per_gpu=16 --epochs=4 \
   train_args \
-  --learning_rate=0.00002 --optimizer=adam \
+  --learning_rate=0.00002 --optimizer=custom \
   --piecewise_boundaries=1 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=/home/chuan/demo/data/IMDB/train.tf_record \

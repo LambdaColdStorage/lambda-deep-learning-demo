@@ -21,7 +21,7 @@ Train from scratch
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --network=fcn \
   --augmenter=fcn_augmenter \
-  --gpu_count=1 --batch_size_per_gpu=16 --epochs=200 \
+  --batch_size_per_gpu=16 --epochs=200 \
   train_args \
   --learning_rate=0.00129 --optimizer=adam \
   --piecewise_boundaries=100 \

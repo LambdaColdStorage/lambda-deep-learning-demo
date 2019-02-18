@@ -52,7 +52,7 @@ class ImageSegmentationModeler(Modeler):
 
     return loss
 
-  def model_fn(self, x):
+  def model_fn(self, x, device_id=None):
     if self.config.mode == "export":
       images = x
     else:

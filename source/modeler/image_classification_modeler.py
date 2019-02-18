@@ -47,7 +47,7 @@ class ImageClassificationModeler(Modeler):
     loss = tf.identity(loss_cross_entropy + loss_l2, "total_loss")
     return loss
 
-  def model_fn(self, x):
+  def model_fn(self, x, device_id=None):
 
     if self.config.mode == "export":
       images = x

@@ -83,7 +83,8 @@ def default_parser():
   train_parser.add_argument("--optimizer",
                             help="Name of optimizer",
                             choices=["adadelta", "adagrad", "adam", "ftrl",
-                                     "momentum", "rmsprop", "sgd"],
+                                     "momentum", "rmsprop", "sgd",
+                                     "custom"],
                             default="momentum")
   train_parser.add_argument("--log_every_n_iter",
                             help="Number of steps to log",

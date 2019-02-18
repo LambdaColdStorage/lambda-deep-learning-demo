@@ -73,7 +73,7 @@ class ObjectDetectionModeler(Modeler):
                        self.config.num_classes,
                        self.config.confidence_threshold)
 
-  def model_fn(self, inputs):
+  def model_fn(self, inputs, device_id=None):
 
     outputs = self.create_graph_fn(inputs)
 

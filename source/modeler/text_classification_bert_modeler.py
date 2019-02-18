@@ -7,15 +7,12 @@ Licensed under
 import tensorflow as tf
 
 from .modeler import Modeler
-from source.network.bert import bert_common
-
-rnn = tf.contrib.rnn
+from source.optimizer import custom
 
 
 class TextClassificationBertModeler(Modeler):
   def __init__(self, config, net):
     super(TextClassificationBertModeler, self).__init__(config, net)
-    # self.grad_clip = 5.
 
     self.bert_config = {
       "attention_probs_dropout_prob": 0.1,
@@ -31,20 +28,21 @@ class TextClassificationBertModeler(Modeler):
       "vocab_size": 30522
     }
 
-    self.num_labels = 2
-    self.num_train_examples = 25000
-    batch_size = (self.config.batch_size_per_gpu *
-                  self.config.gpu_count)
-    self.num_train_epochs = 4.0
     self.warmup_proportion = 0.1
-
-    self.num_train_steps = int(
-        self.num_train_examples / batch_size * self.num_train_epochs)
-    self.num_warmup_steps = int(self.num_train_steps * self.warmup_proportion)
-    self.init_lr = 2e-5
 
   def get_dataset_info(self, inputter):
     self.num_samples = inputter.get_num_samples()
+    self.num_classes = inputter.get_num_classes()
+    self.epochs = inputter.get_num_epochs()
+
+    batch_size = (self.config.batch_size_per_gpu *
+                  self.config.gpu_count)
+
+    if self.config.mode == "train":
+      self.num_train_steps = int(
+          self.num_samples / batch_size * float(self.epochs))
+      self.num_warmup_steps = int(self.num_samples * self.warmup_proportion)      
+
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
@@ -52,14 +50,14 @@ class TextClassificationBertModeler(Modeler):
       self.learning_rate = self.create_learning_rate_fn(self.global_step)
 
   def create_graph_fn(self, is_training, input_ids, input_mask,
-                      segment_ids, labels, num_labels, use_one_hot_embeddings):
+                      segment_ids, labels, num_classes, use_one_hot_embeddings):
     return self.net(self.bert_config,
                     is_training,
                     input_ids,
                     input_mask,
                     segment_ids,
                     labels,
-                    num_labels,
+                    num_classes,
                     use_one_hot_embeddings)
 
   def create_eval_metrics_fn(self, logits, labels):
@@ -76,7 +74,7 @@ class TextClassificationBertModeler(Modeler):
     with tf.variable_scope("loss"):
 
       log_probs = tf.nn.log_softmax(logits, axis=-1)
-      one_hot_labels = tf.one_hot(labels, depth=self.num_labels, dtype=tf.float32)
+      one_hot_labels = tf.one_hot(labels, depth=self.num_classes, dtype=tf.float32)
 
       per_example_loss = -tf.reduce_sum(one_hot_labels * log_probs, axis=-1)
       loss = tf.reduce_mean(per_example_loss)
@@ -85,18 +83,22 @@ class TextClassificationBertModeler(Modeler):
       return loss
 
   def create_optimizer(self, learning_rate):
-    optimizer = bert_common.AdamWeightDecayOptimizer(
-        learning_rate=learning_rate,
-        weight_decay_rate=0.01,
-        beta_1=0.9,
-        beta_2=0.999,
-        epsilon=1e-6,
-        exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"])
+
+    if self.config.optimizer == "custom":
+      optimizer = custom.AdamWeightDecayOptimizer(
+          learning_rate=learning_rate,
+          weight_decay_rate=0.01,
+          beta_1=0.9,
+          beta_2=0.999,
+          epsilon=1e-6,
+          exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"])    
+    else:
+      optimizer = super(TextClassificationBertModeler, self).create_optimizer(learning_rate)
 
     return optimizer
 
   def create_learning_rate_fn(self, global_step):
-    learning_rate = tf.constant(value=self.init_lr, shape=[], dtype=tf.float32)
+    learning_rate = tf.constant(value=self.config.learning_rate, shape=[], dtype=tf.float32)
     # Implements linear decay of the learning rate.
     learning_rate = tf.train.polynomial_decay(
         learning_rate,
@@ -114,7 +116,7 @@ class TextClassificationBertModeler(Modeler):
       warmup_steps_float = tf.cast(warmup_steps_int, tf.float32)
 
       warmup_percent_done = global_steps_float / warmup_steps_float
-      warmup_learning_rate = self.init_lr * warmup_percent_done
+      warmup_learning_rate = self.config.learning_rate * warmup_percent_done
 
       is_warmup = tf.cast(global_steps_int < warmup_steps_int, tf.float32)
       learning_rate = (
@@ -127,7 +129,7 @@ class TextClassificationBertModeler(Modeler):
   def create_grad_fn(self, loss, device_id=None, clipping=None):
 
     # Only update global step for the first GPU
-    if device_id == 0:
+    if device_id == 0 and self.config.optimizer == "custom":
 
       op_update_global_step = self.global_step.assign(self.global_step + 1)
 
@@ -145,11 +147,6 @@ class TextClassificationBertModeler(Modeler):
     return grads
 
   def model_fn(self, x, device_id=None): 
-    # input_ids = x["input_ids"]
-    # input_mask = x["input_mask"]
-    # segment_ids = x["segment_ids"]
-    # label_ids = x["label_ids"]
-
     input_ids, input_mask, segment_ids, label_ids, is_real_example = x
 
     is_real_example = tf.cast(is_real_example, dtype=tf.float32)
@@ -158,7 +155,7 @@ class TextClassificationBertModeler(Modeler):
 
     logits, probabilities = self.create_graph_fn(is_training, input_ids,
                                                  input_mask, segment_ids, label_ids,
-                                                 self.num_labels, False)
+                                                 self.num_classes, False)
 
     if self.config.mode == "train":
       loss = self.create_loss_fn(logits, label_ids)

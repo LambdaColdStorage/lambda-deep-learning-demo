@@ -33,6 +33,8 @@ class TextClassificationBertInputter(Inputter):
     else:
       self.num_samples = 1
 
+    self.num_classes = 2
+
     self.name_to_features = {
         "input_ids": tf.FixedLenFeature([self.max_seq_length], tf.int64),
         "input_mask": tf.FixedLenFeature([self.max_seq_length], tf.int64),
@@ -65,6 +67,12 @@ class TextClassificationBertInputter(Inputter):
 
   def get_num_samples(self):
     return self.num_samples
+
+  def get_num_classes(self):
+    return self.num_classes
+
+  def get_num_epochs(self):
+    return self.config.epochs
 
   def get_vocab_size(self):
     pass
