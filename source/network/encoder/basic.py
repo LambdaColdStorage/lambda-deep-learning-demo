@@ -1,9 +1,9 @@
 import numpy as np
 
 
-def basic(sentences, vocab, max_seq_length):
+def encode(sentences, vocab, max_seq_length):
 
-  def encode(sentence):
+  def run(sentence):
     encode_sentence = [vocab[w] for w in sentence if w in vocab]
     encode_sentence = encode_sentence[0:max_seq_length]
 
@@ -15,12 +15,6 @@ def basic(sentences, vocab, max_seq_length):
 
     return np.array(encode_sentence, dtype="int32"), np.array(mask, dtype="int32")
 
-  encode_sentences, encode_masks = zip(*[encode (s) for s in sentences])
+  encode_sentences, encode_masks = zip(*[run (s) for s in sentences])
   return encode_sentences, encode_masks
 
-def glove(sentences, vocab):
-  pass  
-
-
-def bert(sentences, vocab):
-  pass

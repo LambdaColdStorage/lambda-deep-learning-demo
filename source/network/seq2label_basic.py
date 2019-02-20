@@ -4,29 +4,16 @@ import tensorflow as tf
 
 rnn = tf.contrib.rnn
 
-EMBEDDING_SIZE = 50
-NUM_RNN_LAYER = 1
-RNN_SIZE = [64]
+EMBEDDING_SIZE = 200
+NUM_RNN_LAYER = 2
+RNN_SIZE = [128, 128]
 
 
-def length(sequence):
-  # Measure sentence length by skipping the padded words (-1)
-  used = tf.to_float(tf.math.greater_equal(sequence, 0))
-  length = tf.reduce_sum(used, 1)
-  length = tf.cast(length, tf.int32)
-  return length
+def net(inputs, mask, num_classes, is_training, batch_size, vocab_size, embd=None, use_one_hot_embeddings=False):
 
 
-def net(x, batch_size, vocab_size, mode="train"):
-
-  with tf.variable_scope(name_or_scope='seq2label',
-                         values=[x],
+  with tf.variable_scope(name_or_scope='seq2label_basic',
                          reuse=tf.AUTO_REUSE):
-
-    if mode == "train" or mode == "eval" or mode == 'infer':
-      inputs = x
-    elif mode == "export":
-      pass
 
     initial_state = ()
     for i_layer in range(NUM_RNN_LAYER):
@@ -37,13 +24,18 @@ def net(x, batch_size, vocab_size, mode="train"):
     cell = rnn.MultiRNNCell([rnn.LSTMCell(num_units=RNN_SIZE[i_layer])
                             for i_layer in range(NUM_RNN_LAYER)])
 
-    embeddingW = tf.get_variable(
+    if len(embd) > 0:
+      embeddingW = tf.get_variable(
+        'embedding',
+        initializer=tf.constant(embd),
+        trainable=False)
+    else:
+      embeddingW = tf.get_variable(
       'embedding', [vocab_size, EMBEDDING_SIZE])
 
-    # Hack: use only the non-padded words
-    sequence_length = length(inputs)
+    # Only use the non-padded words
 
-    inputs = inputs + tf.cast(tf.math.equal(inputs, -1), tf.int32)
+    sequence_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
 
     input_feature = tf.nn.embedding_lookup(embeddingW, inputs)
 

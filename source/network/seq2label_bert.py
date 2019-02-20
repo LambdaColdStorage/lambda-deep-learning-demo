@@ -5,9 +5,25 @@ import tensorflow as tf
 from source.network.bert import bert
 from source.network.bert import bert_common
 
+# BERT basic
+bert_config = {
+  "attention_probs_dropout_prob": 0.1,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.1,
+  "hidden_size": 768,
+  "initializer_range": 0.02,
+  "intermediate_size": 3072,
+  "max_position_embeddings": 512,
+  "num_attention_heads": 12,
+  "num_hidden_layers": 12,
+  "type_vocab_size": 2,
+  "vocab_size": 30522
+}
 
-def net(bert_config, is_training, input_ids, input_mask,
-        segment_ids, labels, num_labels, use_one_hot_embeddings):
+
+def net(input_ids, input_mask, num_labels, is_training, batch_size, vocab_size, embd=None, use_one_hot_embeddings=False):
+
+  segment_ids = tf.zeros_like(input_ids)
 
   model = bert.BertModel(
       config=bert_config,

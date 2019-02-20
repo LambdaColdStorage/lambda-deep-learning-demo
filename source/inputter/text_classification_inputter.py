@@ -7,6 +7,7 @@ Licensed under
 from __future__ import print_function
 import os
 import csv
+import numpy as np
 
 import tensorflow as tf
 
@@ -27,11 +28,44 @@ def loadSentences(dataset_meta):
   return sentences, labels 
 
 
+def loadVocab(vocab_file, top_k):
+  # Read vocabulary
+  # Every line has one word.
+  # The embedding of the word is optoinally included in the same line
+
+  vocab = []
+  embd = []
+
+  file = open(vocab_file,'r')
+  count = 0
+  for line in file.readlines():
+      row = line.strip().split(' ')
+      vocab.append(row[0])
+      
+      if len(row) > 1:
+        embd.append(row[1:])
+
+      count += 1
+      if count == top_k:
+        break
+
+  file.close()
+
+  vocab = { w : i for i, w in enumerate(vocab)}
+
+  if embd:
+    embd = np.asarray(embd).astype(np.float32)
+
+  return vocab, embd
+
+
 class TextClassificationInputter(Inputter):
-  def __init__(self, config, augmenter):
+  def __init__(self, config, augmenter, encoder):
     super(TextClassificationInputter, self).__init__(config, augmenter)
 
-    self.max_length = 128
+    self.encoder = encoder
+
+    self.max_length = 256
 
     # Load data
     if self.config.mode == "train" or self.config.mode == "eval":
@@ -42,13 +76,10 @@ class TextClassificationInputter(Inputter):
       pass
 
     # Load vacabulary
-    f = open(self.config.vocab_file, "r")
-    words = f.read().splitlines()
-    self.vocab = { w : i for i, w in enumerate(words)}
-    f.close()
+    self.vocab, self.embd = loadVocab(self.config.vocab_file, self.config.vocab_top_k)
 
     # encode data
-    self.encode_sentences, self.encode_masks = sentence.basic(self.sentences, self.vocab, self.max_length)
+    self.encode_sentences, self.encode_masks = self.encoder.encode(self.sentences, self.vocab, self.max_length)
 
     self.num_samples = len(self.encode_sentences)
 
@@ -64,6 +95,12 @@ class TextClassificationInputter(Inputter):
   def get_vocab_size(self):
     return len(self.vocab)
 
+  def get_embd(self):
+    return self.embd
+
+  def get_num_epochs(self):
+    return self.config.epochs
+
   def get_samples_fn(self):
     for encode_sentence, label, mask in zip(self.encode_sentences, self.labels, self.encode_masks):
       yield encode_sentence, label, mask
@@ -78,7 +115,8 @@ class TextClassificationInputter(Inputter):
 
         dataset = tf.data.Dataset.from_generator(
           generator=lambda: self.get_samples_fn(),
-          output_types=(tf.int32, tf.int32, tf.int32))
+          output_types=(tf.int32, tf.int32, tf.int32),
+          output_shapes=(self.max_length, 1, self.max_length))
 
         if self.config.mode == "train":
           dataset = dataset.shuffle(self.get_num_samples())
@@ -94,5 +132,5 @@ class TextClassificationInputter(Inputter):
         return iterator.get_next()
 
 
-def build(config, augmenter):
-  return TextClassificationInputter(config, augmenter)
+def build(config, augmenter, encoder):
+  return TextClassificationInputter(config, augmenter, encoder)

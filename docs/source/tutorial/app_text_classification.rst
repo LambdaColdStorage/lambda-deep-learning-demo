@@ -70,20 +70,59 @@ Train from scratch
   --pretrained_model=/home/chuan/demo/model/uncased_L-12_H-768_A-12/bert_model.ckpt \
   --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power
 
+/home/ubuntu/demo/model/glove.6B/glove.6B.50d.txt
+/home/ubuntu/demo/model/uncased_L-12_H-768_A-12/vocab.txt
+/home/ubuntu/demo/data/IMDB/vocab_basic.txt
 
+
+# Working bert training
+  python demo/text_classification.py \
+  --mode=train \
+  --model_dir=~/demo/model/seq2label_bert_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_bert \
+  --batch_size_per_gpu=16 --epochs=4 \
+  --vocab_file=/home/ubuntu/demo/model/uncased_L-12_H-768_A-12/vocab.txt \
+  --vocab_top_k=-1 \
+  --encode_method=bert \
+  --lr_method=linear_plus_warmup \
+  train_args \
+  --learning_rate=0.00002 --optimizer=custom \
+  --piecewise_boundaries=1 \
+  --piecewise_lr_decay=1.0,0.1 \
+  --dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv \
+  --pretrained_model=/home/ubuntu/demo/model/uncased_L-12_H-768_A-12/bert_model.ckpt \
+  --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power
+
+# Working glove training ??
+  python demo/text_classification.py \
+  --mode=train \
+  --model_dir=~/demo/model/seq2label_glove_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_basic \
+  --batch_size_per_gpu=128 --epochs=100 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --lr_method=linear_plus_warmup \
+  train_args \
+  --learning_rate=0.002 --optimizer=adam \
+  --dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv
+
+# Working training from scrach ???
   python demo/text_classification.py \
   --mode=train \
   --model_dir=~/demo/model/seq2label_basic_Imdb \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
   --network=seq2label_basic \
-  --batch_size_per_gpu=16 --epochs=2 \
-  --vocab_file=/home/chuan/demo/data/IMDB/vocab_basic.txt \
+  --batch_size_per_gpu=128 --epochs=100 \
+  --vocab_file=/home/ubuntu/demo/data/IMDB/vocab_basic.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --lr_method=linear_plus_warmup \
   train_args \
-  --learning_rate=0.00002 --optimizer=adam \
-  --piecewise_boundaries=1 \
-  --piecewise_lr_decay=1.0,0.1 \
-  --dataset_meta=/home/chuan/demo/data/IMDB/train_clean.csv
-
+  --learning_rate=0.002 --optimizer=adam \
+  --dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv
 
 Evaluation
 
@@ -100,15 +139,18 @@ Evaluation
   --dataset_meta=~/demo/data/CoLA/in_domain_dev.tsv
 
 
+# Working basic evaluation ???
   python demo/text_classification.py \
   --mode=eval \
-  --model_dir=~/demo/model/seq2label_Imdb \
+  --model_dir=~/demo/model/seq2label_basic_Imdb \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
-  --network=seq2label \
+  --network=seq2label_basic \
   --batch_size_per_gpu=128 --epochs=1 \
-  --vocab_file=/home/ubuntu/demo/data/aclImdb_v1/vocab.pkl \
+  --vocab_file=/home/ubuntu/demo/data/IMDB/vocab_basic.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
   eval_args \
-  --dataset_meta=/home/ubuntu/demo/data/aclImdb_v1/test_clean.csv
+  --dataset_meta=/home/ubuntu/demo/data/IMDB/test_clean.csv
 
 
   python demo/text_classification.py \
@@ -122,6 +164,21 @@ Evaluation
   --dataset_meta=/home/ubuntu/demo/data/aclImdb_v1/test_clean.csv
 
 
+# Working glove evaluation ???
+  python demo/text_classification.py \
+  --mode=eval \
+  --model_dir=~/demo/model/seq2label_glove_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_basic \
+  --batch_size_per_gpu=128 --epochs=1 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  eval_args \
+  --dataset_meta=/home/ubuntu/demo/data/IMDB/test_clean.csv
+
+
+
   python demo/text_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/seq2label_bert_Imdb \
@@ -130,6 +187,22 @@ Evaluation
   --batch_size_per_gpu=16 --epochs=1 \
   eval_args \
   --dataset_meta=/home/chuan/demo/data/IMDB/eval.tf_record
+
+
+# Working bert evaluation
+
+  python demo/text_classification.py \
+  --mode=eval \
+  --model_dir=~/demo/model/seq2label_bert_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_bert \
+  --batch_size_per_gpu=16 --epochs=1 \
+  --vocab_file=/home/ubuntu/demo/model/uncased_L-12_H-768_A-12/vocab.txt \
+  --vocab_top_k=-1 \
+  --encode_method=bert \
+  eval_args \
+  --dataset_meta=/home/ubuntu/demo/data/IMDB/test_clean.csv
+
 
 Infer
 
