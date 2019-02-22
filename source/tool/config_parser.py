@@ -37,7 +37,7 @@ def default_parser():
   parser.add_argument("--network", choices=["resnet32", "resnet50", "inception_v4", "nasnet_A_large",
                                             "fcn", "unet",
                                             "fns",
-                                            "char_rnn", "word_rnn", "word2vec_rnn",
+                                            "rnn_basic",
                                             "seq2label_basic", "seq2label_pretrain", "seq2label_bert",
                                             "ssd512", "ssd300"],
                       type=str,

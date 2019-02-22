@@ -27,7 +27,10 @@ def loadData(meta_data, unit):
         d = bytearray(d)
         data.extend([chr(c) for c in d])
   elif unit == "word":
-    pass
+    for meta in meta_data:
+      with open(meta, 'rb') as f:
+        d = f.read()
+        data.extend(d.split())
 
   return data
 
@@ -39,57 +42,52 @@ def loadVocab(vocab_file, data, top_k):
     counter = Counter(data)
     data_sorted = sorted(counter.items(),
                  key=operator.itemgetter(1), reverse=True)
-    vocab = {v: i for i, v in enumerate([x[0] for x in data_sorted])}
+    items = [x[0] for x in data_sorted]
+    if top_k > 0:
+      items = items[0:min(top_k, len(items))]
+    vocab = {v: i for i, v in enumerate(items)}
+    embd = []
 
-  return vocab
+  return vocab, items, embd
 
 
 class TextGenerationInputter(Inputter):
-  def __init__(self, config, augmenter):
+  def __init__(self, config, augmenter, encoder):
     super(TextGenerationInputter, self).__init__(config, augmenter)
+
+    self.encoder = encoder
 
     if self.config.mode == "train":
       self.num_samples = 100000
-      self.seq_length = 50
+      self.max_length = 50
     elif self.config.mode == "infer":
       self.num_samples = 1000
-      self.seq_length = 1
+      self.max_length = 1
     elif self.config.mode == "eval":
       self.num_samples = 10000
-      self.seq_length = 50
+      self.max_length = 50
     elif self.config.mode == "export":
       self.num_samples = 1
-      self.seq_length = 1
+      self.max_length = 1
 
-    self.vocab_size = None
+    if self.config.mode == "train" or self.config.mode == "eval" or self.config.mode == "infer":
+      self.data = loadData(self.config.dataset_meta, self.config.unit)
+      self.vocab, self.items, self.embd = loadVocab(None, self.data, self.config.vocab_top_k)
+      self.vocab_size = len(self.vocab)
 
-    self.config.unit = "char"
+      # clean data
+      if self.config.vocab_top_k > 0:
+        self.data = [w for w in self.data if w in self.vocab]
 
-    if self.config.mode == "train" or self.config.mode == "eval":
-      data = loadData(self.config.dataset_meta, self.config.unit)
-      vocab = loadVocab(None, data, None)
-      print(vocab)
+      print(self.vocab_size)
+      print('*************************************************************')
 
-  def initial_seq(self):
+    # encode data
+    # Use the entire data here
+    self.encode_data, self.encode_mask = self.encoder.encode([self.data], self.vocab, -1)
+    self.encode_data = self.encode_data[0]
+    self.encode_mask = self.encode_mask[0]
 
-    data = []
-    for meta in self.config.dataset_meta:
-      with open(meta, 'rb') as f:
-        d = f.read()
-      if six.PY2:
-        d = bytearray(d)
-        data.extend([chr(c) for c in d])
-
-
-    counter = Counter(data)
-    char_cnt = sorted(counter.items(),
-                      key=operator.itemgetter(1), reverse=True)
-    self.chars = [x[0] for x in char_cnt]
-    self.vocab_size = len(self.chars)
-    self.char2idx = {c: i for i, c in enumerate(self.chars)}
-    self.whole_seq = np.array([self.char2idx[c] for c in data], dtype='int32')
-    print("char2idx: ")
-    print(self.char2idx)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
@@ -103,27 +101,27 @@ class TextGenerationInputter(Inputter):
   def get_vocab_size(self):
     return self.vocab_size
 
-  def get_chars(self):
-    return self.chars
+  def get_max_length(self):
+    return self.max_length
 
-  def get_seq_length(self):
-    return self.seq_length
+  def get_items(self):
+    return self.items
 
   def get_samples_fn(self):
     random_starts = np.random.randint(
       0,
-      self.whole_seq.shape[0] - self.seq_length - 1,
+      self.encode_data.shape[0] - self.max_length - 1,
       (self.num_samples,))
 
     for st in random_starts:
-        seq = self.whole_seq[st:st + self.seq_length + 1]
+        seq = self.encode_data[st:st + self.max_length + 1]
         yield seq[:-1], seq[1:]
 
   def parse_fn(self, inputs, outputs):
     """Parse a single input sample
     """
-    inputs.set_shape([self.seq_length])
-    outputs.set_shape([self.seq_length])
+    inputs.set_shape([self.max_length])
+    outputs.set_shape([self.max_length])
 
     return (inputs, outputs)
 
@@ -132,7 +130,7 @@ class TextGenerationInputter(Inputter):
                   self.config.gpu_count) 
     if self.config.mode == "export":
       input_chars = tf.placeholder(tf.int32,
-                             shape=(batch_size, self.seq_length),
+                             shape=(batch_size, self.max_length),
                              name="input_chars")
       c0 = tf.placeholder(
         tf.float32,
@@ -168,9 +166,9 @@ class TextGenerationInputter(Inputter):
         iterator = dataset.make_one_shot_iterator()
         return iterator.get_next()
       else:
-        return (tf.zeros([batch_size, self.seq_length], tf.int32),
-                tf.zeros([batch_size, self.seq_length], tf.int32))
+        return (tf.zeros([batch_size, self.max_length], tf.int32),
+                tf.zeros([batch_size, self.max_length], tf.int32))
 
 
-def build(config, augmenter):
-  return TextGenerationInputter(config, augmenter)
+def build(config, augmenter, encoder):
+  return TextGenerationInputter(config, augmenter, encoder)

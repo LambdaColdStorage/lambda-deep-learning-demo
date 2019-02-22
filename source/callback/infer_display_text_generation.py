@@ -35,21 +35,24 @@ class InferDisplayTextGeneration(Callback):
     print('-------------------------------------------------')
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
-    chars = outputs_dict["chars"]
+    items = outputs_dict["items"]
     for i, p in zip(outputs_dict["inputs"], outputs_dict["probabilities"]):
 
-      self.input += chars[i[0]]
+      self.input += items[i[0]]
 
       pick_id = pick(p)
 
-      self.output += " " + chars[pick_id]
+      if self.config.unit == "char":
+        self.output += items[pick_id]
+      elif self.config.unit == "word":
+        self.output += " " + items[pick_id]
 
       # Get the placeholder for inputs and states
-      inputs_place_holder = self.graph.get_tensor_by_name("CharRNN/inputs:0")
-      c0_place_holder = self.graph.get_tensor_by_name("CharRNN/c0:0")
-      h0_place_holder = self.graph.get_tensor_by_name("CharRNN/h0:0")
-      c1_place_holder = self.graph.get_tensor_by_name("CharRNN/c1:0")
-      h1_place_holder = self.graph.get_tensor_by_name("CharRNN/h1:0")
+      inputs_place_holder = self.graph.get_tensor_by_name("RNN/inputs:0")
+      c0_place_holder = self.graph.get_tensor_by_name("RNN/c0:0")
+      h0_place_holder = self.graph.get_tensor_by_name("RNN/h0:0")
+      c1_place_holder = self.graph.get_tensor_by_name("RNN/c1:0")
+      h1_place_holder = self.graph.get_tensor_by_name("RNN/h1:0")
 
       # Python passes dictionary by reference
       feed_dict[inputs_place_holder] = np.array([[pick_id]], dtype=np.int32)
