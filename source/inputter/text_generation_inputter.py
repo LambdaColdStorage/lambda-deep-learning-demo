@@ -9,6 +9,7 @@ import six
 from collections import Counter
 import operator
 import numpy as np
+import re
 
 import tensorflow as tf
 
@@ -30,7 +31,9 @@ def loadData(meta_data, unit):
     for meta in meta_data:
       with open(meta, 'rb') as f:
         d = f.read()
-        data.extend(d.split())
+        # d = re.split('(\W)', d)
+        d = re.findall(r"[\w']+|[:.,!?;\n]", d)
+        data.extend(d)
 
   return data
 
@@ -75,12 +78,13 @@ class TextGenerationInputter(Inputter):
       self.vocab, self.items, self.embd = loadVocab(None, self.data, self.config.vocab_top_k)
       self.vocab_size = len(self.vocab)
 
+
       # clean data
       if self.config.vocab_top_k > 0:
         self.data = [w for w in self.data if w in self.vocab]
 
-      print(self.vocab_size)
-      print('*************************************************************')
+      print(self.items)
+      print('---------------------------------------------------------')
 
     # encode data
     # Use the entire data here

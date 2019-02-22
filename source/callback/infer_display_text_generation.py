@@ -31,21 +31,32 @@ class InferDisplayTextGeneration(Callback):
 
   def after_run(self, sess):
     print('-------------------------------------------------')
-    print(self.input[0] + self.output)
+    if self.config.unit == "char":
+      print(self.input[0] + self.output)
+    elif self.config.unit == "word":
+      print(self.input.split()[0] + " " + self.output)
     print('-------------------------------------------------')
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
     items = outputs_dict["items"]
     for i, p in zip(outputs_dict["inputs"], outputs_dict["probabilities"]):
 
-      self.input += items[i[0]]
+      if self.config.unit == "char":
+        self.input += items[i[0]]
+      elif self.config.unit == "word":
+        self.input += " " + items[i[0]]
+
+      # self.input += items[i[0]]
 
       pick_id = pick(p)
 
       if self.config.unit == "char":
         self.output += items[pick_id]
       elif self.config.unit == "word":
-        self.output += " " + items[pick_id]
+        if items[pick_id] == "\n":
+          self.output += items[pick_id]
+        else:
+          self.output += items[pick_id] + " "
 
       # Get the placeholder for inputs and states
       inputs_place_holder = self.graph.get_tensor_by_name("RNN/inputs:0")

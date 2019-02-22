@@ -4,7 +4,8 @@ import tensorflow as tf
 
 rnn = tf.contrib.rnn
 
-STARTER = 9
+STARTER = 218 # Duke
+# STARTER = 28 # T
 RNN_SIZE = 256
 NUM_RNN_LAYER = 2
 SOFTMAX_TEMPRATURE = 1.0

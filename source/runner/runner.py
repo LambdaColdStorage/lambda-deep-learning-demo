@@ -196,7 +196,11 @@ class Runner(object):
     for fn in nonreplicated_fns:
       fn()
 
+    sys.exit()
+    
     batch = self.inputter.input_fn()
+
+
 
     result = self.modeler.model_fn(batch)
     
