@@ -74,19 +74,19 @@ def main():
       callbacks.append(callback)
 
     inputter = importlib.import_module(
-      "source.inputter.text_generation_word2vec_inputter").build(
+      "source.inputter.text_generation_inputter").build(
       inputter_config, augmenter)
 
-    modeler = importlib.import_module(
-      "source.modeler.text_generation_word2vec_modeler").build(
-      modeler_config, net)
+    # modeler = importlib.import_module(
+    #   "source.modeler.text_generation_word2vec_modeler").build(
+    #   modeler_config, net)
 
-    runner = importlib.import_module(
-      "source.runner.parameter_server_runner").build(
-      runner_config, inputter, modeler, callbacks)
+    # runner = importlib.import_module(
+    #   "source.runner.parameter_server_runner").build(
+    #   runner_config, inputter, modeler, callbacks)
 
-    # Run application
-    runner.run()
+    # # Run application
+    # runner.dev()
 
 
 if __name__ == "__main__":

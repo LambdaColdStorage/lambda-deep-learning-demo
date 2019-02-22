@@ -16,15 +16,15 @@ Train from scratch
 
   python demo/text_generation.py \
   --mode=train \
-  --model_dir=~/demo/model/word2vec_rnn_wikitext2 \
+  --model_dir=~/demo/model/char_rnn_shakespeare \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
-  --network=word2vec_rnn \
+  --network=char_rnn \
   --batch_size_per_gpu=128 --epochs=100 \
   train_args \
   --learning_rate=0.002 --optimizer=adam \
   --piecewise_boundaries=50 \
   --piecewise_lr_decay=1.0,0.1 \
-  --dataset_meta=~/demo/data/wikitext2/wikitext-2-train.txt
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
 
 
 Evaluation
