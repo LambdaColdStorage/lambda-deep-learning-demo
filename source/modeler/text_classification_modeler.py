@@ -152,7 +152,6 @@ class TextClassificationModeler(Modeler):
       return {"loss": loss,
               "accuracy": accuracy}
     elif self.config.mode == "infer":
-      pass
       return {"classes": tf.argmax(logits, axis=1, output_type=tf.int32),
               "probabilities": probabilities}
     elif self.config.mode == "export":

@@ -178,6 +178,10 @@ def default_parser():
                             help="List of callbacks in inference.",
                             type=str,
                             default=None)
+  infer_parser.add_argument("--splitter",
+                            help="A special character to split test_samples into a list",
+                            type=str,
+                            default=",")
 
   tune_parser = subparsers.add_parser("tune_args", help="Tune help")
   tune_parser.add_argument("--tune_config_path",
@@ -382,7 +386,7 @@ def prepare(config):
   if hasattr(config, "test_samples"):
     config.test_samples = (
       [] if not config.test_samples else
-      [os.path.expanduser(x) for x in config.test_samples.split(",")])
+      [os.path.expanduser(x) for x in config.test_samples.split(config.splitter)])
 
   if hasattr(config, "callbacks"):
     config.callbacks = (
@@ -492,6 +496,7 @@ def default_config(parser):
     augmenter_speed_mode=(None if not hasattr(config, "augmenter_speed_mode")
                           else config.augmenter_speed_mode))
 
+
   modeler_config = ModelerConfig(
     mode=config.mode,
     batch_size_per_gpu=config.batch_size_per_gpu,
@@ -514,6 +519,7 @@ def default_config(parser):
                      else config.network),
     tune_config_path=(None if not hasattr(config, "tune_config_path")
                      else config.tune_config_path))
+
 
   arg_groups={}
   for group in parser._action_groups:

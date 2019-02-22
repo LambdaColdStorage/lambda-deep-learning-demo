@@ -8,23 +8,31 @@ from __future__ import print_function
 import os
 import csv
 import numpy as np
+import re
 
 import tensorflow as tf
 
 from .inputter import Inputter
 from source.network.encoder import sentence
 
-def loadSentences(dataset_meta):
+def loadSentences(data, mode):
   # Read sentences and labels from csv files
   sentences = []
   labels = []
-  for meta in dataset_meta:
-    dirname = os.path.dirname(meta)
-    with open(meta) as f:
-      parsed = csv.reader(f, delimiter="\t")
-      for row in parsed:
-        sentences.append(row[0].split(" "))
-        labels.append([int(row[1])])
+
+  if mode == "train" or mode == "eval":
+    for meta in data:
+      dirname = os.path.dirname(meta)
+      with open(meta) as f:
+        parsed = csv.reader(f, delimiter="\t")
+        for row in parsed:
+          sentences.append(row[0].split(" "))
+          labels.append([int(row[1])])
+  elif mode == "infer":
+    for s in data:
+      sentences.append(re.findall(r"[\w']+|[.,!?;]", s))
+      labels.append([int(-1)])
+
   return sentences, labels 
 
 
@@ -71,9 +79,9 @@ class TextClassificationInputter(Inputter):
     if self.config.mode == "train" or self.config.mode == "eval":
       for meta in self.config.dataset_meta:
         assert os.path.exists(meta), ("Cannot find dataset_meta file {}.".format(meta))
-      self.sentences, self.labels = loadSentences(self.config.dataset_meta)
+      self.sentences, self.labels = loadSentences(self.config.dataset_meta, self.config.mode)
     elif self.config.mode == "infer":
-      pass
+      self.sentences, self.labels = loadSentences(self.config.test_samples, self.config.mode)
 
     # Load vacabulary
     self.vocab, self.embd = loadVocab(self.config.vocab_file, self.config.vocab_top_k)
