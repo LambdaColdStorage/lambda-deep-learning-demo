@@ -53,7 +53,8 @@ class TextGenerationModeler(Modeler):
 
   def model_fn(self, x, device_id=None):
     if self.config.mode == "export":
-      pass
+      inputs = x
+      input_item, c0, h0, c1, h1 = inputs
     else:
       inputs = x[0]
       labels = x[1]
@@ -82,7 +83,19 @@ class TextGenerationModeler(Modeler):
               "items": tf.convert_to_tensor(self.items),
               "last_state": last_state}
     elif self.config.mode == "export":
-      pass
+      # The vocabulary (TODO: store this on client side?)
+      items = tf.identity(
+        tf.expand_dims(tf.convert_to_tensor(self.items), axis=0), name="items")
+
+      # The prediction
+      output_probabilities = tf.identity(
+        tf.expand_dims(probabilities, axis=0), name="output_probabilities")
+
+      # The state of memory cells
+      output_last_state = tf.identity(
+        tf.expand_dims(last_state, axis=0), name="output_last_state")
+
+      return output_probabilities, output_last_state, items
 
 def build(config, net):
   return TextGenerationModeler(config, net)

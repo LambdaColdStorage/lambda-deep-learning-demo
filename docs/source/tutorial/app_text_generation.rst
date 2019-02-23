@@ -119,6 +119,7 @@ Hyper-Parameter Tuning
   --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
 
 
+
   python demo/text_generation.py \
   --mode=tune \
   --model_dir=~/demo/model/word_rnn_shakespeare \
@@ -137,17 +138,32 @@ Hyper-Parameter Tuning
 
 ::
 
-  CUDA_VISIBLE_DEVICES=3 python demo/text_generation.py \
+  python demo/text_generation.py \
   --mode=export \
   --model_dir=~/demo/model/char_rnn_shakespeare \
-  --network=char_rnn \
+  --network=rnn_basic \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --unit=char \
+  --vocab_top_k=-1 \
   export_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --export_dir=export \
   --export_version=1 \
-  --input_ops=input_chars,c0,h0,c1,h1 \
-  --output_ops=output_probabilities,output_last_state,output_chars
+  --input_ops=input_item,c0,h0,c1,h1 \
+  --output_ops=output_probabilities,output_last_state,items
 
 
-  --output_ops=output_chars,output_probabilities,output_last_state
+
+  python demo/text_generation.py \
+  --mode=export \
+  --model_dir=~/demo/model/word_rnn_shakespeare \
+  --network=rnn_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --unit=word \
+  --vocab_top_k=4000 \
+  export_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_item,c0,h0,c1,h1 \
+  --output_ops=output_probabilities,output_last_state,items

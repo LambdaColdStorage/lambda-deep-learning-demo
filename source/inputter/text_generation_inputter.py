@@ -73,24 +73,20 @@ class TextGenerationInputter(Inputter):
       self.num_samples = 1
       self.max_length = 1
 
+    self.data = loadData(self.config.dataset_meta, self.config.unit)
+    self.vocab, self.items, self.embd = loadVocab(None, self.data, self.config.vocab_top_k)
+    self.vocab_size = len(self.vocab)
+
     if self.config.mode == "train" or self.config.mode == "eval" or self.config.mode == "infer":
-      self.data = loadData(self.config.dataset_meta, self.config.unit)
-      self.vocab, self.items, self.embd = loadVocab(None, self.data, self.config.vocab_top_k)
-      self.vocab_size = len(self.vocab)
-
-
       # clean data
       if self.config.vocab_top_k > 0:
         self.data = [w for w in self.data if w in self.vocab]
 
-      print(self.items)
-      print('---------------------------------------------------------')
-
-    # encode data
-    # Use the entire data here
-    self.encode_data, self.encode_mask = self.encoder.encode([self.data], self.vocab, -1)
-    self.encode_data = self.encode_data[0]
-    self.encode_mask = self.encode_mask[0]
+      # encode data
+      # Use the entire data here
+      self.encode_data, self.encode_mask = self.encoder.encode([self.data], self.vocab, -1)
+      self.encode_data = self.encode_data[0]
+      self.encode_mask = self.encode_mask[0]
 
 
   def create_nonreplicated_fn(self):
@@ -133,9 +129,9 @@ class TextGenerationInputter(Inputter):
     batch_size = (self.config.batch_size_per_gpu *
                   self.config.gpu_count) 
     if self.config.mode == "export":
-      input_chars = tf.placeholder(tf.int32,
+      input_item = tf.placeholder(tf.int32,
                              shape=(batch_size, self.max_length),
-                             name="input_chars")
+                             name="input_item")
       c0 = tf.placeholder(
         tf.float32,
         shape=(batch_size, RNN_SIZE), name="c0")
@@ -148,7 +144,7 @@ class TextGenerationInputter(Inputter):
       h1 = tf.placeholder(
         tf.float32,
         shape=(batch_size, RNN_SIZE), name="h1")      
-      return (input_chars, c0, h0, c1, h1)
+      return (input_item, c0, h0, c1, h1)
     else:
       if self.config.mode == "train" or self.config.mode == "eval":
 

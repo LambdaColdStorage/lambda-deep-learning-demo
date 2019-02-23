@@ -20,11 +20,20 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textgeneration \
---mount type=bind,source=/home/ubuntu/demo/model/char_rnn_shakespeare/export,target=/models/textgeneration \
+--mount type=bind,source=/home/chuan/demo/model/char_rnn_shakespeare/export,target=/models/textgeneration \
 -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
 
 
-python client/text_generation_client.py
+docker run --runtime=nvidia -p 8501:8501 \
+--name tfserving_textgeneration \
+--mount type=bind,source=/home/chuan/demo/model/word_rnn_shakespeare/export,target=/models/textgeneration \
+-e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
+
+
+python client/text_generation_client.py --unit=word --starter=218 --length=128
+
+saved_model_cli show --dir ~/demo/model/char_rnn_shakespeare/export/1/ --all
+
 """
 
 from __future__ import print_function
@@ -32,15 +41,12 @@ from __future__ import print_function
 import requests
 import numpy as np
 import json
+import argparse
 
 
 # The server URL specifies the endpoint of your server running the ResNet
 # model with the name "resnet" and using the predict interface.
 SERVER_URL = 'http://localhost:8501/v1/models/textgeneration:predict'
-
-START_CHAR = 28
-NUM_CHAR = 200
-RNN_SIZE = 256
 
 def pick(prob):
   t = np.cumsum(prob)
@@ -48,14 +54,40 @@ def pick(prob):
   return(int(np.searchsorted(t, np.random.rand(1) * s)))
 
 def main():
-  input_chars = np.full((1, 1), START_CHAR, dtype=np.int32)
 
-  c0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
-  h0 = np.zeros((1, RNN_SIZE), dtype=np.float32)
-  c1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
-  h1 = np.zeros((1, RNN_SIZE), dtype=np.float32)
+  parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-  input_chars = input_chars.tolist()[0]
+  parser.add_argument("--unit", choices=["char", "word"],
+                      type=str,
+                      help="Choose a job mode from char and word.",
+                      default="char")
+
+  parser.add_argument("--length",
+                      type=int,
+                      help="Length (in number of units) of generated text.",
+                      default=128)
+
+  parser.add_argument("--starter",
+                      type=int,
+                      help="id of the starting item. For example, 218 is Duke for word_rnn, 28 is T for char_rnn",
+                      default=8)
+
+  parser.add_argument("-rnn_size",
+                      type=int,
+                      help="Size of RNN. Has to match the served model",
+                      default=256)
+
+  args = parser.parse_args()
+
+  input_item = np.full((1, 1), args.starter, dtype=np.int32)
+
+  c0 = np.zeros((1, args.rnn_size), dtype=np.float32)
+  h0 = np.zeros((1, args.rnn_size), dtype=np.float32)
+  c1 = np.zeros((1, args.rnn_size), dtype=np.float32)
+  h1 = np.zeros((1, args.rnn_size), dtype=np.float32)
+
+  input_item = input_item.tolist()[0]
   c0 = c0.tolist()[0]
   h0 = h0.tolist()[0]
   c1 = c1.tolist()[0]
@@ -63,9 +95,9 @@ def main():
 
   results = ""
 
-  for i_step in range(NUM_CHAR):
+  for i_step in range(args.length):
     input_dict = {}
-    input_dict["input_chars"] = input_chars
+    input_dict["input_item"] = input_item
     input_dict["c0"] = c0
     input_dict["h0"] = h0
     input_dict["c1"] = c1
@@ -76,21 +108,28 @@ def main():
     headers = {"content-type": "application/json"}
 
     response = requests.post(SERVER_URL, data=data, headers=headers)
+    # print(response)
     # response.raise_for_status()
     predictions = response.json()["predictions"][0]
     
-    chars = predictions["output_chars"]
+    items = predictions["items"]
     for p in predictions["output_probabilities"]:
       pick_id = pick(p)
-      results += chars[pick_id]
+      if args.unit == "char":
+        results += items[pick_id]
+      elif args.unit == "word":
+        if items[pick_id] != "\n":
+          results += items[pick_id] + " "
+        else:
+          results += items[pick_id]
 
-    input_chars = np.full((1, 1), pick_id, dtype=np.int32).tolist()[0]
+    input_item = np.full((1, 1), pick_id, dtype=np.int32).tolist()[0]
     c0 = predictions["output_last_state"][0][0][0]
     h0 = predictions["output_last_state"][0][1][0]
     c1 = predictions["output_last_state"][1][1][0]
     h1 = predictions["output_last_state"][1][1][0]
 
-  results = chars[START_CHAR] + results
+  results = items[args.starter] + " " + results
   print(results)
 
 if __name__ == '__main__':
