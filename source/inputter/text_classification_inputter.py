@@ -13,7 +13,7 @@ import re
 import tensorflow as tf
 
 from .inputter import Inputter
-from source.network.encoder import sentence
+
 
 def loadSentences(data, mode):
   # Read sentences and labels from csv files

@@ -70,7 +70,11 @@ class TextGenerationModeler(Modeler):
               "accuracy": accuracy,
               "learning_rate": self.learning_rate}
     elif self.config.mode == "eval":
-      pass
+      loss = self.create_loss_fn(logits, labels)
+      accuracy = self.create_eval_metrics_fn(
+        logits, labels)
+      return {"loss": loss,
+              "accuracy": accuracy}
     elif self.config.mode == "infer":
       return {"inputs": inputs,
               "logits": logits,

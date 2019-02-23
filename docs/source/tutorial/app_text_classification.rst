@@ -157,7 +157,54 @@ Hyper-Parameter Tuning
 
 ::
 
+  python demo/text_classification.py \
+  --mode=tune \
+  --model_dir=~/demo/model/seq2label_basic_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_basic \
+  --batch_size_per_gpu=128 \
+  --vocab_file=/home/ubuntu/demo/data/IMDB/vocab_basic.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --lr_method=linear_plus_warmup \
+  tune_args \
+  --train_dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv \
+  --eval_dataset_meta=/home/ubuntu/demo/data/IMDB/test_clean.csv \
+  --tune_config=source/tool/seq2label_basic_IMDB_tune_coarse.yaml
 
+
+  python demo/text_classification.py \
+  --mode=tune \
+  --model_dir=~/demo/model/seq2label_glove_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_basic \
+  --batch_size_per_gpu=128 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --lr_method=linear_plus_warmup \
+  tune_args \
+  --train_dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv \
+  --eval_dataset_meta=/home/ubuntu/demo/data/IMDB/test_clean.csv \
+  --tune_config=source/tool/seq2label_glove_IMDB_tune_coarse.yaml
+
+
+  python demo/text_classification.py \
+  --mode=tune \
+  --model_dir=~/demo/model/seq2label_bert_Imdb \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
+  --network=seq2label_bert \
+  --batch_size_per_gpu=16 \
+  --vocab_file=/home/ubuntu/demo/model/uncased_L-12_H-768_A-12/vocab.txt \
+  --vocab_top_k=-1 \
+  --encode_method=bert \
+  --lr_method=linear_plus_warmup \
+  tune_args \
+  --pretrained_model=/home/ubuntu/demo/model/uncased_L-12_H-768_A-12/bert_model.ckpt \
+  --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power \
+  --train_dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv \
+  --eval_dataset_meta=/home/ubuntu/demo/data/IMDB/test_clean.csv \
+  --tune_config=source/tool/seq2label_bert_IMDB_tune_coarse.yaml
 
 **Export**
 ------------

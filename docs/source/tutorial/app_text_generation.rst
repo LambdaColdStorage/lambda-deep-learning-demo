@@ -52,11 +52,24 @@ Evaluation
   --mode=eval \
   --model_dir=~/demo/model/char_rnn_shakespeare \
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
-  --network=char_rnn \
-  --batch_size_per_gpu=128 --epochs=1 \
+  --network=rnn_basic \
+  --batch_size_per_gpu=32 --epochs=1 \
+  --vocab_top_k=-1 \
+  --unit=char \
   eval_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
-  
+
+
+  python demo/text_generation.py \
+  --mode=eval \
+  --model_dir=~/demo/model/word_rnn_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=32 --epochs=1 \
+  --vocab_top_k=4000 \
+  --unit=word \
+  eval_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
 
 Infer
 
@@ -95,14 +108,29 @@ Hyper-Parameter Tuning
   python demo/text_generation.py \
   --mode=tune \
   --model_dir=~/demo/model/char_rnn_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \  
-  --network=char_rnn \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
   --batch_size_per_gpu=128 \
+  --unit=char \
+  --vocab_top_k=-1 \
   tune_args \
   --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
-  --tune_config=source/tool/char_rnn_shakespeare_tune_coarse.yaml
+  --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
 
+
+  python demo/text_generation.py \
+  --mode=tune \
+  --model_dir=~/demo/model/word_rnn_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=128 \
+  --unit=word \
+  --vocab_top_k=4000 \
+  tune_args \
+  --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
 
 **Export**
 ------------

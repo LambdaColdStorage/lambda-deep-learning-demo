@@ -66,9 +66,9 @@ def main():
   if runner_config.mode == "tune":
 
     inputter_module = importlib.import_module(
-      "source.inputter.text_generation_word2vec_inputter")
+      "source.inputter.text_generation_inputter")
     modeler_module = importlib.import_module(
-      "source.modeler.text_generation_word2vec_modeler")
+      "source.modeler.text_generation_modeler")
     runner_module = importlib.import_module(
       "source.runner.parameter_server_runner")
 

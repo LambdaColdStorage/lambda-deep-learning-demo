@@ -35,6 +35,10 @@ def excute(app_config, runner_config, callback_config,
                importlib.import_module(
                 "source.augmenter." + inputter_config.augmenter))
 
+  encoder = (None if not hasattr(inputter_config, 'encode_method') else
+               importlib.import_module(
+                "source.network.encoder." + inputter_config.encode_method))
+
   net = importlib.import_module("source.network." + modeler_config.network)
 
   callbacks = []
@@ -44,8 +48,12 @@ def excute(app_config, runner_config, callback_config,
       callback_config)
     callbacks.append(callback)
 
-  inputter = inputter_module.build(
-    inputter_config, augmenter)
+  if encoder:
+    inputter = inputter_module.build(
+      inputter_config, augmenter, encoder)
+  else:
+    inputter = inputter_module.build(
+      inputter_config, augmenter)
 
   modeler = modeler_module.build(
     modeler_config, net)

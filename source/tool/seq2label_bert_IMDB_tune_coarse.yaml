@@ -1,0 +1,10 @@
+num_trials: 20
+fixedparams:
+  epochs: 2
+  piecewise_lr_decay: "1.0,0.1"
+  piecewise_boundaries: "1"  
+hyperparams:
+  generate:
+    learning_rate: "-6.0,-4.0"
+  select:
+    optimizer: "custom"
