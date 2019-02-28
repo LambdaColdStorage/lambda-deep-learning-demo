@@ -131,9 +131,13 @@ class TextClassificationModeler(Modeler):
     return grads
 
   def model_fn(self, x, device_id=None):
-    inputs = x[0]
-    labels = x[1]
-    masks = x[2]
+    if self.config.mode == "export":
+      inputs = x[0]
+      masks = x[1]
+    else:
+      inputs = x[0]
+      labels = x[1]
+      masks = x[2]
 
     logits, probabilities = self.create_graph_fn(inputs, masks)
 
@@ -155,7 +159,11 @@ class TextClassificationModeler(Modeler):
       return {"classes": tf.argmax(logits, axis=1, output_type=tf.int32),
               "probabilities": probabilities}
     elif self.config.mode == "export":
-      pass
+      # The prediction
+      output_probabilities = tf.identity(
+        tf.expand_dims(probabilities, axis=0), name="output_probabilities")
+
+      return output_probabilities
 
 
 def build(config, net):

@@ -210,3 +210,18 @@ Hyper-Parameter Tuning
 ------------
 
 ::
+  python demo/text_classification.py \
+  --mode=export \
+  --model_dir=~/demo/model/seq2label_basic_Imdb \
+  --network=seq2label_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=/home/ubuntu/demo/data/IMDB/vocab_basic.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --lr_method=linear_plus_warmup \
+  export_args \
+  --dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_text,input_mask \
+  --output_ops=output_probabilities

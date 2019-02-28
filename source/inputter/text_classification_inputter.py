@@ -76,20 +76,24 @@ class TextClassificationInputter(Inputter):
     self.max_length = 256
 
     # Load data
-    if self.config.mode == "train" or self.config.mode == "eval":
-      for meta in self.config.dataset_meta:
-        assert os.path.exists(meta), ("Cannot find dataset_meta file {}.".format(meta))
-      self.sentences, self.labels = loadSentences(self.config.dataset_meta, self.config.mode)
-    elif self.config.mode == "infer":
-      self.sentences, self.labels = loadSentences(self.config.test_samples, self.config.mode)
+    if self.config.mode == "export":
+      self.num_samples = 1
+      self.vocab, self.embd = loadVocab(self.config.vocab_file, self.config.vocab_top_k)
+    else:
+      if self.config.mode == "train" or self.config.mode == "eval":
+        for meta in self.config.dataset_meta:
+          assert os.path.exists(meta), ("Cannot find dataset_meta file {}.".format(meta))
+        self.sentences, self.labels = loadSentences(self.config.dataset_meta, self.config.mode)
+      elif self.config.mode == "infer":
+        self.sentences, self.labels = loadSentences(self.config.test_samples, self.config.mode)
 
-    # Load vacabulary
-    self.vocab, self.embd = loadVocab(self.config.vocab_file, self.config.vocab_top_k)
+      # Load vacabulary
+      self.vocab, self.embd = loadVocab(self.config.vocab_file, self.config.vocab_top_k)
 
-    # encode data
-    self.encode_sentences, self.encode_masks = self.encoder.encode(self.sentences, self.vocab, self.max_length)
+      # encode data
+      self.encode_sentences, self.encode_masks = self.encoder.encode(self.sentences, self.vocab, self.max_length)
 
-    self.num_samples = len(self.encode_sentences)
+      self.num_samples = len(self.encode_sentences)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
@@ -117,7 +121,13 @@ class TextClassificationInputter(Inputter):
     batch_size = (self.config.batch_size_per_gpu *
                   self.config.gpu_count) 
     if self.config.mode == "export":
-      pass
+      encode_sentence = tf.placeholder(tf.int32,
+                             shape=(batch_size, self.max_length),
+                             name="input_text")
+      mask = tf.placeholder(tf.int32,
+                             shape=(batch_size, self.max_length),
+                             name="input_mask")
+      return encode_sentence, mask
     else:
       if self.config.mode == "train" or self.config.mode == "eval" or self.config.mode == 'infer':
 
