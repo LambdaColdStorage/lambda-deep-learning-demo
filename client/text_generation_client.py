@@ -30,6 +30,12 @@ docker run --runtime=nvidia -p 8501:8501 \
 -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
 
 
+docker run --runtime=nvidia -p 8501:8501 \
+--name tfserving_textgeneration \
+--mount type=bind,source=/home/ubuntu/demo/model/word_rnn_glove_shakespeare/export,target=/models/textgeneration \
+-e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
+
+
 python client/text_generation_client.py --unit=word --starter=218 --length=128
 
 saved_model_cli show --dir ~/demo/model/char_rnn_shakespeare/export/1/ --all

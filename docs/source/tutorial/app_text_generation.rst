@@ -50,7 +50,7 @@ Train from scratch
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=32 --epochs=100 \
-  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
@@ -95,7 +95,7 @@ Evaluation
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=32 --epochs=1 \
-  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
@@ -139,7 +139,7 @@ Infer
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
-  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
@@ -179,6 +179,23 @@ Hyper-Parameter Tuning
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
 
+
+  python demo/text_generation.py \
+  --mode=tune \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=128 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  tune_args \
+  --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
+
+
 **Export**
 ------------
 
@@ -207,6 +224,23 @@ Hyper-Parameter Tuning
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
   --unit=word \
   --vocab_top_k=4000 \
+  export_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_item,c0,h0,c1,h1 \
+  --output_ops=output_probabilities,output_last_state,items
+
+
+  python demo/text_generation.py \
+  --mode=export \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --network=rnn_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
   export_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --export_dir=export \
