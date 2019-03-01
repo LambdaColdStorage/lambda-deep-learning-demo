@@ -21,7 +21,7 @@ class TextGenerationModeler(Modeler):
     self.num_samples = inputter.get_num_samples()
     self.vocab_size = inputter.get_vocab_size()
     self.items = inputter.get_items()
-
+    self.embd = inputter.get_embd()
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
@@ -31,6 +31,7 @@ class TextGenerationModeler(Modeler):
   def create_graph_fn(self, inputs):
     return self.net(inputs, self.feed_dict_seq, self.seq_length,
                     self.config.batch_size_per_gpu, self.vocab_size,
+                    self.embd,
                     mode=self.config.mode)
 
   def create_eval_metrics_fn(self, logits, labels):

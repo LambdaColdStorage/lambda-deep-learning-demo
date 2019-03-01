@@ -179,13 +179,13 @@ Hyper-Parameter Tuning
   --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/temp.tar.gz \
   --network=seq2label_basic \
   --batch_size_per_gpu=128 \
-  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --lr_method=linear_plus_warmup \
   tune_args \
-  --train_dataset_meta=/home/ubuntu/demo/data/IMDB/train_clean.csv \
-  --eval_dataset_meta=/home/ubuntu/demo/data/IMDB/test_clean.csv \
+  --train_dataset_meta=/home/chuan/demo/data/IMDB/train_clean.csv \
+  --eval_dataset_meta=/home/chuan/demo/data/IMDB/test_clean.csv \
   --tune_config=source/tool/seq2label_glove_IMDB_tune_coarse.yaml
 
 

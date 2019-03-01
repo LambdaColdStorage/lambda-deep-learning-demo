@@ -39,7 +39,25 @@ def loadData(meta_data, unit):
 
 def loadVocab(vocab_file, data, top_k):
   if vocab_file:
-    pass
+    items = []
+    embd = []
+    file = open(vocab_file,'r')
+    count = 0
+    for line in file.readlines():
+        row = line.strip().split(' ')
+        items.append(row[0])
+        
+        if len(row) > 1:
+          embd.append(row[1:])
+
+        count += 1
+        if count == top_k:
+          break
+    file.close()
+    vocab = { w : i for i, w in enumerate(items)}
+    if embd:
+      embd = np.asarray(embd).astype(np.float32)
+
   else:
     # Generate vocabulary on the fly
     counter = Counter(data)
@@ -49,7 +67,7 @@ def loadVocab(vocab_file, data, top_k):
     if top_k > 0:
       items = items[0:min(top_k, len(items))]
     vocab = {v: i for i, v in enumerate(items)}
-    embd = []
+    embd = None
 
   return vocab, items, embd
 
@@ -74,7 +92,9 @@ class TextGenerationInputter(Inputter):
       self.max_length = 1
 
     self.data = loadData(self.config.dataset_meta, self.config.unit)
-    self.vocab, self.items, self.embd = loadVocab(None, self.data, self.config.vocab_top_k)
+    self.vocab, self.items, self.embd = loadVocab(
+      self.config.vocab_file, self.data, self.config.vocab_top_k)
+
     self.vocab_size = len(self.vocab)
 
     if self.config.mode == "train" or self.config.mode == "eval" or self.config.mode == "infer":
@@ -87,7 +107,6 @@ class TextGenerationInputter(Inputter):
       self.encode_data, self.encode_mask = self.encoder.encode([self.data], self.vocab, -1)
       self.encode_data = self.encode_data[0]
       self.encode_mask = self.encode_mask[0]
-
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
@@ -106,6 +125,9 @@ class TextGenerationInputter(Inputter):
 
   def get_items(self):
     return self.items
+
+  def get_embd(self):
+    return self.embd
 
   def get_samples_fn(self):
     random_starts = np.random.randint(

@@ -12,7 +12,7 @@ SOFTMAX_TEMPRATURE = 1.0
 
 
 def net(x, feed_dict_seq, seq_length,
-        batch_size, vocab_size, mode="train"):
+        batch_size, vocab_size, embd, mode="train"):
 
   with tf.variable_scope(name_or_scope='RNN',
                          values=[x],
@@ -29,12 +29,7 @@ def net(x, feed_dict_seq, seq_length,
       c0 = x[1]
       h0 = x[2]
       c1 = x[3]
-      h1 = x[4]
-      # inputs = tf.zeros([1, 1], tf.int32)
-      # c0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
-      # h0 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
-      # c1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)
-      # h1 = tf.zeros([batch_size, RNN_SIZE], tf.float32)      
+      h1 = x[4]   
     else:
       # Use placeholder in inference mode for both input and states
       # This allows taking the previous batch (step)'s output
@@ -72,7 +67,13 @@ def net(x, feed_dict_seq, seq_length,
     cell = rnn.MultiRNNCell([rnn.LSTMBlockCell(num_units=RNN_SIZE)
                             for _ in range(NUM_RNN_LAYER)])
 
-    embeddingW = tf.get_variable('embedding', [vocab_size, RNN_SIZE])
+    if embd is not None:
+      embeddingW = tf.get_variable(
+        'embedding',
+        initializer=tf.constant(embd),
+        trainable=False)      
+    else:
+      embeddingW = tf.get_variable('embedding', [vocab_size, RNN_SIZE])
 
     input_feature = tf.nn.embedding_lookup(embeddingW, inputs)
 

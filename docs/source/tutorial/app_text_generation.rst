@@ -44,6 +44,23 @@ Train from scratch
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
 
 
+  python demo/text_generation.py \
+  --mode=train \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=32 --epochs=100 \
+  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  train_args \
+  --learning_rate=0.002 --optimizer=adam \
+  --piecewise_boundaries=50 \
+  --piecewise_lr_decay=1.0,0.1 \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
+
+
 Evaluation
 
 ::
@@ -70,6 +87,21 @@ Evaluation
   --unit=word \
   eval_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
+
+
+  python demo/text_generation.py \
+  --mode=eval \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=32 --epochs=1 \
+  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  eval_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
+
 
 Infer
 
@@ -101,6 +133,21 @@ Infer
   --callbacks=infer_basic,infer_display_text_generation
   
 
+  python demo/text_generation.py \
+  --mode=infer \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  infer_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --callbacks=infer_basic,infer_display_text_generation
+
+
 Hyper-Parameter Tuning
 
 ::
@@ -117,7 +164,6 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
-
 
 
   python demo/text_generation.py \
