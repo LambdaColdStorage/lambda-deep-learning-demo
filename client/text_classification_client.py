@@ -20,33 +20,33 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textclassification \
---mount type=bind,source=/home/chuan/demo/model/seq2label_basic_Imdb/export,target=/models/textclassification \
+--mount type=bind,source=/home/ubuntu/demo/model/seq2label_basic_Imdb/export,target=/models/textclassification \
 -e MODEL_NAME=textclassification -t tensorflow/serving:latest-gpu &
 
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textclassification \
---mount type=bind,source=/home/chuan/demo/model/seq2label_glove_Imdb/export,target=/models/textclassification \
+--mount type=bind,source=/home/ubuntu/demo/model/seq2label_glove_Imdb/export,target=/models/textclassification \
 -e MODEL_NAME=textclassification -t tensorflow/serving:latest-gpu &
 
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textclassification \
---mount type=bind,source=/home/chuan/demo/model/seq2label_bert_Imdb/export,target=/models/textclassification \
+--mount type=bind,source=/home/ubuntu/demo/model/seq2label_bert_Imdb/export,target=/models/textclassification \
 -e MODEL_NAME=textclassification -t tensorflow/serving:latest-gpu &
 
 
 python client/text_classification_client.py \
-  --vocab_file=/home/chuan/demo/data/IMDB/vocab_basic.txt \
+  --vocab_file=/home/ubuntu/demo/data/IMDB/vocab_basic.txt \
   --vocab_top_k=40000 \
   --encode_method=basic
 
 
 python client/text_classification_client.py \
-  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_top_k=40000 \
   --encode_method=basic
 
 python client/text_classification_client.py \
-  --vocab_file=/home/chuan/demo/model/uncased_L-12_H-768_A-12/vocab.txt \
+  --vocab_file=/home/ubuntu/demo/model/uncased_L-12_H-768_A-12/vocab.txt \
   --vocab_top_k=-1 \
   --encode_method=bert
 

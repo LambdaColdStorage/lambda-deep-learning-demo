@@ -20,7 +20,7 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_objectdetection \
---mount type=bind,source=/home/chuan/demo/model/ssd512_mscoco_20190105/export,target=/models/objectdetection \
+--mount type=bind,source=/home/ubuntu/demo/model/ssd512_mscoco_20190105/export,target=/models/objectdetection \
 -e MODEL_NAME=objectdetection -t tensorflow/serving:latest-gpu &
 
 
@@ -44,7 +44,7 @@ from PIL import Image
 SERVER_URL = 'http://localhost:8501/v1/models/objectdetection:predict'
 
 # The image URL is the location of the image we should send to the server
-IMAGE_PATH = '/home/chuan/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg'
+IMAGE_PATH = '/home/ubuntu/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg'
 
 MSCOCO_CAT_NAME = [u'person', u'bicycle', u'car', u'motorcycle', u'airplane',
                    u'bus', u'train', u'truck', u'boat', u'traffic light',

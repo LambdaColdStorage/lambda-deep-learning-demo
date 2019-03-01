@@ -109,7 +109,7 @@ class TextGenerationWord2VecInputter(Inputter):
       self.num_samples = 1
       self.seq_length = 1
 
-    self.embedding_filename = '/home/chuan/Downloads/glove.6B/glove.6B.50d.txt'
+    self.embedding_filename = '/home/ubuntu/Downloads/glove.6B/glove.6B.50d.txt'
 
     self.chars, self.vocab_size, self.embedding, self.char2idx, self.whole_seq = buildVocabFast(
       self.embedding_filename, self.config.dataset_meta)

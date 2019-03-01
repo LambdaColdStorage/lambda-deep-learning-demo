@@ -20,13 +20,13 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textgeneration \
---mount type=bind,source=/home/chuan/demo/model/char_rnn_shakespeare/export,target=/models/textgeneration \
+--mount type=bind,source=/home/ubuntu/demo/model/char_rnn_shakespeare/export,target=/models/textgeneration \
 -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
 
 
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textgeneration \
---mount type=bind,source=/home/chuan/demo/model/word_rnn_shakespeare/export,target=/models/textgeneration \
+--mount type=bind,source=/home/ubuntu/demo/model/word_rnn_shakespeare/export,target=/models/textgeneration \
 -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
 
 

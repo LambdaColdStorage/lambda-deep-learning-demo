@@ -11,4 +11,5 @@ The demo suite provides the following list of applications:
    app_image_segmentation
    app_style_transfer
    app_text_generation
+   app_text_classification
    app_object_detection

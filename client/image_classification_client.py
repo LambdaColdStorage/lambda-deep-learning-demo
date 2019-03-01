@@ -20,7 +20,7 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_classification \
---mount type=bind,source=/home/chuan/demo/model/cifar10-resnet32-20180824/export,target=/models/classification \
+--mount type=bind,source=/home/ubuntu/demo/model/cifar10-resnet32-20180824/export,target=/models/classification \
 -e MODEL_NAME=classification -t tensorflow/serving:latest-gpu &
 
 python client/image_classification_client.py
@@ -42,7 +42,7 @@ SERVER_URL = 'http://localhost:8501/v1/models/classification:predict'
 
 # The image URL is the location of the image we should send to the server
 # IMAGE_URL = 'https://tensorflow.org/images/blogs/serving/cat.jpg'
-IMAGE_PATH = '/home/chuan/demo/data/cifar10/test/appaloosa_s_001975.png'
+IMAGE_PATH = '/home/ubuntu/demo/data/cifar10/test/appaloosa_s_001975.png'
 
 
 def main():

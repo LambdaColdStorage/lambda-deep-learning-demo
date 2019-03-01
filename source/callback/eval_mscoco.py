@@ -52,7 +52,7 @@ class EvalMSCOCO(Callback):
 
       coco_results = coco.loadRes(self.detection)
 
-      # DETECTION_FILE = "/home/chuan/data/mscoco/results/SSD_512x512_score/detections_minival_ssd512_results.json"
+      # DETECTION_FILE = "/home/ubuntu/data/mscoco/results/SSD_512x512_score/detections_minival_ssd512_results.json"
       # coco_results = coco.loadRes(DETECTION_FILE)
 
       cocoEval = COCOeval(coco, coco_results, "bbox")

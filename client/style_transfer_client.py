@@ -20,7 +20,7 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_styletransfer \
---mount type=bind,source=/home/chuan/demo/model/fns_gothic_20190126/export,target=/models/styletransfer \
+--mount type=bind,source=/home/ubuntu/demo/model/fns_gothic_20190126/export,target=/models/styletransfer \
 -e MODEL_NAME=styletransfer -t tensorflow/serving:latest-gpu &
 
 
@@ -44,7 +44,7 @@ from PIL import Image
 SERVER_URL = 'http://localhost:8501/v1/models/styletransfer:predict'
 
 # The image URL is the location of the image we should send to the server
-IMAGE_PATH = '/home/chuan/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg'
+IMAGE_PATH = '/home/ubuntu/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg'
 
 def main():
   # Read the image

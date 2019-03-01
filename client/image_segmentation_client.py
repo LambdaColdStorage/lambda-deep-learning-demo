@@ -20,13 +20,13 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_segmentation \
---mount type=bind,source=/home/chuan/demo/model/fcn_camvid_20190125/export,target=/models/segmentation \
+--mount type=bind,source=/home/ubuntu/demo/model/fcn_camvid_20190125/export,target=/models/segmentation \
 -e MODEL_NAME=segmentation -t tensorflow/serving:latest-gpu &
 
 
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_segmentation \
---mount type=bind,source=/home/chuan/demo/model/unet_camvid_20190125/export,target=/models/segmentation \
+--mount type=bind,source=/home/ubuntu/demo/model/unet_camvid_20190125/export,target=/models/segmentation \
 -e MODEL_NAME=segmentation -t tensorflow/serving:latest-gpu &
 
 python client/image_segmentation_client.py
