@@ -20,20 +20,35 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textclassification \
---mount type=bind,source=/home/chuan/demo/model/seq2label_basic/export,target=/models/textclassification \
+--mount type=bind,source=/home/chuan/demo/model/seq2label_basic_Imdb/export,target=/models/textclassification \
 -e MODEL_NAME=textclassification -t tensorflow/serving:latest-gpu &
-
 
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_textclassification \
 --mount type=bind,source=/home/chuan/demo/model/seq2label_glove_Imdb/export,target=/models/textclassification \
 -e MODEL_NAME=textclassification -t tensorflow/serving:latest-gpu &
 
+docker run --runtime=nvidia -p 8501:8501 \
+--name tfserving_textclassification \
+--mount type=bind,source=/home/chuan/demo/model/seq2label_bert_Imdb/export,target=/models/textclassification \
+-e MODEL_NAME=textclassification -t tensorflow/serving:latest-gpu &
+
 
 python client/text_classification_client.py \
-  --vocab_file=/home/ubuntu/demo/data/IMDB/vocab_basic.txt \
+  --vocab_file=/home/chuan/demo/data/IMDB/vocab_basic.txt \
   --vocab_top_k=40000 \
   --encode_method=basic
+
+
+python client/text_classification_client.py \
+  --vocab_file=/home/chuan/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic
+
+python client/text_classification_client.py \
+  --vocab_file=/home/chuan/demo/model/uncased_L-12_H-768_A-12/vocab.txt \
+  --vocab_top_k=-1 \
+  --encode_method=bert
 
 saved_model_cli show --dir ~/demo/model/textclassification/export/1/ --all
 
@@ -50,7 +65,7 @@ import re
 
 # The server URL specifies the endpoint of your server running the ResNet
 # model with the name "resnet" and using the predict interface.
-SERVER_URL = 'http://localhost:8501/v1/models/textgeneration:predict'
+SERVER_URL = 'http://localhost:8501/v1/models/textclassification:predict'
 
 def loadVocab(vocab_file, top_k):
   # Read vocabulary
@@ -174,8 +189,8 @@ def main():
   elif args.encode_method == "bert":
     encode_sentences, encode_masks = bert_encode(sentences, vocab, args.max_length)
 
-  for s, m in zip(encode_sentences, encode_masks):
-    input_text = s.tolist()
+  for es, m, s in zip(encode_sentences, encode_masks, list_input_text):
+    input_text = es.tolist()
     input_mask = m.tolist()
 
     input_dict = {}
@@ -188,9 +203,11 @@ def main():
 
     response = requests.post(SERVER_URL, data=data, headers=headers)
 
-    output_probabilities = response.json()["predictions"][0]["output_probabilities"]
-
-    print(output_probabilities)
+    p = response.json()["predictions"][0][0]
+    probability = max(p)
+    label = p.index(probability)
+    print(s)
+    print("class: " + str(label) + ", prob: " + str(probability))
 
 if __name__ == '__main__':
   main()
