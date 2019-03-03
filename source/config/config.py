@@ -78,7 +78,6 @@ class InputterConfig(Config):
                batch_size_per_gpu,
                gpu_count,
                epochs,
-               dataset_url,
                dataset_meta,
                train_dataset_meta,
                eval_dataset_meta,
@@ -90,7 +89,6 @@ class InputterConfig(Config):
       mode, batch_size_per_gpu, gpu_count)
 
     self.epochs = epochs
-    self.dataset_url = dataset_url
     self.dataset_meta = dataset_meta
     self.train_dataset_meta = train_dataset_meta
     self.eval_dataset_meta = eval_dataset_meta

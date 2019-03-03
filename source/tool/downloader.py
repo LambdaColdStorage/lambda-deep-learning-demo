@@ -3,17 +3,11 @@ import sys
 from six.moves import urllib
 import tarfile
 
-def download_and_extract(data_file, data_url, create_parent_folder=True):
-  data_dirname = os.path.dirname(data_file)
-  print("Can not find " + data_file +
-        ", download it now.")
-  if not os.path.isdir(data_dirname):
-    os.makedirs(data_dirname)
 
-  if create_parent_folder:
-    untar_dirname = data_dirname
-  else:
-    untar_dirname = os.path.abspath(os.path.join(data_dirname, os.pardir))
+def download(data_url, data_dir):
+
+  if not os.path.isdir(data_dir):
+    os.makedirs(data_dir)
 
   download_tar_name = os.path.join("/tmp", os.path.basename(data_url))
 
@@ -26,34 +20,21 @@ def download_and_extract(data_file, data_url, create_parent_folder=True):
                                                  download_tar_name,
                                                  _progress)
 
-  print("\nExtracting dataset to " + data_dirname)
-  tarfile.open(local_tar_name, 'r:gz').extractall(untar_dirname)
+  print("\nExtracting dataset to " + data_dir)
+  tarfile.open(local_tar_name, 'r:gz').extractall(data_dir)
 
 
-def check_and_download(config):
-
-  def check_meta_and_download(name_meta, flag_has_meta):
-    if hasattr(config, name_meta):
-      paths_meta = getattr(config, name_meta)
-
-      if paths_meta:
-        for path_meta in paths_meta:
-          if path_meta:
-            if not os.path.isfile(path_meta):
-              download_and_extract(path_meta,
-                                   config.dataset_url,
-                                   False)
-            else:
-              print("Found " + path_meta + ".")
-            flag_has_meta = True
-
-    return flag_has_meta
-
-  flag_has_meta = False
-
-  flag_has_meta = check_meta_and_download('dataset_meta', flag_has_meta)
-  flag_has_meta = check_meta_and_download('train_dataset_meta', flag_has_meta)
-  flag_has_meta = check_meta_and_download('eval_dataset_meta', flag_has_meta)
-
-  if not flag_has_meta and config.mode != "infer" and config.mode != "export":
-    assert False, "A meta data must be provided in non-inference mode." 
+def check_data(config):
+  if config.mode != "infer" and config.mode != "export":
+    if config.mode == "tune":
+      for file in config.train_dataset_meta:    
+        if not os.path.isfile(file):
+          assert False, file + " is not available. Please run demo/download_data.py to download data."
+      for file in config.eval_dataset_meta:    
+        if not os.path.isfile(file):
+          assert False, file + " is not available. Please run demo/download_data.py to download data."          
+    else:
+      for file in config.dataset_meta:
+        if not os.path.isfile(file):
+          assert False, "Data is not available. Please run demo/download_data.py to download data"
+    print("Passed data check.")   

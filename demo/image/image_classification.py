@@ -61,8 +61,8 @@ def main():
     modeler_config,
     num_classes=app_config.num_classes)
 
-  # Download data if necessary
-  downloader.check_and_download(inputter_config)
+  # Check if data is available
+  downloader.check_data(inputter_config)       
 
   if runner_config.mode == "tune":
 

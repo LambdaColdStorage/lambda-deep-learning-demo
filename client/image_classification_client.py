@@ -20,34 +20,40 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_classification \
---mount type=bind,source=/home/ubuntu/demo/model/cifar10-resnet32-20180824/export,target=/models/classification \
+--mount type=bind,source=path_to_model_dir/export,target=/models/classification \
 -e MODEL_NAME=classification -t tensorflow/serving:latest-gpu &
 
-python client/image_classification_client.py
+python client/image_classification_client.py --image_path=path_to_image
 """
 
 from __future__ import print_function
 
-import base64
 import requests
-import skimage.io
-from skimage.transform import resize
-import numpy as np
 import json
-import matplotlib.pyplot as plt
+import argparse
+import os
+import skimage.io
+
 
 # The server URL specifies the endpoint of your server running the ResNet
 # model with the name "resnet" and using the predict interface.
 SERVER_URL = 'http://localhost:8501/v1/models/classification:predict'
 
-# The image URL is the location of the image we should send to the server
-# IMAGE_URL = 'https://tensorflow.org/images/blogs/serving/cat.jpg'
-IMAGE_PATH = '/home/ubuntu/demo/data/cifar10/test/appaloosa_s_001975.png'
-
-
 def main():
+
+  parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+  parser.add_argument("--image_path",
+                      help="path for image to run inference",
+                      default="~/demo/data/cifar10/test/appaloosa_s_001975.png")
+
+  args = parser.parse_args()
+
+  args.image_path = os.path.expanduser(args.image_path)
+
   # Read the image
-  image = skimage.io.imread(IMAGE_PATH, plugin='imageio')
+  image = skimage.io.imread(args.image_path, plugin='imageio')
 
   data = json.dumps({"signature_name": "predict", "instances": image.tolist()})
   headers = {"content-type": "application/json"}

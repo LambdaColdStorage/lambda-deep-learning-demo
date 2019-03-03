@@ -4,7 +4,7 @@ Applications
 The demo suite provides the following list of applications:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 5
 
    app_image_classification
    app_transfer_learning
@@ -13,3 +13,4 @@ The demo suite provides the following list of applications:
    app_text_generation
    app_text_classification
    app_object_detection
+   app_serve

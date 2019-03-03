@@ -2,7 +2,8 @@ Tutorials
 ====================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 6
+
 
    getting_started
    overview

@@ -100,8 +100,8 @@ def main():
     feature_net_path=app_config.feature_net_path,
     style_image_path=app_config.style_image_path)
 
-  # Download data if necessary
-  downloader.check_and_download(inputter_config)
+  # Check if data is available
+  downloader.check_data(inputter_config)  
 
   if runner_config.mode == "tune":
 

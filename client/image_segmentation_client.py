@@ -29,27 +29,24 @@ docker run --runtime=nvidia -p 8501:8501 \
 --mount type=bind,source=/home/ubuntu/demo/model/unet_camvid_20190125/export,target=/models/segmentation \
 -e MODEL_NAME=segmentation -t tensorflow/serving:latest-gpu &
 
-python client/image_segmentation_client.py
+python client/image_segmentation_client.py --image_path=~/demo/data/camvid/test/0001TP_008550.png
 """
 
 from __future__ import print_function
 
+import os
 import requests
-import skimage.io
-from skimage.transform import resize
-from skimage import img_as_ubyte
 import numpy as np
 import json
+import argparse
+import skimage.io
+from skimage import img_as_ubyte
 import matplotlib.pyplot as plt
 from PIL import Image
 
 # The server URL specifies the endpoint of your server running the ResNet
 # model with the name "resnet" and using the predict interface.
 SERVER_URL = 'http://localhost:8501/v1/models/segmentation:predict'
-
-# The image URL is the location of the image we should send to the server
-IMAGE_PATH = '/home/ubuntu/demo/data/camvid/test/0001TP_008550.png'
-
 
 NUM_CLASSES = 12
 
@@ -75,8 +72,20 @@ def render_label(label, num_classes, label_colors):
   return rgb
 
 def main():
+
+  parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+  parser.add_argument("--image_path",
+                      help="path for image to run inference",
+                      default="~/demo/data/camvid/test/0001TP_008550.png")
+
+  args = parser.parse_args()
+
+  args.image_path = os.path.expanduser(args.image_path)
+
   # Read the image
-  image = img_as_ubyte(skimage.io.imread(IMAGE_PATH, plugin='imageio'))
+  image = img_as_ubyte(skimage.io.imread(args.image_path, plugin='imageio'))
   
   data = json.dumps({"signature_name": "predict", "instances": image.tolist()})
   headers = {"content-type": "application/json"}

@@ -24,18 +24,20 @@ docker run --runtime=nvidia -p 8501:8501 \
 -e MODEL_NAME=styletransfer -t tensorflow/serving:latest-gpu &
 
 
-python client/object_detection_client.py
+python client/style_transfer_client.py --image_path=/home/ubuntu/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg
 """
 
 from __future__ import print_function
 
 import requests
+import numpy as np
+import json
+import argparse
+import os
 import skimage.io
 from skimage.transform import resize
 from skimage.transform import rescale
 from skimage import img_as_ubyte
-import numpy as np
-import json
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -43,12 +45,22 @@ from PIL import Image
 # model with the name "resnet" and using the predict interface.
 SERVER_URL = 'http://localhost:8501/v1/models/styletransfer:predict'
 
-# The image URL is the location of the image we should send to the server
-IMAGE_PATH = '/home/ubuntu/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg'
 
 def main():
+
+  parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+  parser.add_argument("--image_path",
+                      help="path for image to run inference",
+                      default="~/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg")
+
+  args = parser.parse_args()
+
+  args.image_path = os.path.expanduser(args.image_path)
+
   # Read the image
-  image = skimage.io.imread(IMAGE_PATH, plugin='imageio')
+  image = skimage.io.imread(args.image_path, plugin='imageio')
   image = rescale(image, 2.0, anti_aliasing=False)
   image = img_as_ubyte(image)
 

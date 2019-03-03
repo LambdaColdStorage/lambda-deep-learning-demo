@@ -31,9 +31,6 @@ def default_parser():
                       help="Directory to save mode",
                       type=str,
                       default=None)
-  parser.add_argument("--dataset_url",
-                      help="URL for downloading data",
-                      default="")
   parser.add_argument("--network", choices=["resnet32", "resnet50", "inception_v4", "nasnet_A_large",
                                             "fcn", "unet",
                                             "fns",
@@ -481,8 +478,6 @@ def default_config(parser):
     batch_size_per_gpu=config.batch_size_per_gpu,
     gpu_count=config.gpu_count,
     epochs=config.epochs,
-    dataset_url=(None if not hasattr(config, "dataset_url")
-                  else config.dataset_url),
     dataset_meta=(None if not hasattr(config, "dataset_meta")
                   else config.dataset_meta),
     train_dataset_meta=(None if not hasattr(config, "train_dataset_meta")

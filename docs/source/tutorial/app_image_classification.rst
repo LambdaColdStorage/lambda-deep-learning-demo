@@ -1,12 +1,24 @@
 Image Classification
 ========================================
 
-
+* :ref:`downloaddata`
 * :ref:`resnet32train`
 * :ref:`resnet32eval`
 * :ref:`resnet32infer`
 * :ref:`resnet32tune`
 * :ref:`resnet32pretrain`
+* :ref:`export`
+* :ref:`serve`
+
+.. _downloaddata:
+**Download CIFAR10 Dataset**
+----------------------------------------------
+
+::
+
+  python demo/download_data.py \
+  --data_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
+  --data_dir=~/demo/data
 
 .. _resnet32train:
 
@@ -15,10 +27,9 @@ Image Classification
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=train \
   --model_dir=~/demo/model/resnet32_cifar10 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --batch_size_per_gpu=256 --epochs=100 \
@@ -35,10 +46,9 @@ Image Classification
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/resnet32_cifar10 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --batch_size_per_gpu=128 --epochs=1 \
@@ -52,7 +62,7 @@ Image Classification
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=infer \
   --model_dir=~/demo/model/resnet32_cifar10 \
   --network=resnet32 \
@@ -69,10 +79,9 @@ Image Classification
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=tune \
   --model_dir=~/demo/model/resnet32_cifar10 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --batch_size_per_gpu=128 \
@@ -103,10 +112,9 @@ Image Classification
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/cifar10-resnet32-20180824 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --network=resnet32 \
   --augmenter=cifar_augmenter \
   --batch_size_per_gpu=128 --epochs=1 \
@@ -114,11 +122,14 @@ Image Classification
   --dataset_meta=~/demo/data/cifar10/eval.csv
 
 
+.. _export:
+
 **Export**
 ------------
 
 ::
-  python demo/image_classification.py \
+
+  python demo/image/image_classification.py \
   --mode=export \
   --model_dir=~/demo/model/cifar10-resnet32-20180824 \
   --network=resnet32 \
@@ -129,3 +140,17 @@ Image Classification
   --export_version=1 \
   --input_ops=input_image \
   --output_ops=output_classes
+
+.. _serve:
+
+**Serve**
+-------------
+
+::
+
+  docker run --runtime=nvidia -p 8501:8501 \
+  --name tfserving_classification \
+  --mount type=bind,source=model_dir/export,target=/models/classification \
+  -e MODEL_NAME=classification -t tensorflow/serving:latest-gpu &
+
+  python client/image_classification_client.py --image_path=path_to_image

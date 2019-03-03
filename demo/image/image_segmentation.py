@@ -89,8 +89,8 @@ def main():
     num_classes=app_config.num_classes,
     data_format=app_config.data_format)
 
-  # Download data if necessary
-  downloader.check_and_download(inputter_config)
+  # Check if data is available
+  downloader.check_data(inputter_config)  
 
   if runner_config.mode == "tune":
 
