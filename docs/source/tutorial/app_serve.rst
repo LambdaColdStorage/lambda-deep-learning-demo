@@ -1,11 +1,12 @@
 Model Serving
 ========================================
 
-* :ref:`installdocker`
-* :ref:`installnvidiadocker`
-* :ref:`serve`
+* :ref:`modelserving_installdocker`
+* :ref:`modelserving_installnvidiadocker`
+* :ref:`modelserving_serve`
 
-.. _installdocker:
+.. _modelserving_installdocker:
+
 **Install Docker (Ubuntu 18.04)**
 ----------------------------------------------
 
@@ -27,7 +28,7 @@ Model Serving
   sudo groupadd docker
   sudo usermod -aG docker $USER
 
-.. _installnvidiadocker:
+.. _modelserving_installnvidiadocker:
 
 **Install Nvidia Docker**
 ----------------------------------------------
@@ -53,7 +54,7 @@ Model Serving
   # Test nvidia-smi with the latest official CUDA image
   docker run --runtime=nvidia --rm nvidia/cuda:9.0-base nvidia-smi
 
-.. _serve:
+.. _modelserving_serve:
 
 **Serve**
 ----------------------------------------------
@@ -77,7 +78,7 @@ The following three steps are used to serve the trained model:
   --output_ops=output_classes
 
 
-More examples can be found here: `Image Segmentation <fcn.html#export>`__ , `Object Detection <app_object_detection.html#export>`__, `Style Transfer <app_style_transfer.html#export>`__, `Text Generation <app_text_generation.html#export>`__, `Text Classification <app_text_classification.html#export>`__.
+More examples can be found here: `Image Segmentation <fcn.html#export>`__ , `Object Detection <ssd.html#export>`__, `Style Transfer <fns.html#export>`__, `Text Generation <app_text_generation.html#export>`__, `Text Classification <app_text_classification.html#export>`__.
 
 * **Run TF-Serving**. A typical example of serving the exported model is like this:
 

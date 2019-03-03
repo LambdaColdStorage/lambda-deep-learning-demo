@@ -1,16 +1,16 @@
 Fast Neural Style
 ========================================
 
-* :ref:`downloadvgg`
-* :ref:`downloadmscocosub`
-* :ref:`fnstrain`
-* :ref:`fnseval`
-* :ref:`fnsinference`
-* :ref:`fnstune`
-* :ref:`fnsevalpretrain`
-* :ref:`fnsexport`
+* :ref:`fns_downloadvgg`
+* :ref:`fns_downloadmscocosub`
+* :ref:`fns_train`
+* :ref:`fns_eval`
+* :ref:`fns_inference`
+* :ref:`fns_tune`
+* :ref:`fns_evalpretrain`
+* :ref:`fns_export`
 
-.. _downloadvgg:
+.. _fns_downloadvgg:
 
 Download VGG backbone
 ----------------------------------------------
@@ -20,7 +20,7 @@ Download VGG backbone
   (mkdir ~/demo/model/vgg_19_2016_08_28;curl http://download.tensorflow.org/models/vgg_19_2016_08_28.tar.gz | tar xvz -C ~/demo/model/vgg_19_2016_08_28)
 
 
-.. _downloadmscocosub:
+.. _fns_downloadmscocosub:
 
 Download MSCOCO (sub) Dataset
 ----------------------------------------------
@@ -32,7 +32,7 @@ Download MSCOCO (sub) Dataset
   --data_dir=~/demo/data
 
 
-.. _fnstrain:
+.. _fns_train:
 
 Train from scratch
 ----------------------------------------------
@@ -54,7 +54,7 @@ Train from scratch
   --callbacks=train_basic,train_loss,train_speed,train_summary \
   --trainable_vars=FNS
 
-.. _fnseval:
+.. _fns_eval:
 
 Evaluation
 ----------------------------------------------
@@ -72,7 +72,7 @@ Evaluation
   --dataset_meta=~/demo/data/mscoco_fns/eval2014.csv
   
 
-.. _fnsinference:
+.. _fns_inference:
 
 Inference
 ----------------------------------------------
@@ -90,7 +90,7 @@ Inference
   --test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000015070.jpg
 
 
-.. _fnstune:
+.. _fns_tune:
 
 Hyper-Parameter Tuning
 ----------------------------------------------
@@ -112,15 +112,20 @@ Hyper-Parameter Tuning
   --trainable_vars=FNS
 
 
-.. _fnsevalpretrain:
+.. _fns_evalpretrain:
 
 Evaluate Pre-trained model
 ----------------------------------------------
+
+Download pre-trained models:
 
 ::
 
   curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/fns_gothic_20190126.tar.gz | tar xvz -C ~/demo/model
 
+Evaluate
+
+::
 
   python demo/image/style_transfer.py \
   --mode=infer \
@@ -133,7 +138,7 @@ Evaluate Pre-trained model
   --test_samples=~/demo/data/mscoco_fns/train2014/COCO_train2014_000000003348.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000138954.jpg,~/demo/data/mscoco_fns/val2014/COCO_val2014_000000015070.jpg
 
 
-.. _fnsexport:
+.. _fns_export:
 
 Export
 ----------------------------------------------
@@ -152,7 +157,7 @@ Export
   --output_ops=output_image
 
 
-.. _serve:
+.. _fns_serve:
 
 Serve
 -------------

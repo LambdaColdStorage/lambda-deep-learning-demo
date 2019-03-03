@@ -1,16 +1,17 @@
 Image Classification
 ========================================
 
-* :ref:`downloaddata`
-* :ref:`resnet32train`
-* :ref:`resnet32eval`
-* :ref:`resnet32infer`
-* :ref:`resnet32tune`
-* :ref:`resnet32pretrain`
-* :ref:`export`
-* :ref:`serve`
+* :ref:`imageclassification_downloaddata`
+* :ref:`imageclassification_resnet32train`
+* :ref:`imageclassification_resnet32eval`
+* :ref:`imageclassification_resnet32infer`
+* :ref:`imageclassification_resnet32tune`
+* :ref:`imageclassification_resnet32pretrain`
+* :ref:`imageclassification_export`
+* :ref:`imageclassification_serve`
 
-.. _downloaddata:
+.. _imageclassification_downloaddata:
+
 **Download CIFAR10 Dataset**
 ----------------------------------------------
 
@@ -20,7 +21,7 @@ Image Classification
   --data_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/cifar10.tar.gz \
   --data_dir=~/demo/data
 
-.. _resnet32train:
+.. _imageclassification_resnet32train:
 
 **Train ResNet32 from scratch on CIFAR10**
 ----------------------------------------------
@@ -39,7 +40,7 @@ Image Classification
   --piecewise_lr_decay=1.0,0.1,0.01,0.001 \
   --dataset_meta=~/demo/data/cifar10/train.csv
 
-.. _resnet32eval:
+.. _imageclassification_resnet32eval:
 
 **Evaluation**
 -----------------------
@@ -55,7 +56,7 @@ Image Classification
   eval_args \
   --dataset_meta=~/demo/data/cifar10/eval.csv
 
-.. _resnet32infer:
+.. _imageclassification_resnet32infer:
 
 **Inference**
 -----------------------
@@ -72,7 +73,7 @@ Image Classification
   --callbacks=infer_basic,infer_display_image_classification \
   --test_samples=~/demo/data/cifar10/test/appaloosa_s_001975.png,~/demo/data/cifar10/test/domestic_cat_s_001598.png,~/demo/data/cifar10/test/rhea_s_000225.png,~/demo/data/cifar10/test/trucking_rig_s_001216.png
 
-.. _resnet32tune:
+.. _imageclassification_resnet32tune:
 
 **Hyper-Parameter Tuning**
 ---------------------------
@@ -101,7 +102,7 @@ Image Classification
   --eval_dataset_meta=~/demo/data/cifar10/eval.csv \
   --tune_config=source/tool/resnet32_cifar10_tune_fine.yaml
 
-.. _resnet32pretrain:
+.. _imageclassification_resnet32pretrain:
 
 **Evaluate Pre-trained model**
 ------------------------------
@@ -122,7 +123,7 @@ Image Classification
   --dataset_meta=~/demo/data/cifar10/eval.csv
 
 
-.. _export:
+.. _imageclassification_export:
 
 **Export**
 ------------
@@ -141,7 +142,7 @@ Image Classification
   --input_ops=input_image \
   --output_ops=output_classes
 
-.. _serve:
+.. _imageclassification_serve:
 
 **Serve**
 -------------

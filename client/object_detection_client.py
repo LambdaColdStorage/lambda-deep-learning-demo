@@ -20,22 +20,32 @@ https://github.com/NVIDIA/nvidia-docker#quick-start
 Typical usage example:
 docker run --runtime=nvidia -p 8501:8501 \
 --name tfserving_objectdetection \
+--mount type=bind,source=/home/ubuntu/demo/model/ssd300_mscoco_20190105/export,target=/models/objectdetection \
+-e MODEL_NAME=objectdetection -t tensorflow/serving:latest-gpu &
+
+python client/object_detection_client.py --image_path=/home/ubuntu/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg
+
+
+docker run --runtime=nvidia -p 8501:8501 \
+--name tfserving_objectdetection \
 --mount type=bind,source=/home/ubuntu/demo/model/ssd512_mscoco_20190105/export,target=/models/objectdetection \
 -e MODEL_NAME=objectdetection -t tensorflow/serving:latest-gpu &
 
+python client/object_detection_client.py --image_path=/home/ubuntu/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg
 
-python client/object_detection_client.py
 """
 
 from __future__ import print_function
 
+import os
 import requests
+import numpy as np
+import json
+import argparse
 import skimage.io
 from skimage.transform import resize
 from skimage.transform import rescale
 from skimage import img_as_ubyte
-import numpy as np
-import json
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -43,8 +53,6 @@ from PIL import Image
 # model with the name "resnet" and using the predict interface.
 SERVER_URL = 'http://localhost:8501/v1/models/objectdetection:predict'
 
-# The image URL is the location of the image we should send to the server
-IMAGE_PATH = '/home/ubuntu/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg'
 
 MSCOCO_CAT_NAME = [u'person', u'bicycle', u'car', u'motorcycle', u'airplane',
                    u'bus', u'train', u'truck', u'boat', u'traffic light',
@@ -98,8 +106,19 @@ def display_ori(image, outputs_dict):
   plt.show()
 
 def main():
+  parser = argparse.ArgumentParser(
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+  parser.add_argument("--image_path",
+                      help="path for image to run inference",
+                      default="~/demo/data/mscoco_fns/val2014/COCO_val2014_000000301397.jpg")
+
+  args = parser.parse_args()
+
+  args.image_path = os.path.expanduser(args.image_path)
+
   # Read the image
-  image = skimage.io.imread(IMAGE_PATH, plugin='imageio')
+  image = skimage.io.imread(args.image_path, plugin='imageio')
   image = rescale(image, 2.0, anti_aliasing=False)
   image = img_as_ubyte(image)
 

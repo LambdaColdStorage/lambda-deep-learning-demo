@@ -1,16 +1,16 @@
 U-Net
 ========================================
 
-* :ref:`downloaddata`
-* :ref:`unettrain`
-* :ref:`uneteval`
-* :ref:`unetinference`
-* :ref:`unettune`
-* :ref:`unetevalpretrain`
-* :ref:`unetexport`
-* :ref:`serve`
+* :ref:`unet_downloaddata`
+* :ref:`unet_train`
+* :ref:`unet_eval`
+* :ref:`unet_inference`
+* :ref:`unet_tune`
+* :ref:`unet_evalpretrain`
+* :ref:`unet_export`
+* :ref:`unet_serve`
 
-.. _downloaddata:
+.. _unet_downloaddata:
 
 Download CamVid Dataset
 ----------------------------------------------
@@ -21,7 +21,7 @@ Download CamVid Dataset
   --data_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --data_dir=~/demo/data
 
-.. _unettrain:
+.. _unet_train:
 
 Train from scratch
 ----------------------------------------------
@@ -41,7 +41,7 @@ Train from scratch
   --dataset_meta=~/demo/data/camvid/train.csv
 
 
-.. _uneteval:
+.. _unet_eval:
 
 Evaluation
 ----------------------------------------------
@@ -58,7 +58,7 @@ Evaluation
   --dataset_meta=~/demo/data/camvid/val.csv
 
 
-.. _unetinference:
+.. _unet_inference:
 
 Inference
 ----------------------------------------------
@@ -76,7 +76,7 @@ Inference
   --test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
 
 
-.. _unettune:
+.. _unet_tune:
 
 Hyper-Parameter Tuning
 ----------------------------------------------
@@ -96,14 +96,18 @@ Hyper-Parameter Tuning
 
 
 
-.. _unetevalpretrain:
+.. _unet_evalpretrain:
 
 Evaluate Pre-trained model
 ----------------------------------------------
 
+Download pre-trained models:
+
 ::
 
   curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/unet_camvid_20190125.tar.gz | tar xvz -C ~/demo/model
+
+Evaluate
 
 ::
 
@@ -117,7 +121,7 @@ Evaluate Pre-trained model
   --dataset_meta=~/demo/data/camvid/val.csv
 
 
-.. _unetexport:
+.. _unet_export:
 
 Export
 ----------------------------------------------
@@ -136,7 +140,7 @@ Export
   --input_ops=input_image \
   --output_ops=output_classes
 
-.. _serve:
+.. _unet_serve:
 
 Serve
 -------------

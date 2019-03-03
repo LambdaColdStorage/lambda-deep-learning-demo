@@ -1,15 +1,15 @@
 Fully Convolutional Networks
 ========================================
 
-* :ref:`downloaddata`
-* :ref:`fcntrain`
-* :ref:`fcneval`
-* :ref:`fcninference`
-* :ref:`fcntune`
-* :ref:`fcnevalpretrain`
-* :ref:`fcnexport`
+* :ref:`fcn_downloaddata`
+* :ref:`fcn_train`
+* :ref:`fcn_eval`
+* :ref:`fcn_inference`
+* :ref:`fcn_tune`
+* :ref:`fcn_evalpretrain`
+* :ref:`fcn_export`
 
-.. _downloaddata:
+.. _fcn_downloaddata:
 
 Download CamVid Dataset
 ----------------------------------------------
@@ -20,10 +20,8 @@ Download CamVid Dataset
   --data_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/camvid.tar.gz \
   --data_dir=~/demo/data
 
-Fully Convolutional Networks
-----------------------------------------------
 
-.. _fcntrain:
+.. _fcn_train:
 
 Train from scratch
 ----------------------------------------------
@@ -43,7 +41,7 @@ Train from scratch
   --dataset_meta=~/demo/data/camvid/train.csv
 
 
-.. _fcneval:
+.. _fcn_eval:
 
 Evaluation
 ----------------------------------------------
@@ -61,7 +59,7 @@ Evaluation
 
 
 
-.. _fcninference:
+.. _fcn_inference:
 
 Inference
 ----------------------------------------------
@@ -79,7 +77,7 @@ Inference
   --test_samples=~/demo/data/camvid/test/0001TP_008550.png,~/demo/data/camvid/test/Seq05VD_f02760.png,~/demo/data/camvid/test/Seq05VD_f04650.png,~/demo/data/camvid/test/Seq05VD_f05100.png
 
 
-.. _fcntune:
+.. _fcn_tune:
 
 Hyper-Parameter Tuning
 ----------------------------------------------
@@ -99,14 +97,18 @@ Hyper-Parameter Tuning
 
 
 
-.. _fcnevalpretrain:
+.. _fcn_evalpretrain:
 
 Evaluate Pre-trained model
 ----------------------------------------------
 
+Download pre-trained models:
+
 ::
 
   curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/fcn_camvid_20190125.tar.gz | tar xvz -C ~/demo/model
+
+Evaluate
 
 ::
 
@@ -120,7 +122,7 @@ Evaluate Pre-trained model
   --dataset_meta=~/demo/data/camvid/val.csv
 
 
-.. _fcnexport:
+.. _fcn_export:
 
 Export
 ----------------------------------------------
@@ -140,7 +142,7 @@ Export
   --output_ops=output_classes
 
 
-.. _serve:
+.. _fcn_serve:
 
 Serve
 -------------
