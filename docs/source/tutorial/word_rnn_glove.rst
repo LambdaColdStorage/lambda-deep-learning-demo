@@ -1,13 +1,35 @@
 Word RNN with Glove Embedding
 ========================================
 
-
+* :ref:`wordrnnglove_downloaddata`
+* :ref:`wordrnnglove_downloadvocab`
 * :ref:`wordrnnglove_train`
 * :ref:`wordrnnglove_eval`
 * :ref:`wordrnnglove_inference`
 * :ref:`wordrnnglove_tune`
 * :ref:`wordrnnglove_export`
 * :ref:`wordrnnglove_serve`
+
+
+.. _wordrnnglove_downloaddata:
+
+Download Dataset
+----------------------------------------------
+
+::
+
+  python demo/download_data.py \
+  --data_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --data_dir=~/demo/data/
+
+.. _wordrnnglove_downloadvocab:
+
+Build Vocabulary
+----------------------------------------------
+
+::
+
+  wget http://nlp.stanford.edu/data/glove.6B.zip && unzip glove.6B.zip -d ~/demo/model/glove.6B && rm glove.6B.zip
 
 .. _wordrnnglove_train:
 
@@ -16,13 +38,13 @@ Train from scratch
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=train \
   --model_dir=~/demo/model/word_rnn_glove_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=32 --epochs=100 \
-  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_format=txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
@@ -39,36 +61,38 @@ Evaluation
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=eval \
   --model_dir=~/demo/model/word_rnn_glove_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=32 --epochs=1 \
-  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_format=txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
   eval_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
 
-.. _wordrnnglove_infer:
+.. _wordrnnglove_inference:
 
 Infer
 ----------------------------------------------
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=infer \
   --model_dir=~/demo/model/word_rnn_glove_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
-  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_format=txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
+  --starter=king \
+  --softmax_temperature=1.0 \
   infer_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --callbacks=infer_basic,infer_display_text_generation
@@ -80,13 +104,13 @@ Hyper-Parameter Tuning
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=tune \
   --model_dir=~/demo/model/word_rnn_glove_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=128 \
-  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_format=txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
@@ -102,12 +126,13 @@ Export
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=export \
   --model_dir=~/demo/model/word_rnn_glove_shakespeare \
   --network=rnn_basic \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
-  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_format=txt \
   --vocab_top_k=40000 \
   --encode_method=basic \
   --unit=word \
@@ -115,5 +140,25 @@ Export
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --export_dir=export \
   --export_version=1 \
-  --input_ops=input_item,c0,h0,c1,h1 \
-  --output_ops=output_probabilities,output_last_state,items
+  --input_ops=input_item,RNN/c0,RNN/h0,RNN/c1,RNN/h1 \
+  --output_ops=output_logits,output_last_state
+
+
+.. _wordrnnglove_serve:
+
+Serve
+------------
+
+::
+
+  docker run --runtime=nvidia -p 8501:8501 \
+  --name tfserving_textgeneration \
+  --mount type=bind,source=/home/ubuntu/demo/model/word_rnn_glove_shakespeare/export,target=/models/textgeneration \
+  -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
+
+
+  python client/text_generation_client.py \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --vocab_format=txt \
+  --unit=word --starter=the --length=256 --softmax_temperature=1.0

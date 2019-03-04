@@ -1,7 +1,8 @@
 Word RNN
 ========================================
 
-
+* :ref:`wordrnn_downloaddata`
+* :ref:`wordrnn_buildvoc`
 * :ref:`wordrnn_train`
 * :ref:`wordrnn_eval`
 * :ref:`wordrnn_inference`
@@ -12,7 +13,7 @@ Word RNN
 
 .. _wordrnn_downloaddata:
 
-**Download Dataset**
+Download Dataset
 ----------------------------------------------
 
 ::
@@ -23,7 +24,7 @@ Word RNN
 
 .. _wordrnn_buildvoc:
 
-**Build Vocabulary**
+Build Vocabulary
 ----------------------------------------------
 
 ::
@@ -41,13 +42,15 @@ Train from scratch
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=train \
   --model_dir=~/demo/model/word_rnn_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=32 --epochs=100 \
-  --vocab_top_k=4000 \
+  --vocab_file=~/demo/data/shakespeare/shakespeare_word_basic.vocab \
+  --vocab_format=pickle \
+  --vocab_top_k=-1 \
+  --encode_method=basic \
   --unit=word \
   train_args \
   --learning_rate=0.002 --optimizer=adam \
@@ -62,32 +65,37 @@ Evaluation
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=eval \
   --model_dir=~/demo/model/word_rnn_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=32 --epochs=1 \
-  --vocab_top_k=4000 \
+  --vocab_file=~/demo/data/shakespeare/shakespeare_word_basic.vocab \
+  --vocab_format=pickle \
+  --vocab_top_k=-1 \
+  --encode_method=basic \
   --unit=word \
   eval_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
 
-.. _wordrnn_infer:
+.. _wordrnn_inference:
 
 Infer
 ----------------------------------------------
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=infer \
   --model_dir=~/demo/model/word_rnn_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=~/demo/data/shakespeare/shakespeare_word_basic.vocab \
+  --vocab_format=pickle \
+  --vocab_top_k=-1 \
   --unit=word \
-  --vocab_top_k=4000 \
+  --starter=The \
+  --softmax_temperature=1.0 \
   infer_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --callbacks=infer_basic,infer_display_text_generation
@@ -99,14 +107,15 @@ Hyper-Parameter Tuning
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=tune \
   --model_dir=~/demo/model/word_rnn_shakespeare \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
   --network=rnn_basic \
   --batch_size_per_gpu=128 \
+  --vocab_file=~/demo/data/shakespeare/shakespeare_word_basic.vocab \
+  --vocab_format=pickle \
+  --vocab_top_k=-1 \
   --unit=word \
-  --vocab_top_k=4000 \
   tune_args \
   --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
@@ -119,16 +128,37 @@ Export
 
 ::
 
-  python demo/text_generation.py \
+  python demo/text/text_generation.py \
   --mode=export \
   --model_dir=~/demo/model/word_rnn_shakespeare \
   --network=rnn_basic \
   --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=~/demo/data/shakespeare/shakespeare_word_basic.vocab \
+  --vocab_format=pickle \
+  --vocab_top_k=-1 \
   --unit=word \
-  --vocab_top_k=4000 \
   export_args \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --export_dir=export \
   --export_version=1 \
-  --input_ops=input_item,c0,h0,c1,h1 \
-  --output_ops=output_probabilities,output_last_state,items
+  --input_ops=input_item,RNN/c0,RNN/h0,RNN/c1,RNN/h1 \
+  --output_ops=output_logits,output_last_state
+
+.. _wordrnn_serve:
+
+Serve
+------------
+
+::
+
+  docker run --runtime=nvidia -p 8501:8501 \
+  --name tfserving_textgeneration \
+  --mount type=bind,source=/home/ubuntu/demo/model/word_rnn_shakespeare/export,target=/models/textgeneration \
+  -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
+
+
+  python client/text_generation_client.py \
+  --vocab_file=~/demo/data/shakespeare/shakespeare_word_basic.vocab \
+  --vocab_top_k=-1 \
+  --vocab_format=pickle \
+  --unit=word --starter=KING --length=256 --softmax_temperature=1.0

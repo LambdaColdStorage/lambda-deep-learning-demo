@@ -1,7 +1,8 @@
 Char RNN
 ========================================
 
-
+* :ref:`charrnn_downloaddata`
+* :ref:`charrnn_buildvoc`
 * :ref:`charrnn_train`
 * :ref:`charrnn_eval`
 * :ref:`charrnn_inference`
@@ -12,7 +13,7 @@ Char RNN
 
 .. _charrnn_downloaddata:
 
-**Download Dataset**
+Download Dataset
 ----------------------------------------------
 
 ::
@@ -23,7 +24,7 @@ Char RNN
 
 .. _charrnn_buildvoc:
 
-**Build Vocabulary**
+Build Vocabulary
 ----------------------------------------------
 
 ::
@@ -143,6 +144,7 @@ Export
   --input_ops=input_item,RNN/c0,RNN/h0,RNN/c1,RNN/h1 \
   --output_ops=output_logits,output_last_state
 
+.. _charrnn_serve:
 
 Serve
 ------------

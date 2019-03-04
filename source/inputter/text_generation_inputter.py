@@ -30,7 +30,6 @@ def loadData(meta_data, unit):
     for meta in meta_data:
       with open(meta, 'rb') as f:
         d = f.read()
-        # d = re.split('(\W)', d)
         d = re.findall(r"[\w']+|[:.,!?;\n]", d)
         data.extend(d)
 
@@ -45,27 +44,24 @@ def loadVocab(vocab_file, vocab_format, top_k):
     vocab = { w : i for i, w in enumerate(items)}
     embd = None
   elif vocab_format == "txt":
-    pass
-  # if vocab_file:
-  #   items = []
-  #   embd = []
-  #   file = open(vocab_file,'r')
-  #   count = 0
-  #   for line in file.readlines():
-  #       row = line.strip().split(' ')
-  #       items.append(row[0])
+    items = []
+    embd = []
+    file = open(vocab_file,'r')
+    count = 0
+    for line in file.readlines():
+        row = line.strip().split(' ')
+        items.append(row[0])
         
-  #       if len(row) > 1:
-  #         embd.append(row[1:])
+        if len(row) > 1:
+          embd.append(row[1:])
 
-  #       count += 1
-  #       if count == top_k:
-  #         break
-  #   file.close()
-  #   vocab = { w : i for i, w in enumerate(items)}
-  #   if embd:
-  #     embd = np.asarray(embd).astype(np.float32)
-
+        count += 1
+        if count == top_k:
+          break
+    file.close()
+    vocab = { w : i for i, w in enumerate(items)}
+    if embd:
+      embd = np.asarray(embd).astype(np.float32)
 
   return vocab, items, embd
 
@@ -108,7 +104,7 @@ class TextGenerationInputter(Inputter):
 
     if self.config.mode == "infer":
       self.config.starter = self.config.starter.split("#")
-      self.config.starter, _ = self.encoder.encode(self.config.starter, self.vocab, -1)
+      self.config.starter = [[self.vocab[w] for w in self.config.starter if w in self.vocab]]
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
