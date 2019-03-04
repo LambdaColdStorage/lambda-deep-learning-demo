@@ -36,7 +36,11 @@ docker run --runtime=nvidia -p 8501:8501 \
 -e MODEL_NAME=textgeneration -t tensorflow/serving:latest-gpu &
 
 
-python client/text_generation_client.py --unit=word --starter=218 --length=128
+python client/text_generation_client.py \
+--vocab_file=~/demo/data/shakespeare/shakespeare_char_basic.vocab \
+--vocab_top_k=-1 \
+--vocab_format=pickle \
+--unit=char --starter=T --length=256
 
 saved_model_cli show --dir ~/demo/model/char_rnn_shakespeare/export/1/ --all
 
@@ -45,6 +49,8 @@ saved_model_cli show --dir ~/demo/model/char_rnn_shakespeare/export/1/ --all
 from __future__ import print_function
 
 import requests
+import os
+import pickle
 import numpy as np
 import json
 import argparse
@@ -59,10 +65,44 @@ def pick(prob):
   s = np.sum(prob)
   return(int(np.searchsorted(t, np.random.rand(1) * s)))
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0) # only difference
+
+def loadVocab(vocab_file, vocab_format, top_k):
+  if vocab_format == "pickle":
+    f = open(vocab_file,'r')  
+    items = pickle.load(f)
+    if top_k > 0 and len(items) > top_k:
+      items = items[:top_k]
+    vocab = { w : i for i, w in enumerate(items)}
+    embd = None
+  elif vocab_format == "txt":
+    pass
+  return vocab, items, embd
+
+
 def main():
 
   parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+
+  parser.add_argument("--vocab_file",
+                      help="Path of the vocabulary file.",
+                      type=str,
+                      default="")
+
+  parser.add_argument("--vocab_top_k",
+                      help="Number of words kept in the vocab. set to -1 to use all words.",
+                      type=int,
+                      default=-1)
+
+  parser.add_argument("--vocab_format",
+                      help="Format of vocabulary.",
+                      type=str,
+                      default="pickle",
+                      choices=["pickle", "txt"])
 
   parser.add_argument("--unit", choices=["char", "word"],
                       type=str,
@@ -74,10 +114,15 @@ def main():
                       help="Length (in number of units) of generated text.",
                       default=128)
 
+  parser.add_argument("--softmax_temperature",
+                      help="Control the randomness during generation.",
+                      type=float,
+                      default=1.0)
+
   parser.add_argument("--starter",
-                      type=int,
+                      type=str,
                       help="id of the starting item. For example, 218 is Duke for word_rnn, 28 is T for char_rnn",
-                      default=8)
+                      default="T")
 
   parser.add_argument("-rnn_size",
                       type=int,
@@ -86,7 +131,13 @@ def main():
 
   args = parser.parse_args()
 
-  input_item = np.full((1, 1), args.starter, dtype=np.int32)
+
+  args.vocab_file = os.path.expanduser(args.vocab_file)
+
+  vocab, items, embd = loadVocab(
+    args.vocab_file, args.vocab_format, args.vocab_top_k)
+
+  input_item = np.full((1, 1), vocab[args.starter], dtype=np.int32)
 
   c0 = np.zeros((1, args.rnn_size), dtype=np.float32)
   h0 = np.zeros((1, args.rnn_size), dtype=np.float32)
@@ -104,23 +155,21 @@ def main():
   for i_step in range(args.length):
     input_dict = {}
     input_dict["input_item"] = input_item
-    input_dict["c0"] = c0
-    input_dict["h0"] = h0
-    input_dict["c1"] = c1
-    input_dict["h1"] = h1
+    input_dict["RNN/c0"] = c0
+    input_dict["RNN/h0"] = h0
+    input_dict["RNN/c1"] = c1
+    input_dict["RNN/h1"] = h1
     data = json.dumps({"signature_name": "predict", "instances": [input_dict]})
 
 
     headers = {"content-type": "application/json"}
 
     response = requests.post(SERVER_URL, data=data, headers=headers)
-    # print(response)
-    # response.raise_for_status()
+
     predictions = response.json()["predictions"][0]
     
-    items = predictions["items"]
-    for p in predictions["output_probabilities"]:
-      pick_id = pick(p)
+    for p in predictions["output_logits"]:
+      pick_id = pick(softmax( np.asarray(p, dtype=np.float32) / args.softmax_temperature))
       if args.unit == "char":
         results += items[pick_id]
       elif args.unit == "word":
@@ -132,11 +181,17 @@ def main():
     input_item = np.full((1, 1), pick_id, dtype=np.int32).tolist()[0]
     c0 = predictions["output_last_state"][0][0][0]
     h0 = predictions["output_last_state"][0][1][0]
-    c1 = predictions["output_last_state"][1][1][0]
+    c1 = predictions["output_last_state"][1][0][0]
     h1 = predictions["output_last_state"][1][1][0]
 
-  results = items[args.starter] + " " + results
+  if args.unit == "char":
+    results = args.starter + results
+  elif args.unit == "word":
+    results = args.starter + " " + results
+
+  print('=======================================')
   print(results)
+  print('=======================================')
 
 if __name__ == '__main__':
   main()

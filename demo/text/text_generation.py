@@ -35,6 +35,11 @@ def main():
                           help="Number of words kept in the vocab. set to -1 to use all words.",
                           type=int,
                           default=-1)
+  app_parser.add_argument("--vocab_format",
+                          help="Format of vocabulary.",
+                          type=str,
+                          default="pickle",
+                          choices=["pickle", "txt"])  
   app_parser.add_argument("--encode_method",
                           help="Name of the method to encode text.",
                           type=str,
@@ -44,6 +49,14 @@ def main():
                           help="Type of unit. Must be chosen from char or word.",
                           type=str,
                           default="word")
+  app_parser.add_argument("--starter",
+                          help="The starting token(s) to generate the text, splited by the splitter (default #)",
+                          type=str,
+                          default="T")
+  app_parser.add_argument("--softmax_temperature",
+                          help="Control the randomness during generation.",
+                          type=float,
+                          default=1.0)
 
   # Default configs
   runner_config, callback_config, inputter_config, modeler_config, app_config = \
@@ -53,15 +66,18 @@ def main():
     inputter_config,
     vocab_file=app_config.vocab_file,
     vocab_top_k=app_config.vocab_top_k,
+    vocab_format=app_config.vocab_format,
     encode_method=app_config.encode_method,
-    unit=app_config.unit)
+    unit=app_config.unit,
+    starter=app_config.starter)
 
   callback_config = TextGenerationCallbackConfig(
     callback_config,
-    unit=app_config.unit)
+    unit=app_config.unit,
+    softmax_temperature=app_config.softmax_temperature)
 
-  # Download data if necessary
-  downloader.check_and_download(inputter_config)
+  # Check if data is available
+  downloader.check_data(inputter_config)   
 
   if runner_config.mode == "tune":
 
@@ -92,7 +108,6 @@ def main():
              It owns a network and a list of callbacks as inputs.
 
     """
-
     augmenter = (None if not inputter_config.augmenter else
                  importlib.import_module(
                   "source.augmenter." + inputter_config.augmenter))

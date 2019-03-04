@@ -341,7 +341,6 @@ def prepare(config):
       (None if not meta else os.path.expanduser(meta)) 
       for meta in config.eval_dataset_meta]
 
-
   if hasattr(config, "model_dir"):
     config.model_dir = ("" if not config.model_dir else
                         os.path.expanduser(config.model_dir))
@@ -409,6 +408,10 @@ def prepare(config):
     config.output_ops = (
       [] if not config.output_ops else
       config.output_ops.split(","))
+
+  if hasattr(config, "vocab_file"):
+    config.vocab_file = ("" if not config.vocab_file else
+                        os.path.expanduser(config.vocab_file))
 
   return config
 

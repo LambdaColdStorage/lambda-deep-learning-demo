@@ -19,6 +19,10 @@ def pick(prob):
     s = np.sum(prob)
     return(int(math.floor(np.searchsorted(t, 0.9999 * np.random.rand(1) * s))))
 
+def softmax(x):
+    """Compute softmax values for each sets of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0) # only difference
 
 class InferDisplayTextGeneration(Callback):
   def __init__(self, config):
@@ -39,7 +43,7 @@ class InferDisplayTextGeneration(Callback):
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
     items = outputs_dict["items"]
-    for i, p in zip(outputs_dict["inputs"], outputs_dict["probabilities"]):
+    for i, l in zip(outputs_dict["inputs"], outputs_dict["logits"]):
 
       if self.config.unit == "char":
         self.input += items[i[0]]
@@ -47,7 +51,7 @@ class InferDisplayTextGeneration(Callback):
         self.input += " " + items[i[0]]
 
       # self.input += items[i[0]]
-
+      p = softmax(l / self.config.softmax_temperature)
       pick_id = pick(p)
 
       if self.config.unit == "char":

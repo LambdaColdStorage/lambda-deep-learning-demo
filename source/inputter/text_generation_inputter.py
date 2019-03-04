@@ -10,13 +10,12 @@ from collections import Counter
 import operator
 import numpy as np
 import re
+import pickle
 
 import tensorflow as tf
 
 from .inputter import Inputter
 
-
-RNN_SIZE = 256
 
 def loadData(meta_data, unit):
   data = []
@@ -37,37 +36,36 @@ def loadData(meta_data, unit):
 
   return data
 
-def loadVocab(vocab_file, data, top_k):
-  if vocab_file:
-    items = []
-    embd = []
-    file = open(vocab_file,'r')
-    count = 0
-    for line in file.readlines():
-        row = line.strip().split(' ')
-        items.append(row[0])
-        
-        if len(row) > 1:
-          embd.append(row[1:])
-
-        count += 1
-        if count == top_k:
-          break
-    file.close()
+def loadVocab(vocab_file, vocab_format, top_k):
+  if vocab_format == "pickle":
+    f = open(vocab_file,'r')  
+    items = pickle.load(f)
+    if top_k > 0 and len(items) > top_k:
+      items = items[:top_k]
     vocab = { w : i for i, w in enumerate(items)}
-    if embd:
-      embd = np.asarray(embd).astype(np.float32)
-
-  else:
-    # Generate vocabulary on the fly
-    counter = Counter(data)
-    data_sorted = sorted(counter.items(),
-                 key=operator.itemgetter(1), reverse=True)
-    items = [x[0] for x in data_sorted]
-    if top_k > 0:
-      items = items[0:min(top_k, len(items))]
-    vocab = {v: i for i, v in enumerate(items)}
     embd = None
+  elif vocab_format == "txt":
+    pass
+  # if vocab_file:
+  #   items = []
+  #   embd = []
+  #   file = open(vocab_file,'r')
+  #   count = 0
+  #   for line in file.readlines():
+  #       row = line.strip().split(' ')
+  #       items.append(row[0])
+        
+  #       if len(row) > 1:
+  #         embd.append(row[1:])
+
+  #       count += 1
+  #       if count == top_k:
+  #         break
+  #   file.close()
+  #   vocab = { w : i for i, w in enumerate(items)}
+  #   if embd:
+  #     embd = np.asarray(embd).astype(np.float32)
+
 
   return vocab, items, embd
 
@@ -82,7 +80,7 @@ class TextGenerationInputter(Inputter):
       self.num_samples = 100000
       self.max_length = 50
     elif self.config.mode == "infer":
-      self.num_samples = 1000
+      self.num_samples = 256
       self.max_length = 1
     elif self.config.mode == "eval":
       self.num_samples = 10000
@@ -93,7 +91,7 @@ class TextGenerationInputter(Inputter):
 
     self.data = loadData(self.config.dataset_meta, self.config.unit)
     self.vocab, self.items, self.embd = loadVocab(
-      self.config.vocab_file, self.data, self.config.vocab_top_k)
+      self.config.vocab_file, self.config.vocab_format, self.config.vocab_top_k)
 
     self.vocab_size = len(self.vocab)
 
@@ -107,6 +105,10 @@ class TextGenerationInputter(Inputter):
       self.encode_data, self.encode_mask = self.encoder.encode([self.data], self.vocab, -1)
       self.encode_data = self.encode_data[0]
       self.encode_mask = self.encode_mask[0]
+
+    if self.config.mode == "infer":
+      self.config.starter = self.config.starter.split("#")
+      self.config.starter, _ = self.encoder.encode(self.config.starter, self.vocab, -1)
 
   def create_nonreplicated_fn(self):
     batch_size = (self.config.batch_size_per_gpu *
@@ -128,6 +130,9 @@ class TextGenerationInputter(Inputter):
 
   def get_embd(self):
     return self.embd
+
+  def get_starter(self):
+    return self.config.starter
 
   def get_samples_fn(self):
     random_starts = np.random.randint(
@@ -154,19 +159,7 @@ class TextGenerationInputter(Inputter):
       input_item = tf.placeholder(tf.int32,
                              shape=(batch_size, self.max_length),
                              name="input_item")
-      c0 = tf.placeholder(
-        tf.float32,
-        shape=(batch_size, RNN_SIZE), name="c0")
-      h0 = tf.placeholder(
-        tf.float32,
-        shape=(batch_size, RNN_SIZE), name="h0")
-      c1 = tf.placeholder(
-        tf.float32,
-        shape=(batch_size, RNN_SIZE), name="c1")
-      h1 = tf.placeholder(
-        tf.float32,
-        shape=(batch_size, RNN_SIZE), name="h1")      
-      return (input_item, c0, h0, c1, h1)
+      return input_item
     else:
       if self.config.mode == "train" or self.config.mode == "eval":
 

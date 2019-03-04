@@ -22,6 +22,7 @@ class TextGenerationModeler(Modeler):
     self.vocab_size = inputter.get_vocab_size()
     self.items = inputter.get_items()
     self.embd = inputter.get_embd()
+    self.starter = inputter.get_starter()
 
   def create_nonreplicated_fn(self):
     self.global_step = tf.train.get_or_create_global_step()
@@ -32,6 +33,7 @@ class TextGenerationModeler(Modeler):
     return self.net(inputs, self.feed_dict_seq, self.seq_length,
                     self.config.batch_size_per_gpu, self.vocab_size,
                     self.embd,
+                    self.starter,
                     mode=self.config.mode)
 
   def create_eval_metrics_fn(self, logits, labels):
@@ -55,12 +57,11 @@ class TextGenerationModeler(Modeler):
   def model_fn(self, x, device_id=None):
     if self.config.mode == "export":
       inputs = x
-      input_item, c0, h0, c1, h1 = inputs
     else:
       inputs = x[0]
       labels = x[1]
 
-    logits, probabilities, last_state, inputs = \
+    logits, last_state, inputs = \
         self.create_graph_fn(inputs)
 
     if self.config.mode == "train":
@@ -80,23 +81,18 @@ class TextGenerationModeler(Modeler):
     elif self.config.mode == "infer":
       return {"inputs": inputs,
               "logits": logits,
-              "probabilities": probabilities,
               "items": tf.convert_to_tensor(self.items),
               "last_state": last_state}
     elif self.config.mode == "export":
-      # The vocabulary (TODO: store this on client side?)
-      items = tf.identity(
-        tf.expand_dims(tf.convert_to_tensor(self.items), axis=0), name="items")
-
       # The prediction
-      output_probabilities = tf.identity(
-        tf.expand_dims(probabilities, axis=0), name="output_probabilities")
+      output_logits = tf.identity(
+        tf.expand_dims(logits, axis=0), name="output_logits")
 
       # The state of memory cells
       output_last_state = tf.identity(
         tf.expand_dims(last_state, axis=0), name="output_last_state")
 
-      return output_probabilities, output_last_state, items
+      return output_logits, output_last_state
 
 def build(config, net):
   return TextGenerationModeler(config, net)

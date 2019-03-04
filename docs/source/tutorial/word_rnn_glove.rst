@@ -1,0 +1,119 @@
+Word RNN with Glove Embedding
+========================================
+
+
+* :ref:`wordrnnglove_train`
+* :ref:`wordrnnglove_eval`
+* :ref:`wordrnnglove_inference`
+* :ref:`wordrnnglove_tune`
+* :ref:`wordrnnglove_export`
+* :ref:`wordrnnglove_serve`
+
+.. _wordrnnglove_train:
+
+Train from scratch
+----------------------------------------------
+
+::
+
+  python demo/text_generation.py \
+  --mode=train \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=32 --epochs=100 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  train_args \
+  --learning_rate=0.002 --optimizer=adam \
+  --piecewise_boundaries=50 \
+  --piecewise_lr_decay=1.0,0.1 \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
+
+.. _wordrnnglove_eval:
+
+Evaluation
+----------------------------------------------
+
+::
+
+  python demo/text_generation.py \
+  --mode=eval \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=32 --epochs=1 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  eval_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
+
+.. _wordrnnglove_infer:
+
+Infer
+----------------------------------------------
+
+::
+
+  python demo/text_generation.py \
+  --mode=infer \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  infer_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --callbacks=infer_basic,infer_display_text_generation
+
+.. _wordrnnglove_tune:
+
+Hyper-Parameter Tuning
+----------------------------------------------
+
+::
+
+  python demo/text_generation.py \
+  --mode=tune \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/shakespeare.tar.gz \
+  --network=rnn_basic \
+  --batch_size_per_gpu=128 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  tune_args \
+  --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
+
+.. _wordrnnglove_export:
+
+Export
+--------------------------------------------
+
+::
+
+  python demo/text_generation.py \
+  --mode=export \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare \
+  --network=rnn_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=/home/ubuntu/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  export_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --export_dir=export \
+  --export_version=1 \
+  --input_ops=input_item,c0,h0,c1,h1 \
+  --output_ops=output_probabilities,output_last_state,items

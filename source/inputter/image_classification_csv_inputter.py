@@ -92,9 +92,6 @@ class ImageClassificationCSVInputter(Inputter):
                              shape=(self.config.image_height,
                                     self.config.image_width, 3),
                              name="input_image")
-      # label = tf.placeholder(tf.int32,
-      #                        shape=(1, self.config.num_classes),
-      #                        name="input_label")
       image = tf.to_float(image)
       image = tf.image.per_image_standardization(image)
       image = tf.expand_dims(image, 0)
