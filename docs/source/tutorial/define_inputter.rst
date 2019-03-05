@@ -1,4 +1,4 @@
-**Define an Inputter**
+Define an Inputter
 ---------------------------------------------------
 
 The inputter is the data pipeline. This example defines the data pipeline of feeding CIFAR10 data with some basic augmentations: 

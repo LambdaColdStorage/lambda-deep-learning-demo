@@ -1,19 +1,19 @@
-Sequence-to-sequence Basic
+Sequence-to-label Basic
 ========================================
 
 
-* :ref:`seq2seq_basic_downloaddata`
-* :ref:`seq2seq_basic_preprocess`
-* :ref:`seq2seq_basic_buildvoc`
-* :ref:`seq2seq_basic_train`
-* :ref:`seq2seq_basic_eval`
-* :ref:`seq2seq_basic_inference`
-* :ref:`seq2seq_basic_tune`
-* :ref:`seq2seq_basic_export`
-* :ref:`seq2seq_basic_serve`
+* :ref:`seq2label_basic_downloaddata`
+* :ref:`seq2label_basic_preprocess`
+* :ref:`seq2label_basic_buildvoc`
+* :ref:`seq2label_basic_train`
+* :ref:`seq2label_basic_eval`
+* :ref:`seq2label_basic_inference`
+* :ref:`seq2label_basic_tune`
+* :ref:`seq2label_basic_export`
+* :ref:`seq2label_basic_serve`
 
 
-.. _seq2seq_basic_downloaddata:
+.. _seq2label_basic_downloaddata:
 
 Download Dataset
 ----------------------------------------------
@@ -25,7 +25,7 @@ Download Dataset
   --data_dir=~/demo/data/
 
 
-.. _seq2seq_basic_preprocess:
+.. _seq2label_basic_preprocess:
 
 Preprocess Dataset
 ---------------------------------------------
@@ -36,7 +36,7 @@ Preprocess Dataset
   --remove_punctuation=False
 
 
-.. _seq2seq_basic_buildvoc:
+.. _seq2label_basic_buildvoc:
 
 Build Vocabulary
 ----------------------------------------------
@@ -49,7 +49,7 @@ Build Vocabulary
   --unit=word \
   --loader=imdb_loader
 
-.. _seq2seq_basic_train:
+.. _seq2label_basic_train:
 
 Train from scratch
 ----------------------------------------------
@@ -72,7 +72,7 @@ Train from scratch
   --dataset_meta=~/demo/data/IMDB/train.csv
 
 
-.. _seq2seq_basic_eval:
+.. _seq2label_basic_eval:
 
 Evaluation
 ----------------------------------------------
@@ -93,7 +93,7 @@ Evaluation
   --dataset_meta=~/demo/data/IMDB/test.csv
 
 
-.. _seq2seq_basic_inference:
+.. _seq2label_basic_inference:
 
 Inference
 ---------------------
@@ -115,7 +115,7 @@ Inference
   --splitter=#
 
 
-.. _seq2seq_basic_tune:
+.. _seq2label_basic_tune:
 
 Hyper-Parameter Tuning
 ---------------------------------
@@ -138,7 +138,7 @@ Hyper-Parameter Tuning
   --tune_config=source/tool/seq2label_basic_IMDB_tune_coarse.yaml
 
 
-.. _seq2seq_basic_export:
+.. _seq2label_basic_export:
 
 Export
 ---------------------------
@@ -163,7 +163,7 @@ Export
   --output_ops=output_probabilities
 
 
-.. _seq2seq_basic_serve:
+.. _seq2label_basic_serve:
 
 Serve
 ---------------------------

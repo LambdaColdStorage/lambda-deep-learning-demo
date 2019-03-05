@@ -12,7 +12,7 @@ Image Classification
 
 .. _imageclassification_downloaddata:
 
-**Download CIFAR10 Dataset**
+Download CIFAR10 Dataset
 ----------------------------------------------
 
 ::
@@ -23,7 +23,7 @@ Image Classification
 
 .. _imageclassification_resnet32train:
 
-**Train ResNet32 from scratch on CIFAR10**
+Train ResNet32 from scratch on CIFAR10
 ----------------------------------------------
 
 ::
@@ -42,7 +42,7 @@ Image Classification
 
 .. _imageclassification_resnet32eval:
 
-**Evaluation**
+Evaluation
 -----------------------
 
 ::
@@ -58,7 +58,7 @@ Image Classification
 
 .. _imageclassification_resnet32infer:
 
-**Inference**
+Inference
 -----------------------
 
 ::
@@ -75,7 +75,7 @@ Image Classification
 
 .. _imageclassification_resnet32tune:
 
-**Hyper-Parameter Tuning**
+Hyper-Parameter Tuning
 ---------------------------
 
 ::
@@ -104,7 +104,7 @@ Image Classification
 
 .. _imageclassification_resnet32pretrain:
 
-**Evaluate Pre-trained model**
+Evaluate Pre-trained model
 ------------------------------
 
 ::
@@ -125,7 +125,7 @@ Image Classification
 
 .. _imageclassification_export:
 
-**Export**
+Export
 ------------
 
 ::
@@ -144,7 +144,7 @@ Image Classification
 
 .. _imageclassification_serve:
 
-**Serve**
+Serve
 -------------
 
 ::

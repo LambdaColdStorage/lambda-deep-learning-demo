@@ -7,7 +7,7 @@ Model Serving
 
 .. _modelserving_installdocker:
 
-**Install Docker (Ubuntu 18.04)**
+Install Docker (Ubuntu 18.04)
 ----------------------------------------------
 
 ::
@@ -30,7 +30,7 @@ Model Serving
 
 .. _modelserving_installnvidiadocker:
 
-**Install Nvidia Docker**
+Install Nvidia Docker
 ----------------------------------------------
 
 ::
@@ -56,7 +56,7 @@ Model Serving
 
 .. _modelserving_serve:
 
-**Serve**
+Serve
 ----------------------------------------------
 
 The following three steps are used to serve the trained model:

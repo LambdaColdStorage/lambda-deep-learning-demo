@@ -7,10 +7,19 @@ Transfer Learning
 
 .. _resnet50:
 
-**ResNet50 on Stanford Dogs Dataset**
+ResNet50 on Stanford Dogs Dataset
 ----------------------------------------------
 
-Download pre-trained model
+Download Dataset
+
+::
+
+  python demo/download_data.py \
+  --data_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
+  --data_dir=~/demo/data
+
+
+Download Pre-trained Model
 
 ::
 
@@ -21,10 +30,9 @@ Train with weights restored from pre-trained model
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=train \
   --model_dir=~/demo/model/resnet50_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=resnet50 \
   --augmenter=vgg_augmenter \
   --batch_size_per_gpu=16 --epochs=10 \
@@ -42,10 +50,9 @@ Hyper-Parameter Tuning
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=tune \
   --model_dir=~/demo/model/resnet50_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=resnet50 \
   --augmenter=vgg_augmenter \
   --batch_size_per_gpu=16 \
@@ -62,10 +69,9 @@ Evaluation
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/resnet50_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \  
   --network=resnet50 \
   --augmenter=vgg_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \
@@ -76,7 +82,7 @@ Evaluation
 
 .. _inceptionv4:
 
-**InceptionV4 on Stanford Dogs Dataset**
+InceptionV4 on Stanford Dogs Dataset
 ----------------------------------------------
 
 Download pre-trained model
@@ -89,10 +95,9 @@ Train with weights restored from pre-trained model
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=train \
   --model_dir=~/demo/model/inceptionv4_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=inception_v4 \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=4 \
@@ -110,10 +115,9 @@ Hyper-Parameter Tuning
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=tune \
   --model_dir=~/demo/model/inceptionv4_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=inception_v4 \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 \
@@ -130,10 +134,9 @@ Evaluation
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/inceptionv4_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \  
   --network=inception_v4 \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \
@@ -143,7 +146,7 @@ Evaluation
 
 .. _nasnetalarge:
 
-**NasNet-A-Large on Stanford Dogs Dataset**
+NasNet-A-Large on Stanford Dogs Dataset
 ----------------------------------------------
 
 Download pre-trained model
@@ -156,10 +159,9 @@ Train with weights restored from pre-trained model
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=train \
   --model_dir=~/demo/model/nasnet_A_large_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=4 \
@@ -177,10 +179,9 @@ Hyper-Parameter Tuning
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=tune \
   --model_dir=~/demo/model/nasnet_A_large_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 \
@@ -197,10 +198,9 @@ Evaluation
 
 ::
 
-  python demo/image_classification.py \
+  python demo/image/image_classification.py \
   --mode=eval \
   --model_dir=~/demo/model/nasnet_A_large_StanfordDogs120 \
-  --dataset_url=https://s3-us-west-2.amazonaws.com/lambdalabs-files/StanfordDogs120.tar.gz \  
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \

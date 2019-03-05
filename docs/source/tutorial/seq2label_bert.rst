@@ -1,19 +1,19 @@
-Sequence-to-sequence BERT
+Sequence-to-label BERT
 ========================================
 
 
-* :ref:`seq2seq_bert_downloaddata`
-* :ref:`seq2seq_bert_preprocess`
-* :ref:`seq2seq_bert_downloadbert`
-* :ref:`seq2seq_bert_train`
-* :ref:`seq2seq_bert_eval`
-* :ref:`seq2seq_bert_inference`
-* :ref:`seq2seq_bert_tune`
-* :ref:`seq2seq_bert_export`
-* :ref:`seq2seq_bert_serve`
+* :ref:`seq2label_bert_downloaddata`
+* :ref:`seq2label_bert_preprocess`
+* :ref:`seq2label_bert_downloadbert`
+* :ref:`seq2label_bert_train`
+* :ref:`seq2label_bert_eval`
+* :ref:`seq2label_bert_inference`
+* :ref:`seq2label_bert_tune`
+* :ref:`seq2label_bert_export`
+* :ref:`seq2label_bert_serve`
 
 
-.. _seq2seq_bert_downloaddata:
+.. _seq2label_bert_downloaddata:
 
 Download Dataset
 ----------------------------------------------
@@ -24,7 +24,7 @@ Download Dataset
   --data_url=http://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz \
   --data_dir=~/demo/data/
 
-.. _seq2seq_bert_preprocess:
+.. _seq2label_bert_preprocess:
 
 Preprocess Dataset
 ----------------------------------------------
@@ -35,7 +35,7 @@ Preprocess Dataset
   --remove_punctuation=False
 
 
-.. _seq2seq_bert_downloadbert:
+.. _seq2label_bert_downloadbert:
 
 Download Pre-trained BERT model
 ----------------------------------------------
@@ -45,7 +45,7 @@ Download Pre-trained BERT model
   wget https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip && unzip uncased_L-12_H-768_A-12.zip -d ~/demo/model && rm uncased_L-12_H-768_A-12.zip
 
 
-.. _seq2seq_bert_train:
+.. _seq2label_bert_train:
 
 Train from scratch
 ----------------------------------------------
@@ -72,7 +72,7 @@ Train from scratch
   --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power
 
 
-.. _seq2seq_bert_eval:
+.. _seq2label_bert_eval:
 
 Evaluation
 ----------------------------------------------
@@ -92,7 +92,7 @@ Evaluation
   eval_args \
   --dataset_meta=~/demo/data/IMDB/test.csv
 
-.. _seq2seq_bert_inference:
+.. _seq2label_bert_inference:
 
 Inference
 ---------------------
@@ -115,7 +115,7 @@ Inference
   --splitter=#
 
 
-.. _seq2seq_bert_tune:
+.. _seq2label_bert_tune:
 
 Hyper-Parameter Tuning
 ---------------------------------
@@ -140,7 +140,7 @@ Hyper-Parameter Tuning
   --eval_dataset_meta=~/demo/data/IMDB/test.csv \
   --tune_config=source/tool/seq2label_bert_IMDB_tune_coarse.yaml
 
-.. _seq2seq_bert_export:
+.. _seq2label_bert_export:
 
 Export
 ---------------------------
@@ -164,7 +164,7 @@ Export
   --output_ops=output_probabilities
 
 
-.. _seq2seq_bert_serve:
+.. _seq2label_bert_serve:
 
 Serve
 ---------------------------

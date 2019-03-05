@@ -1,4 +1,4 @@
-**Define a Modeler**
+Define a Modeler
 ---------------------------------------------------
 
 The modeler defines the model pipeline. This example defines the computation that is needed for a ResNet32 network:

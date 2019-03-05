@@ -1,4 +1,4 @@
-**Define a Runner**
+Define a Runner
 ---------------------------------------------------
 
 A runner runs the inputter and the modeler. It also use callbacks for auxiliary jobs:
