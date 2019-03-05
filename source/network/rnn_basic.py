@@ -77,7 +77,7 @@ def net(x, feed_dict_seq, seq_length,
       embeddingW = tf.get_variable(
         'embedding',
         initializer=tf.constant(embd),
-        trainable=True)      
+        trainable=False)      
     else:
       embeddingW = tf.get_variable('embedding', [vocab_size, rnn_size[0]])
 

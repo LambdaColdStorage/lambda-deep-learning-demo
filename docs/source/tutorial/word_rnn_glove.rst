@@ -24,7 +24,7 @@ Download Dataset
 
 .. _wordrnnglove_downloadvocab:
 
-Build Vocabulary
+Download Glove Embedding
 ----------------------------------------------
 
 ::

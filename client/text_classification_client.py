@@ -128,7 +128,7 @@ def main():
   parser.add_argument("--input_text",
                       type=str,
                       help="Input text for classification",
-                      default="This is a good movie!.#This movie is bad.")
+                      default="This movie is awesome.#This movie is bad.")
   parser.add_argument("--vocab_file",
                       help="Path of the vocabulary file.",
                       type=str,

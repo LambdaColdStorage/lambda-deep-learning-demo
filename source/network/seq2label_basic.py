@@ -34,7 +34,6 @@ def net(inputs, mask, num_classes, is_training, batch_size, vocab_size, embd=Non
       'embedding', [vocab_size, EMBEDDING_SIZE])
 
     # Only use the non-padded words
-
     sequence_length = tf.cast(tf.reduce_sum(mask, 1), tf.int32)
 
     input_feature = tf.nn.embedding_lookup(embeddingW, inputs)

@@ -4,6 +4,6 @@ Text Classification
 .. toctree::
    :maxdepth: 4
 
-   seq2seq_basic
-   seq2seq_glove
-   seq2seq_bert
+   seq2label_basic
+   seq2label_glove
+   seq2label_bert

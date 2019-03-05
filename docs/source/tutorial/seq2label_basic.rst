@@ -25,7 +25,6 @@ Download Dataset
   --data_dir=~/demo/data/
 
 
-
 .. _seq2seq_basic_preprocess:
 
 Preprocess Dataset
@@ -112,7 +111,7 @@ Inference
   --encode_method=basic \
   infer_args \
   --callbacks=infer_basic,infer_display_text_classification \
-  --test_samples="This movie is awesome."#"This movie is bad."#"This movie has an unusual taste."#"It is not clear what this movie is about ."#"This is not a very good movie."#"I saw this at the premier at TIFF and was thrilled to learn the story is about a real friendship." \
+  --test_samples="This movie is awesome."#"This movie is bad."#"This movie has an unusual taste."#"It is not clear what this movie is about."#"This is not a very good movie."#"I saw this at the premier at TIFF and was thrilled to learn the story is about a real friendship." \
   --splitter=#
 
 
