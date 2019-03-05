@@ -9,8 +9,8 @@ import csv
 import os
 import csv
 
-DATASET_PATH = "/home/ubuntu/Downloads/aclImdb_v1"
-CSV_PATH = "/home/ubuntu/Downloads/aclImdb_v1/test.csv"
+DATASET_PATH = "/home/chuan/demo/data"
+CSV_PATH = "/home/chuan/demo/data/aclImdb/test.csv"
 
 def load_directory_data(directory, label):
   data = []

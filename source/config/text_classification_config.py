@@ -13,11 +13,17 @@ class TextClassificationInputterConfig(Config):
                default_inputter_config,
                vocab_file="",
                vocab_top_k=-1,
+               vocab_format="pickle",
+               unit="word",
+               max_length=256,
                encode_method=""):
 
     self.copy_props(default_inputter_config)
     self.vocab_file = vocab_file
     self.vocab_top_k = vocab_top_k
+    self.vocab_format = vocab_format
+    self.unit = unit
+    self.max_length = max_length
     self.encode_method = encode_method
 
 

@@ -73,7 +73,7 @@ def net(x, feed_dict_seq, seq_length,
     cell = rnn.MultiRNNCell([rnn.LSTMBlockCell(num_units=rnn_size[i])
                             for i in range(num_rnn_layer)])
 
-    if embd is not None:
+    if len(embd) > 0:
       embeddingW = tf.get_variable(
         'embedding',
         initializer=tf.constant(embd),

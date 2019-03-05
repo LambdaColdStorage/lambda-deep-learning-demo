@@ -15,6 +15,7 @@ import pickle
 import tensorflow as tf
 
 from .inputter import Inputter
+from demo.text.preprocess import vocab_loader
 
 
 def loadData(meta_data, unit):
@@ -34,36 +35,6 @@ def loadData(meta_data, unit):
         data.extend(d)
 
   return data
-
-def loadVocab(vocab_file, vocab_format, top_k):
-  if vocab_format == "pickle":
-    f = open(vocab_file,'r')  
-    items = pickle.load(f)
-    if top_k > 0 and len(items) > top_k:
-      items = items[:top_k]
-    vocab = { w : i for i, w in enumerate(items)}
-    embd = None
-  elif vocab_format == "txt":
-    items = []
-    embd = []
-    file = open(vocab_file,'r')
-    count = 0
-    for line in file.readlines():
-        row = line.strip().split(' ')
-        items.append(row[0])
-        
-        if len(row) > 1:
-          embd.append(row[1:])
-
-        count += 1
-        if count == top_k:
-          break
-    file.close()
-    vocab = { w : i for i, w in enumerate(items)}
-    if embd:
-      embd = np.asarray(embd).astype(np.float32)
-
-  return vocab, items, embd
 
 
 class TextGenerationInputter(Inputter):
@@ -86,7 +57,7 @@ class TextGenerationInputter(Inputter):
       self.max_length = 1
 
     self.data = loadData(self.config.dataset_meta, self.config.unit)
-    self.vocab, self.items, self.embd = loadVocab(
+    self.vocab, self.items, self.embd = vocab_loader.load(
       self.config.vocab_file, self.config.vocab_format, self.config.vocab_top_k)
 
     self.vocab_size = len(self.vocab)

@@ -1,9 +1,8 @@
-import pandas as pd
 import re
 from collections import Counter
 import operator
 
-
+import pandas as pd
 from tqdm import tqdm
 from nltk.tokenize import WordPunctTokenizer
 
@@ -96,8 +95,8 @@ def buildVocab(sentences, top_k):
   return words2idx, words
 
 
-names_raw_csv = ["/home/ubuntu/demo/data/IMDB/train.csv", "/home/ubuntu/demo/data/IMDB/test.csv"]
-names_clean_csv = ["/home/ubuntu/demo/data/IMDB/train_clean.csv", "/home/ubuntu/demo/data/IMDB/test_clean.csv"]
+names_raw_csv = ["/home/chuan/demo/data/aclImdb/train.csv", "/home/chuan/demo/data/aclImdb/test.csv"]
+names_clean_csv = ["/home/chuan/demo/data/aclImdb/train_clean.csv", "/home/chuan/demo/data/aclImdb/test_clean.csv"]
 create_vocab = [True, False]
 names_vocab = ["/home/ubuntu/demo/data/IMDB/vocab_basic.txt", ""]
 flags_visualization = [False, False]

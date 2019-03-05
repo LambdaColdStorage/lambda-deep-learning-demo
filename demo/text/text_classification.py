@@ -29,18 +29,32 @@ def main():
                           help="Path of the vocabulary file.",
                           type=str,
                           default="")
-  app_parser.add_argument("--encode_method",
-                          help="Name of the method to encode text.",
-                          type=str,
-                          default="basic")
   app_parser.add_argument("--vocab_top_k",
                           help="Number of words kept in the vocab. set to -1 to use all words.",
                           type=int,
                           default=-1)
+  app_parser.add_argument("--vocab_format",
+                          help="Format of vocabulary.",
+                          type=str,
+                          default="pickle",
+                          choices=["pickle", "txt"])                              
+  app_parser.add_argument("--encode_method",
+                          help="Name of the method to encode text.",
+                          type=str,
+                          default="basic")
+  app_parser.add_argument("--unit",
+                          choices=["char", "word"],
+                          help="Type of unit. Must be chosen from char or word.",
+                          type=str,
+                          default="word")
+  app_parser.add_argument("--max_length",
+                          help="Max length for input sentence.",
+                          type=int,
+                          default=256)  
   app_parser.add_argument("--num_classes",
-                      help="Number of classes.",
-                      type=int,
-                      default=2)
+                          help="Number of classes.",
+                          type=int,
+                          default=2)
   app_parser.add_argument("--lr_method",
                           choices=["step", "linear_plus_warmup"],
                           help="Name of the learning rate scheduling method",
@@ -55,15 +69,18 @@ def main():
     inputter_config,
     vocab_file=app_config.vocab_file,
     vocab_top_k=app_config.vocab_top_k,
-    encode_method=app_config.encode_method)
+    vocab_format=app_config.vocab_format,
+    unit=app_config.unit,
+    encode_method=app_config.encode_method,
+    max_length=app_config.max_length)
 
   modeler_config = TextClassificationModelerConfig(
     modeler_config,
     num_classes=app_config.num_classes,
     lr_method=app_config.lr_method)
 
-  # Download data if necessary
-  downloader.check_and_download(inputter_config)
+  # Check if data is available
+  downloader.check_data(inputter_config) 
 
   if runner_config.mode == "tune":
 

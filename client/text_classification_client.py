@@ -56,6 +56,9 @@ saved_model_cli show --dir ~/demo/model/textclassification/export/1/ --all
 
 from __future__ import print_function
 
+import os
+import sys
+import pickle
 import requests
 import numpy as np
 import json
@@ -66,36 +69,6 @@ import re
 # The server URL specifies the endpoint of your server running the ResNet
 # model with the name "resnet" and using the predict interface.
 SERVER_URL = 'http://localhost:8501/v1/models/textclassification:predict'
-
-def loadVocab(vocab_file, top_k):
-  # Read vocabulary
-  # Every line has one word.
-  # The embedding of the word is optoinally included in the same line
-
-  vocab = []
-  embd = []
-
-  file = open(vocab_file,'r')
-  count = 0
-  for line in file.readlines():
-      row = line.strip().split(' ')
-      vocab.append(row[0])
-      
-      if len(row) > 1:
-        embd.append(row[1:])
-
-      count += 1
-      if count == top_k:
-        break
-
-  file.close()
-
-  vocab = { w : i for i, w in enumerate(vocab)}
-
-  if embd:
-    embd = np.asarray(embd).astype(np.float32)
-
-  return vocab, embd
 
 
 def basic_encode(sentences, vocab, max_seq_length):
@@ -155,7 +128,7 @@ def main():
   parser.add_argument("--input_text",
                       type=str,
                       help="Input text for classification",
-                      default="This is a good movie !#This movie is bad .")
+                      default="This is a good movie!.#This movie is bad.")
   parser.add_argument("--vocab_file",
                       help="Path of the vocabulary file.",
                       type=str,
@@ -168,6 +141,11 @@ def main():
                       help="Number of words kept in the vocab. set to -1 to use all words.",
                       type=int,
                       default=-1)
+  parser.add_argument("--vocab_format",
+                      help="Format of vocabulary.",
+                      type=str,
+                      default="pickle",
+                      choices=["pickle", "txt"])  
   parser.add_argument("--splitter",
                       help="A special character to split test_samples into a list",
                       type=str,
@@ -175,10 +153,13 @@ def main():
 
   args = parser.parse_args()
 
+  args.vocab_file = os.path.expanduser(args.vocab_file)
 
-  vocab, embd = loadVocab(args.vocab_file, args.vocab_top_k)
+  sys.path.append('.')
+  from demo.text.preprocess import vocab_loader
 
-  
+  vocab, items, embd = vocab_loader.load(args.vocab_file, args.vocab_format, args.vocab_top_k)
+
   list_input_text = args.input_text.split(args.splitter)
   sentences = []
   for s in list_input_text:

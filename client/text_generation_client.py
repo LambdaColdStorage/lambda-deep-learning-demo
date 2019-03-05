@@ -48,8 +48,9 @@ saved_model_cli show --dir ~/demo/model/char_rnn_shakespeare/export/1/ --all
 
 from __future__ import print_function
 
-import requests
 import os
+import sys
+import requests
 import pickle
 import numpy as np
 import json
@@ -69,36 +70,6 @@ def softmax(x):
     """Compute softmax values for each sets of scores in x."""
     e_x = np.exp(x - np.max(x))
     return e_x / e_x.sum(axis=0) # only difference
-
-def loadVocab(vocab_file, vocab_format, top_k):
-  if vocab_format == "pickle":
-    f = open(vocab_file,'r')  
-    items = pickle.load(f)
-    if top_k > 0 and len(items) > top_k:
-      items = items[:top_k]
-    vocab = { w : i for i, w in enumerate(items)}
-    embd = None
-  elif vocab_format == "txt":
-    items = []
-    embd = []
-    file = open(vocab_file,'r')
-    count = 0
-    for line in file.readlines():
-        row = line.strip().split(' ')
-        items.append(row[0])
-        
-        if len(row) > 1:
-          embd.append(row[1:])
-
-        count += 1
-        if count == top_k:
-          break
-    file.close()
-    vocab = { w : i for i, w in enumerate(items)}
-    if embd:
-      embd = np.asarray(embd).astype(np.float32)
-
-  return vocab, items, embd
 
 
 def main():
@@ -152,7 +123,10 @@ def main():
 
   args.vocab_file = os.path.expanduser(args.vocab_file)
 
-  vocab, items, embd = loadVocab(
+  sys.path.append('.')
+  from demo.text.preprocess import vocab_loader
+
+  vocab, items, embd = vocab_loader.load(
     args.vocab_file, args.vocab_format, args.vocab_top_k)
 
   input_item = np.full((1, 1), vocab[args.starter], dtype=np.int32)

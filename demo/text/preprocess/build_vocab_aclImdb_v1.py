@@ -2,6 +2,9 @@
 Copyright 2018 Lambda Labs. All Rights Reserved.
 Licensed under
 ==========================================================================
+
+
+
 """
 import argparse
 import os
@@ -10,9 +13,8 @@ from collections import Counter
 import operator
 import pickle
 
-
-def buildVocab(data):
-  list_words = [w for w in data]
+def buildVocab(sentences):
+  list_words = [w for l in sentences for w in l.split(" ")]
   counter = Counter(list_words)
   word_cnt = sorted(counter.items(),
                     key=operator.itemgetter(1), reverse=True)
@@ -37,12 +39,12 @@ def main():
                       help="Type of basic units",
                       choices=["char", "word"],
                       type=str,
-                      default="char_basic")
+                      default="word_basic")
   parser.add_argument("--loader",
                       help="name of data loader",
-                      default="char_basic",
+                      default="word_basic",
                       type=str,
-                      choices=["char_basic", "word_basic"])
+                      choices=["char_basic", "word_basic", "imdb_loader"])
 
   args = parser.parse_args()
 
@@ -52,8 +54,8 @@ def main():
   
   loader = getattr(data_loader, args.loader)
   data = loader(args.input_file)
-
-  vocab = buildVocab(data)
+  
+  vocab = buildVocab(data['sentence'])
 
   with open(args.output_vocab, 'w') as f:
     pickle.dump(vocab, f)
