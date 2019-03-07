@@ -1,10 +1,8 @@
-num_trials: 20
+num_trials: 10
 fixedparams:
-  epochs: 2
-  piecewise_lr_decay: "1.0,0.1"
-  piecewise_boundaries: "1"  
+  epochs: 4
 hyperparams:
   generate:
-    learning_rate: "-5.0,-1.0"
+    learning_rate: "-4.0,-2.0"
   select:
-    optimizer: "momentum,adam,rmsprop"
+    optimizer: "adam"

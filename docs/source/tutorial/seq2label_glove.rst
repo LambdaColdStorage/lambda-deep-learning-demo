@@ -9,6 +9,7 @@ Sequence-to-label Glove
 * :ref:`seq2label_glove_eval`
 * :ref:`seq2label_glove_inference`
 * :ref:`seq2label_glove_tune`
+* :ref:`seq2label_glove_pretrain`
 * :ref:`seq2label_glove_export`
 * :ref:`seq2label_glove_serve`
 
@@ -57,7 +58,7 @@ Train from scratch
   --mode=train \
   --model_dir=~/demo/model/seq2label_glove_Imdb \
   --network=seq2label_basic \
-  --batch_size_per_gpu=128 --epochs=100 \
+  --batch_size_per_gpu=128 --epochs=4 \
   --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_format=txt \
   --vocab_top_k=40000 \
@@ -133,6 +134,36 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/IMDB/train.csv \
   --eval_dataset_meta=~/demo/data/IMDB/test.csv \
   --tune_config=source/tool/seq2label_glove_IMDB_tune_coarse.yaml
+
+
+.. _seq2label_glove_pretrain:
+
+Evaluate Pre-trained model
+---------------------------------------
+
+Download pre-trained models:
+
+::
+
+  curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/seq2label_glove_Imdb-20190303.tar.gz | tar xvz -C ~/demo/model
+
+Evaluate
+
+::
+
+  python demo/text/text_classification.py \
+  --mode=eval \
+  --model_dir=~/demo/model/seq2label_glove_Imdb-20190303 \
+  --network=seq2label_basic \
+  --batch_size_per_gpu=128 --epochs=1 \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_format=txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  eval_args \
+  --dataset_meta=~/demo/data/IMDB/test.csv
+
 
 .. _seq2label_glove_export:
 

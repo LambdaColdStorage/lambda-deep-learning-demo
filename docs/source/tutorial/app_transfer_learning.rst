@@ -69,9 +69,11 @@ Evaluation
 
 ::
 
+  (mkdir ~/demo/model/resnet50_StanfordDogs120-20190303;curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/resnet50_StanfordDogs120-20190303.tar.gz | tar xvz -C ~/demo/model)
+
   python demo/image/image_classification.py \
   --mode=eval \
-  --model_dir=~/demo/model/resnet50_StanfordDogs120 \
+  --model_dir=~/demo/model/resnet50_StanfordDogs120-20190303 \
   --network=resnet50 \
   --augmenter=vgg_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \
@@ -134,15 +136,18 @@ Evaluation
 
 ::
 
+  (mkdir ~/demo/model/inceptionv4_StanfordDogs120-20190306;curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/inceptionv4_StanfordDogs120-20190306.tar.gz | tar xvz -C ~/demo/model)
+
   python demo/image/image_classification.py \
   --mode=eval \
-  --model_dir=~/demo/model/inceptionv4_StanfordDogs120 \
+  --model_dir=~/demo/model/inceptionv4_StanfordDogs120-20190306 \
   --network=inception_v4 \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \
   --num_classes=120 --image_width=299 --image_height=299 \
   eval_args \
   --dataset_meta=~/demo/data/StanfordDogs120/eval.csv
+
 
 .. _nasnetalarge:
 
@@ -189,7 +194,7 @@ Hyper-Parameter Tuning
   tune_args \
   --train_dataset_meta=~/demo/data/StanfordDogs120/train.csv \
   --eval_dataset_meta=~/demo/data/StanfordDogs120/eval.csv \
-  --pretrained_model=~/demo/model/nasnet-a_large_04_10_2017/model.ckpt \
+  --pretrained_model=~/demo/model/nasnet-a_large_04_10_2/ KKi017/model.ckpt \
   --skip_pretrained_var=final_layer,aux_logits,global_step,power \
   --trainable_vars=final_layer,aux_logits \
   --tune_config=source/tool/nasnetalarge_stanforddogs120_tune_coarse.yaml
@@ -198,9 +203,12 @@ Evaluation
 
 ::
 
+  (mkdir ~/demo/model/nasnet_A_large_StanfordDogs120-20190306;curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/nasnet_A_large_StanfordDogs120-20190306.tar.gz | tar xvz -C ~/demo/model)
+
+
   python demo/image/image_classification.py \
   --mode=eval \
-  --model_dir=~/demo/model/nasnet_A_large_StanfordDogs120 \
+  --model_dir=~/demo/model/nasnet_A_large_StanfordDogs120-20190306 \
   --network=nasnet_A_large \
   --augmenter=inception_augmenter \
   --batch_size_per_gpu=16 --epochs=1 \

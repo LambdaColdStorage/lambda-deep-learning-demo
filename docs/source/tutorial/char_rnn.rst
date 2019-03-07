@@ -7,6 +7,7 @@ Char RNN
 * :ref:`charrnn_eval`
 * :ref:`charrnn_inference`
 * :ref:`charrnn_tune`
+* :ref:`charrnn_pretrain`
 * :ref:`charrnn_export`
 * :ref:`charrnn_serve`
 
@@ -46,7 +47,7 @@ Train from scratch
   --mode=train \
   --model_dir=~/demo/model/char_rnn_shakespeare \
   --network=rnn_basic \
-  --batch_size_per_gpu=32 --epochs=100 \
+  --batch_size_per_gpu=256 --epochs=10 \
   --vocab_file=~/demo/data/shakespeare/shakespeare_char_basic.vocab \
   --vocab_format=pickle \
   --vocab_top_k=-1 \
@@ -54,7 +55,7 @@ Train from scratch
   --unit=char \
   train_args \
   --learning_rate=0.002 --optimizer=adam \
-  --piecewise_boundaries=50 \
+  --piecewise_boundaries=5 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
 
@@ -120,6 +121,38 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
+
+
+.. _charrnn_pretrain:
+
+Inference Using Pre-trained model
+---------------------------------------
+
+Download pre-trained models:
+
+::
+
+  curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/char_rnn_shakespeare-20190303.tar.gz | tar xvz -C ~/demo/model
+
+Inference
+
+::
+
+  python demo/text/text_generation.py \
+  --mode=infer \
+  --model_dir=~/demo/model/char_rnn_shakespeare-20190303 \
+  --network=rnn_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=~/demo/data/shakespeare/shakespeare_char_basic.vocab \
+  --vocab_format=pickle \
+  --vocab_top_k=-1 \
+  --unit=char \
+  --starter=V \
+  --softmax_temperature=1.0 \
+  infer_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --callbacks=infer_basic,infer_display_text_generation
+
 
 .. _charrnn_export:
 

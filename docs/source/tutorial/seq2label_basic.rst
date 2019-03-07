@@ -9,6 +9,7 @@ Sequence-to-label Basic
 * :ref:`seq2label_basic_eval`
 * :ref:`seq2label_basic_inference`
 * :ref:`seq2label_basic_tune`
+* :ref:`seq2label_basic_pretrain`
 * :ref:`seq2label_basic_export`
 * :ref:`seq2label_basic_serve`
 
@@ -60,7 +61,7 @@ Train from scratch
   --mode=train \
   --model_dir=~/demo/model/seq2label_basic_Imdb \
   --network=seq2label_basic \
-  --batch_size_per_gpu=128 --epochs=100 \
+  --batch_size_per_gpu=128 --epochs=4 \
   --vocab_file=~/demo/data/IMDB/imdb_word_basic.vocab \
   --vocab_format=pickle \
   --vocab_top_k=40000 \
@@ -68,7 +69,7 @@ Train from scratch
   --unit=word \
   --lr_method=linear_plus_warmup \
   train_args \
-  --learning_rate=0.002 --optimizer=adam \
+  --learning_rate=0.00014 --optimizer=adam \
   --dataset_meta=~/demo/data/IMDB/train.csv
 
 
@@ -136,6 +137,35 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/IMDB/train.csv \
   --eval_dataset_meta=~/demo/data/IMDB/test.csv \
   --tune_config=source/tool/seq2label_basic_IMDB_tune_coarse.yaml
+
+
+.. _seq2label_basic_pretrain:
+
+Evaluate Pre-trained model
+---------------------------------------
+
+Download pre-trained models:
+
+::
+
+  curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/seq2label_basic_Imdb-20190303.tar.gz | tar xvz -C ~/demo/model
+
+Evaluate
+
+::
+
+  python demo/text/text_classification.py \
+  --mode=eval \
+  --model_dir=~/demo/model/seq2label_basic_Imdb-20190303 \
+  --network=seq2label_basic \
+  --batch_size_per_gpu=128 --epochs=1 \
+  --vocab_file=~/demo/data/IMDB/imdb_word_basic.vocab \
+  --vocab_format=pickle \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  eval_args \
+  --dataset_meta=~/demo/data/IMDB/test.csv
 
 
 .. _seq2label_basic_export:

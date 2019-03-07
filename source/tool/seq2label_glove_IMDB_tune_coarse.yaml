@@ -1,8 +1,6 @@
 num_trials: 20
 fixedparams:
-  epochs: 2
-  piecewise_lr_decay: "1.0,0.1"
-  piecewise_boundaries: "1"  
+  epochs: 4
 hyperparams:
   generate:
     learning_rate: "-5.0,-1.0"

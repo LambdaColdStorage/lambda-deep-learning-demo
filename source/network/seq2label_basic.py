@@ -28,7 +28,7 @@ def net(inputs, mask, num_classes, is_training, batch_size, vocab_size, embd=Non
       embeddingW = tf.get_variable(
         'embedding',
         initializer=tf.constant(embd),
-        trainable=False)
+        trainable=True)
     else:
       embeddingW = tf.get_variable(
       'embedding', [vocab_size, EMBEDDING_SIZE])

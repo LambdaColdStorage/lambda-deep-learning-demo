@@ -7,6 +7,7 @@ Word RNN with Glove Embedding
 * :ref:`wordrnnglove_eval`
 * :ref:`wordrnnglove_inference`
 * :ref:`wordrnnglove_tune`
+* :ref:`wordrnnglove_pretrain`
 * :ref:`wordrnnglove_export`
 * :ref:`wordrnnglove_serve`
 
@@ -42,7 +43,7 @@ Train from scratch
   --mode=train \
   --model_dir=~/demo/model/word_rnn_glove_shakespeare \
   --network=rnn_basic \
-  --batch_size_per_gpu=32 --epochs=100 \
+  --batch_size_per_gpu=32 --epochs=10 \
   --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_format=txt \
   --vocab_top_k=40000 \
@@ -50,7 +51,7 @@ Train from scratch
   --unit=word \
   train_args \
   --learning_rate=0.002 --optimizer=adam \
-  --piecewise_boundaries=50 \
+  --piecewise_boundaries=5 \
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt
 
@@ -76,7 +77,7 @@ Evaluation
 
 .. _wordrnnglove_inference:
 
-Infer
+Inference
 ----------------------------------------------
 
 ::
@@ -118,6 +119,39 @@ Hyper-Parameter Tuning
   --train_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --eval_dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
   --tune_config=source/tool/rnn_basic_shakespeare_tune_coarse.yaml
+
+
+.. _wordrnnglove_pretrain:
+
+Inference Using Pre-trained model
+---------------------------------------
+
+Download pre-trained models:
+
+::
+
+  curl https://s3-us-west-2.amazonaws.com/lambdalabs-files/word_rnn_glove_shakespeare-20190303.tar.gz | tar xvz -C ~/demo/model
+
+Inference
+
+::
+
+  python demo/text/text_generation.py \
+  --mode=infer \
+  --model_dir=~/demo/model/word_rnn_glove_shakespeare-20190303 \
+  --network=rnn_basic \
+  --gpu_count=1 --batch_size_per_gpu=1 --epochs=1 \
+  --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
+  --vocab_format=txt \
+  --vocab_top_k=40000 \
+  --encode_method=basic \
+  --unit=word \
+  --starter=king \
+  --softmax_temperature=1.0 \
+  infer_args \
+  --dataset_meta=~/demo/data/shakespeare/shakespeare_input.txt \
+  --callbacks=infer_basic,infer_display_text_generation
+
 
 .. _wordrnnglove_export:
 
