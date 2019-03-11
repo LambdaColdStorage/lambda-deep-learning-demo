@@ -70,7 +70,7 @@ Train from scratch
   --piecewise_lr_decay=1.0,0.1 \
   --dataset_meta=~/demo/data/IMDB/train.csv \
   --pretrained_model=~/demo/model/uncased_L-12_H-768_A-12/bert_model.ckpt \
-  --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power
+  --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power,adam
 
 
 .. _seq2label_bert_eval:
@@ -136,7 +136,7 @@ Hyper-Parameter Tuning
   --lr_method=linear_plus_warmup \
   tune_args \
   --pretrained_model=~/demo/model/uncased_L-12_H-768_A-12/bert_model.ckpt \
-  --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power \
+  --skip_pretrained_var=classification/output_weights,classification/output_bias,global_step,power,adam \
   --train_dataset_meta=~/demo/data/IMDB/train.csv \
   --eval_dataset_meta=~/demo/data/IMDB/test.csv \
   --tune_config=source/tool/seq2label_bert_IMDB_tune_coarse.yaml
