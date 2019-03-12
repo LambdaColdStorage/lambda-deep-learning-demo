@@ -42,6 +42,12 @@ class EvalSummary(Callback):
     self.summary_writer.add_summary(summary, self.trained_step)
     self.summary_writer.flush()
     self.summary_writer.close()
+    # print(self.config.model_dir + ' should be added')
+    if 'accuracy' in self.accumulated_summary:
+      result_name = os.path.basename(self.config.model_dir) + "_acc_" + str(self.accumulated_summary['accuracy'])
+      path_result_file = os.path.join(self.config.model_dir, result_name)
+      if not os.path.exists(path_result_file):
+        with open(path_result_file, 'w'): pass
 
   def after_step(self, sess, outputs_dict, feed_dict=None):
     if not self.accumulated_summary:

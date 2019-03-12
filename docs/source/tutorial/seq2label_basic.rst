@@ -127,7 +127,7 @@ Hyper-Parameter Tuning
   --mode=tune \
   --model_dir=~/demo/model/seq2label_basic_Imdb \
   --network=seq2label_basic \
-  --batch_size_per_gpu=128 \
+  --batch_size_per_gpu=32 \
   --vocab_file=~/demo/data/IMDB/imdb_word_basic.vocab \
   --vocab_format=pickle \
   --vocab_top_k=40000 \

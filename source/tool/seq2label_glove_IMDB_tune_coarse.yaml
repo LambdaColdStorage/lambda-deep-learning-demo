@@ -1,6 +1,6 @@
 num_trials: 20
 fixedparams:
-  epochs: 4
+  epochs: 8
 hyperparams:
   generate:
     learning_rate: "-5.0,-1.0"

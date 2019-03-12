@@ -124,7 +124,7 @@ Hyper-Parameter Tuning
   --mode=tune \
   --model_dir=~/demo/model/seq2label_glove_Imdb \
   --network=seq2label_basic \
-  --batch_size_per_gpu=128 \
+  --batch_size_per_gpu=32 \
   --vocab_file=~/demo/model/glove.6B/glove.6B.200d.txt \
   --vocab_format=txt \
   --vocab_top_k=40000 \
