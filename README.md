@@ -92,9 +92,11 @@ Check this [documents](https://lambda-deep-learning-demo.readthedocs.io/en/lates
 ### Citation
 If you use our code in your research or wish to refer to the examples, please cite with:
 
+```
 @misc{lambdalabs2018demo,
   title={Lambda Labs Deep Learning Demos},
   author={Lambda Labs, inc.},
   howpublished={\url{https://github.com/lambdal/lambda-deep-learning-demo}},
   year={2018}
 }
+```
