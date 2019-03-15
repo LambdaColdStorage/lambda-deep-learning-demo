@@ -88,3 +88,15 @@ Check this [documents](https://lambda-deep-learning-demo.readthedocs.io/en/lates
 | Transfer Learning + BERT | IMDB |  92.2% |  [Download](https://s3-us-west-2.amazonaws.com/lambdalabs-files/seq2label_bert_Imdb-20190303.tar.gz) |
 
 ---
+
+### Citation
+If you use our code in your research or wish to refer to the examples, please cite with:
+
+```
+@misc{lambdalabs2018demo,
+  title={Lambda Labs Deep Learning Demos},
+  author={Lambda Labs, inc.},
+  howpublished={\url{https://github.com/lambdal/lambda-deep-learning-demo}},
+  year={2018}
+}
+```
