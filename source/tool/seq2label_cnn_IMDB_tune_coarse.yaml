@@ -1,0 +1,8 @@
+num_trials: 20
+fixedparams:
+  epochs: 8
+hyperparams:
+  generate:
+    learning_rate: "-5.0,-1.0"
+  select:
+    optimizer: "momentum,adam,rmsprop"

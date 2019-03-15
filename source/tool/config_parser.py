@@ -35,7 +35,7 @@ def default_parser():
                                             "fcn", "unet",
                                             "fns",
                                             "rnn_basic",
-                                            "seq2label_basic", "seq2label_pretrain", "seq2label_bert",
+                                            "seq2label_cnn", "seq2label_basic", "seq2label_pretrain", "seq2label_bert",
                                             "ssd512", "ssd300"],
                       type=str,
                       help="Choose a network architecture",
