@@ -34,7 +34,7 @@ Our TensorFlow application is comprised of three main components:
 
 .. _example:
 
-Example: Training a ResNet32 newtowrk on CIFAR10 
+Example: Training a ResNet32 network on CIFAR10 
 ---------------------------------------------------
 
 Let's walk through an example of building a Tensorflow application. In this example we will use a ResNet32 model for classifying CIFAR10 images.
